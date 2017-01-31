@@ -320,7 +320,8 @@ class Qmcpack(Simulation):
                     if len(jnew)==1:
                         wavefunction.jastrow = jnew[0].copy()
                     else:
-                        wavefunction.jastrows = collection(jnew)
+                        #wavefunction.jastrows = collection(jnew)
+                        wavefunction.jastrows = optwf.jastrows.copy()
                     #end if
                 #end if
                 del optwf
