@@ -569,7 +569,7 @@ class obj(object_interface):
 
     def to_dict(self):
         d = dict()
-        for k,v in self:
+        for k,v in self.iteritems():
             if isinstance(v,obj):
                 d[k] = v.to_dict()
             else:
