@@ -29,6 +29,16 @@ SET( DART_TESTING_TIMEOUT 3600 CACHE STRING "Maximum time for one test")
 ENABLE_TESTING()
 INCLUDE( CTest )
 
+SET( QMC_SYMLINK_TEST_FILES TRUE CACHE BOOL "Use symbolic links for test files to save space.  Set to false to copy files instead.")
+
+
+IF (QMC_SYMLINK_TEST_FILES)
+  SET(SYMLINK_MSG "Using symbolic links for large test files may cause test failures if the build is installed on a separate filesystem from the source.  For example, Titan at OLCF.")
+ELSE()
+  SET(SYMLINK_MSG "Copying large test files uses more disk space than using symbolic links.")
+ENDIF()
+MESSAGE(STATUS "QMC_SYMLINK_TEST_FILES = ${QMC_SYMLINK_TEST_FILES}.  ${SYMLINK_MSG}")
+
 ######################################################################
 # Build level
 ######################################################################
@@ -395,7 +405,8 @@ ELSE(CMAKE_TOOLCHAIN_FILE)
   #-------------------------------------------------------------------
   IF(QMC_MPI)
     ## mpi compilers
-    if($ENV{CXX} MATCHES "mp")
+    GET_FILENAME_COMPONENT(BASE_CXX_COMPILER_NAME ${CMAKE_CXX_COMPILER} NAME)
+    if(${BASE_CXX_COMPILER_NAME} MATCHES "^mp")
       SET(HAVE_MPI 1)
       SET(HAVE_OOMPI 1)
       SET(MPI_FOUND TRUE)
@@ -407,6 +418,7 @@ ELSE(CMAKE_TOOLCHAIN_FILE)
       include(FindMPI)
       IF(MPI_FOUND)
         MESSAGE(STATUS "Found mpi.h and libraries. Check for working mpi compiler ")
+        INCLUDE_DIRECTORIES(${MPI_CXX_INCLUDE_PATH})
         FILE(WRITE ${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/testmpi.cxx 
           "#include <mpi.h>"
           "int main(int argc, char** argv){MPI_Init(&argc,&argv); MPI_Finalize();return 0;}\n")
@@ -414,18 +426,25 @@ ELSE(CMAKE_TOOLCHAIN_FILE)
         #${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/testmpi.cxx
         #OUTPUT_VARIABLE OUTPUT)
         set(MPI_WORKS 1)
+        SET(MPI_WARNING_LIST
+            "Building MPI version without using MPI compiler wrappers.\n"
+            "This may not build qmcpack correctly. To ensure the correct version, specify the compiler wrappers to cmake.\n"
+            "For example: cmake -DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpic++\n"
+            "To build without MPI, pass '-DQMC_MPI=0' to cmake")
+        MESSAGE(WARNING ${MPI_WARNING_LIST})
+
         IF(MPI_WORKS)
           MESSAGE(STATUS "MPI is enabled")
           SET(HAVE_MPI 1)
           SET(HAVE_OOMPI 1)
-          #LINK_LIBRARIES(${MPI_LIBRARY})
+          LINK_LIBRARIES(${MPI_CXX_LIBRARIES})
         ELSE(MPI_WORKS)
           MESSAGE(STATUS "MPI is disabled")
           SET(HAVE_MPI 0)
           SET(HAVE_OOMPI 0)
         ENDIF(MPI_WORKS)
       ENDIF(MPI_FOUND)
-    endif($ENV{CXX} MATCHES "mp")
+    ENDIF()
   ENDIF(QMC_MPI)
 
   #-------------------------------------------------------------------
@@ -506,10 +525,9 @@ IF(CXX11_NEEDED)
   ENDIF()
 ENDIF(CXX11_NEEDED)
 
-# AFQMC requires MKL sparse
+# AFQMC requires MKL sparse for good performance (roughly a factor of 2x)
 IF (BUILD_AFQMC AND NOT MKL_FOUND)
-  MESSAGE(STATUS "AFQMC requires MKL sparse libraries. Disabling AFQMC")
-  SET (BUILD_AFQMC 0)
+  MESSAGE(WARNING "AFQMC - MKL not found, using simple sparse matrix routines.  Link with MKL sparse libraries for better performance.")
 ENDIF()
 
 # AFQMC requires MPI
@@ -521,7 +539,7 @@ If (BUILD_AFQMC AND QMC_COMPLEX)
   MESSAGE(STATUS "Warning: Complex wavefunctions are not yet supported by AFQMC.")
 ENDIF()
 
-IF (BUILD_AFQMC AND CMAKE_COMPILER_IS_GNUCXX AND MKL_FOUND)
+IF (BUILD_AFQMC AND NOT APPLE)
   LINK_LIBRARIES("rt")
 ENDIF()
   
@@ -856,6 +874,8 @@ SUBDIRS(src)
 SUBDIRS(tests/converter)
 SUBDIRS(tests/system)
 SUBDIRS(examples)
+
+SUBDIRS(tests/performance)
 
 IF(QE_BIN)
   MESSAGE(STATUS "QE binary path ${QE_BIN}")
