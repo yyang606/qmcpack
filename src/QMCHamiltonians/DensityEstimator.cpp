@@ -22,6 +22,7 @@
 #include "Particle/DistanceTable.h"
 #include "Particle/DistanceTableData.h"
 #include "Particle/MCWalkerConfiguration.h"
+#include <sstream>
 
 namespace qmcplusplus
 {
@@ -30,7 +31,7 @@ typedef LRCoulombSingleton::LRHandlerType LRHandlerType;
 typedef LRCoulombSingleton::GridType       GridType;
 typedef LRCoulombSingleton::RadFunctorType RadFunctorType;
 
-DensityEstimator::DensityEstimator(ParticleSet& elns) : rVs(0)
+DensityEstimator::DensityEstimator(ParticleSet& elns) : rVs(0), tspecies(elns.getSpeciesSet())
 {
   UpdateMode.set(COLLECTABLE,1);
   Periodic=(elns.Lattice.SuperCellEnum != SUPERCELL_OPEN);
@@ -39,7 +40,6 @@ DensityEstimator::DensityEstimator(ParticleSet& elns) : rVs(0)
     density_max[dim]=elns.Lattice.Length[dim];
     ScaleFactor[dim]=1.0/elns.Lattice.Length[dim];
   }
-  //    InitPotential(elns);
 }
 
 void DensityEstimator::resetTargetParticleSet(ParticleSet& P)
@@ -53,12 +53,17 @@ DensityEstimator::Return_t DensityEstimator::evaluate(ParticleSet& P)
   {
     for(int iat=0; iat<P.getTotalNum(); ++iat)
     {
+      // see if particle should be registered
+      int found = 0;
+      found = watchSpecies.count( tspecies.speciesName[ P.GroupID(iat) ] );
+
       PosType ru;
       ru=P.Lattice.toUnit(P.R[iat]);
       int i=static_cast<int>(DeltaInv[0]*(ru[0]-std::floor(ru[0])));
       int j=static_cast<int>(DeltaInv[1]*(ru[1]-std::floor(ru[1])));
       int k=static_cast<int>(DeltaInv[2]*(ru[2]-std::floor(ru[2])));
-      P.Collectables[getGridIndex(i,j,k)]+=wgt;//1.0;
+      if (found)
+        P.Collectables[getGridIndex(i,j,k)]+=wgt;//1.0;
       //	P.Collectables[getGridIndexPotential(i,j,k)]-=1.0;
       //HACK!	P.Collectables[getGridIndexPotential(i,j,k)]+=evalSR(P,iat)+evalLR(P,iat);
     }
@@ -67,6 +72,10 @@ DensityEstimator::Return_t DensityEstimator::evaluate(ParticleSet& P)
   {
     for(int iat=0; iat<P.getTotalNum(); ++iat)
     {
+      // see if particle should be registered
+      int found = 0;
+      found = watchSpecies.count( tspecies.speciesName[ P.GroupID(iat) ] );
+
       PosType ru;
       for (int dim=0; dim<OHMMS_DIM; dim++)
       {
@@ -79,7 +88,8 @@ DensityEstimator::Return_t DensityEstimator::evaluate(ParticleSet& P)
         int i=static_cast<int>(DeltaInv[0]*(ru[0]-std::floor(ru[0])));
         int j=static_cast<int>(DeltaInv[1]*(ru[1]-std::floor(ru[1])));
         int k=static_cast<int>(DeltaInv[2]*(ru[2]-std::floor(ru[2])));
-        P.Collectables[getGridIndex(i,j,k)]+=wgt;//1.0;
+        if (found)
+          P.Collectables[getGridIndex(i,j,k)]+=wgt;//1.0;
         //	  P.Collectables[getGridIndexPotential(i,j,k)]-=1.0;
         //HACK!	  P.Collectables[getGridIndexPotential(i,j,k)]+=evalSR(P,iat)+evalLR(P,iat);
       }
@@ -147,7 +157,7 @@ DensityEstimator::evalLR(ParticleSet &P,int iat)
 
 void DensityEstimator::InitPotential(ParticleSet &P)
 {
-  SpeciesSet& tspecies(P.getSpeciesSet());
+  tspecies = P.getSpeciesSet();
   int ChargeAttribIndx = tspecies.addAttribute("charge");
   int MemberAttribIndx = tspecies.addAttribute("membersize");
   NumCenters = P.getTotalNum();
@@ -245,6 +255,9 @@ bool DensityEstimator::put(xmlNodePtr cur)
   std::vector<double> delta;
   std::string debug("no");
   std::string potential("no");
+  std::string force_nonperiodic("no");
+  std::string species_to_watch("u+d");
+
   OhmmsAttributeSet attrib;
   attrib.add(debug,"debug");
   attrib.add(potential,"potential");
@@ -255,7 +268,25 @@ bool DensityEstimator::put(xmlNodePtr cur)
   attrib.add(density_max[1],"y_max");
   attrib.add(density_max[2],"z_max");
   attrib.add(Delta,"delta");
+  attrib.add(force_nonperiodic,"forcen");
+  attrib.add(species_to_watch,"species");
   attrib.put(cur);
+
+  std::istringstream iss(species_to_watch);
+  std::string substr;
+  while (std::getline(iss,substr,'+')) watch_species.push_back(substr);
+
+  app_log() << "  DensityEstimator registering species: "; 
+  for (std::vector<std::string>::iterator it = watch_species.begin(); it != watch_species.end(); it++) { 
+    watchSpecies.insert(*it);
+    app_log() << "    " << *it << std::endl;
+  }
+
+  if (force_nonperiodic=="yes"){
+    Periodic = false;
+    app_log() << "  DensityEstimator force non-periodic evaluation! " << std::endl;
+  }
+
   if(!Periodic)
   {
     for(int dim=0; dim<OHMMS_DIM; ++dim)

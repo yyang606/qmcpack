@@ -40,6 +40,8 @@ public:
   void InitPotential(ParticleSet &P);
   std::vector<RealType> Zat,Zspec;
   RadFunctorType* rVs;
+  SpeciesSet &tspecies;
+  std::set<std::string> watchSpecies;
   int NumSpecies;
   int NumCenters;
   LRHandlerType* AA;
@@ -91,6 +93,8 @@ private:
   TinyVector<RealType, OHMMS_DIM> density_min;
   ///upper bound
   TinyVector<RealType, OHMMS_DIM> density_max;
+  ///species to record
+  std::vector<std::string> watch_species;
   ///name of the density data
   std::string prefix;
   ///density
