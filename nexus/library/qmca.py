@@ -4,6 +4,7 @@ import code
 import os
 from optparse import OptionParser
 import sys
+from sys import exit
 import traceback
 from copy import deepcopy
 
