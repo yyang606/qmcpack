@@ -941,6 +941,26 @@ int ParticleSet::addPropertyHistory(int leng)
   return newL;
 }
 
+ParticleSet::SingleParticlePos_t ParticleSet::center_of_mass()
+{
+  SingleParticlePos_t com(0);
+  RealType tot_mass = 0.0;
+  for (int iat=0;iat<R.size();iat++)
+  {
+    com += R[iat]*Mass[iat];
+    tot_mass += Mass[iat];
+  }
+  return com/tot_mass;
+}
+void ParticleSet::restore_center_of_mass()
+{
+  SingleParticlePos_t com = center_of_mass();
+  for (int iat=0;iat<R.size();iat++)
+  {
+    R[iat] -= com;
+  }
+}
+
 //      void ParticleSet::resetPropertyHistory( )
 //     {
 //       for(int i=0;i<PropertyHistory.size();i++)

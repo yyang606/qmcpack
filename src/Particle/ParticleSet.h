@@ -547,6 +547,9 @@ public:
     return mySpecies.speciesName[GroupID[i]];
   }
 
+  SingleParticlePos_t center_of_mass(); // calculate and return the center of mass of the particle set
+  void restore_center_of_mass(); // move center of mass to (0,0,0)
+
 protected:
   ///the number of particle objects
   static Index_t PtclObjectCounter;
