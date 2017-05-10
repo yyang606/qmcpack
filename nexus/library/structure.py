@@ -5381,10 +5381,10 @@ def generate_crystal_structure(lattice=None,cell=None,centering=None,
             operations     = operations,
             posu           = posu)
     elif isinstance(structure,Structure):
-        if kpoints!=None:
+        if kpoints is not None:
             structure.add_kpoints(kpoints,kweights)
         #end if
-        if kgrid!=None:
+        if kgrid is not None:
             structure.add_kmesh(kgrid,kshift)
         #end if        
         return structure

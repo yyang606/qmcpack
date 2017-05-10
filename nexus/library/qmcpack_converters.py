@@ -104,7 +104,7 @@ class Pw2qmcpackInput(SimulationInput):
     ints   = []
     floats = []
     strs   = ['outdir','prefix']
-    bools  = ['write_psir']
+    bools  = ['write_psir','cusp_corr']
 
     var_types = dict()
     for v in ints:
@@ -179,13 +179,15 @@ class Pw2qmcpackInput(SimulationInput):
 #end class Pw2qmcpackInput
 
 
-def generate_pw2qmcpack_input(prefix='pwscf',outdir='pwscf_output',write_psir=True,cusp_corr=False):
+def generate_pw2qmcpack_input(prefix='pwscf',outdir='pwscf_output',write_psir=False,cusp_corr=None):
     pw = Pw2qmcpackInput(
         prefix     = prefix,
         outdir     = outdir,
-        write_psir = write_psir,
-        cusp_corr  = cusp_corr
+        write_psir = write_psir
         )
+    if cusp_corr is not None:
+        pw['inputpp']['cusp_corr'] = cusp_corr
+    # end if
     return pw
 #end def generate_pw2qmcpack_input
 
