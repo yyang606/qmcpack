@@ -232,6 +232,10 @@ BasisSetBuilder* BasisSetFactory::createBasisSet(xmlNodePtr cur,xmlNodePtr  root
     }
   }
 #endif //!QMC_COMPLEX
+  else
+  {
+    APP_ABORT("BasisSetFactory::createSPOSet cannot build basis set of unknown type "+type);
+  }
 #endif  //OHMMS_DIM==3
   PRE.flush();
 
