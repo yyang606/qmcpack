@@ -256,7 +256,10 @@ struct CheckBoxConds<T,3>
   }
 
   inline static bool inside(const TinyVector<T,3>& u, const TinyVector<int,3>& bc)
-  {
+  { // bc is 0 for open and 1 for periodic
+    //  if periodic, then particles are free to go outside the box
+    //  if open in say z direction (bc[2]==0), then particles attempting to move out
+    //    of the box will be rejected
     return
       (bc[0] || (u[0]>0.0 && u[0]<1.0)) &&
       (bc[1] || (u[1]>0.0 && u[1]<1.0)) &&
