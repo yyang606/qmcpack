@@ -32,6 +32,7 @@
 #include "Configuration.h"
 #include <map>
 #include <cmath>
+#include <fstream>
 #include "OhmmsPETE/OhmmsArray.h"
 #include "OhmmsData/ParameterSet.h"
 #include "Numerics/LinearFit.h"
@@ -273,6 +274,16 @@ void BackflowBuilder::addOneBody(xmlNodePtr cur)
         dum->uniqueRadFun.push_back(bsp);
         offsets.push_back(tbf->numParams);
         tbf->numParams += bsp->NumParams;
+        if(OHMMS::Controller->rank()==0 & i==0)
+        {
+          char fname[64];
+          sprintf(fname,"BFe-I.%s.dat",(bsp->myVars.NameAndValue[0].first).c_str());
+          std::ofstream fout(fname);
+          fout.setf(std::ios::scientific, std::ios::floatfield);
+          fout << "# Backflow radial function \n";
+          bsp->print(fout);
+          fout.close();
+        }
       }
       tbf->derivs.resize(tbf->numParams);
       dum->offsetPrms.resize(nIons);
@@ -353,16 +364,16 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
           tbf->addFunc(ia,ib,bsp);
           offsets.push_back(tbf->numParams);
           tbf->numParams += bsp->NumParams;
-//            if(OHMMS::Controller->rank()==0)
-//            {
-//              char fname[64];
-//              sprintf(fname,"BFe-e.%s.dat",(spA+spB).c_str());
-//              std::ofstream fout(fname);
-//              fout.setf(std::ios::scientific, std::ios::floatfield);
-//              fout << "# Backflow radial function \n";
-//              bsp->print(fout);
-//              fout.close();
-//            }
+          if(OHMMS::Controller->rank()==0)
+          {
+            char fname[64];
+            sprintf(fname,"BFe-e.%s.dat",(spA+spB).c_str());
+            std::ofstream fout(fname);
+            fout.setf(std::ios::scientific, std::ios::floatfield);
+            fout << "# Backflow radial function \n";
+            bsp->print(fout);
+            fout.close();
+          }
         }
         cur = cur->next;
       }
