@@ -233,6 +233,10 @@ BasisSetBuilder* BasisSetFactory::createBasisSet(xmlNodePtr cur,xmlNodePtr  root
   }
 #endif //!QMC_COMPLEX
 #endif  //OHMMS_DIM==3
+  else
+  {
+    APP_ABORT("BasisSetFactory::createSPOSet cannot build basis set of unknown type "+type);
+  }
   PRE.flush();
 
   if(bb==0)
@@ -338,8 +342,3 @@ void BasisSetFactory::build_sposet_collection(xmlNodePtr cur)
 
 
 }
-/***************************************************************************
- * $RCSfile$   $Author$
- * $Revision$   $Date$
- * $Id$
- ***************************************************************************/

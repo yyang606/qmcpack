@@ -228,7 +228,7 @@ bool SlaterDetBuilder::put(xmlNodePtr cur)
   if (SPOSetNeedsDistanceTable) app_log() << "  At least one SPO Set requires precomputed distance tables." << std::endl;
 
   cur = curRoot->children;
-  while (cur != NULL)//check the basis set
+  while (cur != NULL) // read xml for sposcanner_tag, sd_tag, and multisd_tag. Build slaterdet_0
   {
     getNodeName(cname,cur);
     if (cname == sposcanner_tag)
@@ -505,8 +505,8 @@ bool SlaterDetBuilder::putDeterminant(xmlNodePtr cur, int spin_group)
   int lastIndex=targetPtcl.last(spin_group);
   if(firstIndex==lastIndex)
     return true;
-//    app_log() << "  Creating DiracDeterminant " << detname << " group=" << spin_group << " First Index = " << firstIndex << std::endl;
-//    app_log() <<"   My det method is "<<detMethod<< std::endl;
+    app_log() << "  Creating DiracDeterminant " << detname << " group=" << spin_group << " First Index = " << firstIndex << std::endl;
+    //app_log() <<"   My det method is "<<detMethod<< std::endl;
 //#if defined(BRYAN_MULTIDET_TRIAL)
 //    if (detMethod=="Iterative")
 //    {
@@ -562,7 +562,7 @@ bool SlaterDetBuilder::putDeterminant(xmlNodePtr cur, int spin_group)
 #ifdef QMC_CUDA
     adet = new DiracDeterminantCUDA(psi,firstIndex);
 #else
-    if(UseBackflow)
+    if(UseBackflow & spin_group < 2)
       adet = new DiracDeterminantWithBackflow(targetPtcl,psi,BFTrans,firstIndex);
     else if (afm=="AFM")
     {
@@ -1217,8 +1217,3 @@ bool SlaterDetBuilder::readDetList(xmlNodePtr cur, std::vector<ci_configuration>
 //   targetPsi.addOrbital(multidet,"MultiSlateDet");
 // }
 }
-/***************************************************************************
- * $RCSfile$   $Author$
- * $Revision$   $Date$
- * $Id$
- ***************************************************************************/

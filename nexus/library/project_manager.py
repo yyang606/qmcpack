@@ -99,9 +99,9 @@ class ProjectManager(NexusCore):
                 ipoll = 0
                 while len(self.progressing_cascades)>0:
                     elapsed_time = time.time() - start_time
-                    self.log('elapsed time %.1f s'%elapsed_time,
-                             ' memory %3.2f MB'%(memory.resident(children=True)/1e6),
-                             n=1,progress=True)
+                    #self.log('elapsed time %.1f s'%elapsed_time,
+                    #         ' memory %3.2f MB'%(memory.resident()/1e6),
+                    #         n=1,progress=True)
                     NexusCore.wrote_something = False
                     ipoll+=1
                     self.machine.query_queue()
