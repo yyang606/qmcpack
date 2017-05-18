@@ -47,3 +47,4 @@ fi
 cd build/bin
 ln -s ../../complex_build/bin/qmcpack qmcpack_comp
 ln -s ../../debug_build/bin/qmcpack debug_qmcpack
+cd ..

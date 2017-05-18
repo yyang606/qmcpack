@@ -23,8 +23,11 @@
 
 #include <stdio.h>
 #include <string>
+#include <iostream>
 
 using std::string;
+using std::cout;
+using std::endl;
 
 namespace qmcplusplus
 {
@@ -100,6 +103,10 @@ const char *particles =
   // calculate particle distances
   electrons.addTable(ions);
   electrons.update();
+
+  DistanceTableData* edtable = electrons.DistTables[0];
+  double ee_dist = edtable->r(edtable->loc(0,0)); // u-d distance
+  REQUIRE( ee_dist == 0.4);
 
   // get target particle set's distance table data
   int tid = electrons.getTable(ions);
@@ -194,6 +201,30 @@ const char *particles =
   // calculate particle distances
   electrons.addTable(ions);
   electrons.update();
+
+  // check electron distances
+  DistanceTableData* dtable0= electrons.DistTables[0];
+  double uu_dist = std::sqrt(0.7*0.7+1);
+  double ud_dist = std::sqrt(0.9*0.9+1);
+  double expect0[3][3] = {
+    0,uu_dist,1.6,
+    uu_dist,0,ud_dist,
+    1.6,ud_dist,0
+  };
+  for (int ielec=0;ielec<electrons.R.size();ielec++)
+  {
+    for (int jelec=0;jelec<electrons.R.size();jelec++)
+    {
+      if (ielec != jelec)
+      { // cannot access the distance between the same particle
+        int ij_dist_idx = dtable0->pair_loc(ielec,jelec); // local index for pair distance
+        double ij_dist  = dtable0->r(ij_dist_idx); // access pair distance
+        //cout << ielec << " " << jelec << " " << ij_dist << endl;
+        REQUIRE( ij_dist == Approx(expect0[ielec][jelec]) );
+      }
+    }
+  }
+  REQUIRE( dtable0->r( dtable0->pair_loc(0,1) ) == Approx(1.22065556) );
 
   // get distance table attached to target particle set (electrons)
   int tid = electrons.getTable(ions);

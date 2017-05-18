@@ -84,7 +84,6 @@ struct SymmetricDTD
     }
   }
 
-
   inline virtual void nearest_neighbors(int n,int neighbors,std::vector<ripair>& ri,bool transposed=false)
   {
     int m = N[VisitorIndex];

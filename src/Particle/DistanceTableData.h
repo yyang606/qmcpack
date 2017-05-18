@@ -11,8 +11,8 @@
 //
 // File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
-    
-    
+  
+  
 
 
 
@@ -289,6 +289,14 @@ public:
   inline IndexType loc(int i, int j) const
   {
     return M[i] + j;
+  }
+
+  //!< Returns the id of i-th and j-th ptcl, only works for symmetric distance table
+  inline IndexType pair_loc(int i, int j) const
+  {
+    if (i==j) APP_ABORT("DistanceTableData::pair_loc cannot access distance between the same particle");
+    return IJ[i*N[SourceIndex]+j];
+    //APP_ABORT("DistanceTableData::pair_loc need specialization. e.g. SymmetricDistanceData")
   }
 
   /** search the closest source particle within rcut
