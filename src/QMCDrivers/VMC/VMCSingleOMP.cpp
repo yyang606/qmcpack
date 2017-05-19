@@ -104,8 +104,9 @@ bool VMCSingleOMP::run()
 #if !defined(REMOVE_TRACEMANAGER)
     Traces->write_buffers(traceClones, block);
 #endif
-    if(storeConfigs)
-      recordBlock(block);
+    //if(storeConfigs)
+    recordBlock(block); // conditions inside QMCDriver.cpp::recordBlock
+    // only turned on by checkpoint and recordconfigs
   }//block
   Estimators->stop(estimatorClones);
   for (int ip=0; ip<NumThreads; ++ip)

@@ -186,7 +186,44 @@ bool HDFWalkerOutput::dump(MCWalkerConfiguration& W, int nblock)
   return true;
 }
 
-void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive& hout, int nblock)
+/** Write the set of walker configurations to the HDF5 file.
+ * @param W set of walker configurations
+ *
+ * record is similar to dump, but tries to preserves the HDF5 file
+ * - version
+ * - state_0
+ *  - block (int)
+ *  - number_of_walkes (int)
+ *  - walker_partition (int array)
+ *  - walkers (nw,np,3) <- append to this dataset
+ */
+bool HDFWalkerOutput::record(MCWalkerConfiguration& W, int nblock)
+{
+  HDFVersion cur_version;
+
+  // FileName = prefix + .g000.s000 + config.h5
+  std::string FileName=myComm->getName()+hdf::config_ext;
+
+  // try to open the config.h5 file instead of immediately overwrite it
+  hdf_archive dump_file(myComm,true);
+  bool success=dump_file.open(FileName);
+  if (!success)
+  { // if config.h5 cannot be opened, then let dump() take over to blast config.h5
+    app_log() << "failed to open " << FileName << " creating a new one." << std::endl;
+    return dump(W,nblock);
+  }
+
+  // verify the HDF5 file format
+  // YY: implement later
+
+  // pass each_block flag to write_configuration, which will create a new dataset for each block
+  write_configuration(W,dump_file,nblock,true);
+  dump_file.close();
+  prevFile=FileName;
+  return true;
+}
+
+void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive& hout, int nblock, bool each_block)
 {
   const int wb=OHMMS_DIM*number_of_particles;
   if(nblock > block)
@@ -206,6 +243,14 @@ void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive&
   //gcounts[0]=number_of_walkers;
   //gcounts[1]=number_of_particles;
   //gcounts[2]=OHMMS_DIM;
+
+  std::string dataset_name = hdf::walkers;
+  if (each_block)
+  { // change h5 slab name if each block is being recorded 
+		std::stringstream block_str;
+		block_str << nblock;
+    dataset_name += block_str.str();
+  }
 
   if(hout.is_collective())
   { 
@@ -230,7 +275,7 @@ void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive&
     }
     int buffer_id=(myComm->size()>1)?1:0;
     hyperslab_proxy<BufferType,3> slab(*RemoteData[buffer_id],gcounts);
-    hout.write(slab,hdf::walkers);
+    hout.write(slab,dataset_name);
   }
 }
 

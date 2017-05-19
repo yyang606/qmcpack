@@ -79,10 +79,15 @@ public:
 #endif
 #endif
 
-  /** dump configurations
+  /** dump configurations for restart, destroys config.h5
    * @param w walkers
    */
   bool dump(MCWalkerConfiguration& w, int block);
+
+  /** record configurations, preserves config.h5
+   * @param w walkers
+   */
+  bool record(MCWalkerConfiguration& w, int block);
 //     bool dump(ForwardWalkingHistoryObject& FWO);
 
 private:
@@ -98,7 +103,7 @@ private:
 //     std::vector<FWBufferType*> FWData;
 //     std::vector<std::vector<int> > FWCountData;
 
-  void write_configuration(MCWalkerConfiguration& W, hdf_archive& hout, int block);
+  void write_configuration(MCWalkerConfiguration& W, hdf_archive& hout, int block, bool each_block=false);
 };
 
 }

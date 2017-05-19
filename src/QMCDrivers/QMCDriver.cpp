@@ -444,6 +444,11 @@ void QMCDriver::recordBlock(int block)
     }
     branchEngine->write(RootName,true); //save energy_history
     RandomNumberControl::write(RootName,myComm);
+  } else if (Period4ConfigDump!=0) {
+    if (block%Period4ConfigDump == 0)
+    { // append current walkers to config.h5
+      wOut->record(W,block);
+    }
   }
 }
 
