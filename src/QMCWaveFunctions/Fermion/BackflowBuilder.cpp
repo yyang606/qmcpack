@@ -77,26 +77,23 @@ bool BackflowBuilder::put(xmlNodePtr cur)
       {
         addTwoBody(cur);
       }
+      else if(type == "e-e-I")
+      {
+        APP_ABORT("e-e-I backflow is not implemented yet. \n");
+      }
+      else if(type == "e-I")
+      {
+        addOneBody(cur);
+      }
+      else if(type == "rpa")
+      {
+        app_log() <<"Adding RPA backflow functions. \n";
+        addRPA(cur);
+      }
       else
-        if(type == "e-e-I")
-        {
-          APP_ABORT("e-e-I backflow is not implemented yet. \n");
-        }
-        else
-          if(type == "e-I")
-          {
-            addOneBody(cur);
-          }
-          else
-            if(type == "rpa")
-            {
-              app_log() <<"Adding RPA backflow functions. \n";
-              addRPA(cur);
-            }
-            else
-            {
-              APP_ABORT("Unknown backflow type. \n");
-            }
+      {
+        APP_ABORT("Unknown backflow type. \n");
+      }
     }
     cur = cur->next;
   }
@@ -485,23 +482,22 @@ void BackflowBuilder::addRPA(xmlNodePtr cur)
         }
         makeShortRange_twoBody(cur,tbf,offsetsSR);
       }
-      else
-        if(type == "longrange")
+      else if(type == "longrange")
+      {
+        if(tbfks==0)
         {
-          if(tbfks==0)
-          {
-            tbfks = new Backflow_ee_kSpace(targetPtcl,targetPtcl);
-          }
-          else
-          {
-            APP_ABORT("Only a single LongRange RPAbackflow allowed for now. ");
-          }
-          makeLongRange_twoBody(cur,tbfks,offsetsLR);
+          tbfks = new Backflow_ee_kSpace(targetPtcl,targetPtcl);
         }
         else
         {
-          APP_ABORT("Unknown rpa backflow type in <correlation/>.");
+          APP_ABORT("Only a single LongRange RPAbackflow allowed for now. ");
         }
+        makeLongRange_twoBody(cur,tbfks,offsetsLR);
+      }
+      else
+      {
+        APP_ABORT("Unknown rpa backflow type in <correlation/>.");
+      }
     }
     cur = cur->next;
   }
@@ -606,6 +602,7 @@ void BackflowBuilder::makeLongRange_twoBody(xmlNodePtr cur, Backflow_ee_kSpace *
       }
     }
     xmlCoefs=xmlCoefs->next;
+    if (xmlCoefs == NULL) break; // why is this not caught by while?
   }
 }
 
@@ -717,16 +714,16 @@ void BackflowBuilder::makeShortRange_twoBody(xmlNodePtr cur, Backflow_ee<Bspline
       tbf->addFunc(ia,ib,bsp);
       offsets.push_back(tbf->numParams);
       tbf->numParams += bsp->NumParams;
-//            if(OHMMS::Controller->rank()==0)
-//            {
-//              char fname[64];
-//              sprintf(fname,"RPABFee-SR.%s.dat",(spA+spB).c_str());
-//              std::ofstream fout(fname);
-//              fout.setf(std::ios::scientific, std::ios::floatfield);
-//              fout << "# Backflow radial function \n";
-//              bsp->print(fout);
-//              fout.close();
-//            }
+      if(OHMMS::Controller->rank()==0)
+      {
+        char fname[64];
+        sprintf(fname,"RPABFee-SR.%s.dat",(spA+spB).c_str());
+        std::ofstream fout(fname);
+        fout.setf(std::ios::scientific, std::ios::floatfield);
+        fout << "# Backflow radial function \n";
+        bsp->print(fout);
+        fout.close();
+      }
     }
     xmlCoefs=xmlCoefs->next;
   }
