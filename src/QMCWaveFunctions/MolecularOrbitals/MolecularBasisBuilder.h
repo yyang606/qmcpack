@@ -115,6 +115,8 @@ public:
     }
     //resize the basis set
     thisBasisSet->setBasisSetSize(-1);
+    //pass a reference of the quantum particle set to the basis functions
+    thisBasisSet->resetTargetParticleSet(targetPtcl);
     return true;
   }
 

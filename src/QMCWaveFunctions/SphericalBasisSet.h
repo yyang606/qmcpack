@@ -82,6 +82,7 @@ struct SphericalBasisSet
   std::vector<ROT*> Rnl;
   ///container for the quantum-numbers
   std::vector<QuantumNumberType> RnlID;
+  ParticleSet* tpset;
 
   ///the constructor
   explicit SphericalBasisSet(int lmax, bool addsignforM=false, bool useXYZ=false):Ylm(lmax,addsignforM),XYZ(lmax),useCartesian(useXYZ) {}
@@ -135,9 +136,10 @@ struct SphericalBasisSet
 
   /** reset the target ParticleSet
    *
-   * Do nothing. Leave it to a composite object which owns this
+   * !!! HACK to put in quantum distances !!!
+   * previously: Do nothing. Leave it to a composite object which owns this
    */
-  void resetTargetParticleSet(ParticleSet& P) { }
+  void resetTargetParticleSet(ParticleSet& P) { tpset=&P; }
 
   ///reset the DistanceTableData (ion-electron)
   inline void setTable(const DistanceTableData* atable)

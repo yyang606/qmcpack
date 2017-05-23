@@ -164,7 +164,10 @@ struct LocalizedBasisSet: public BasisSetBase<typename COT::value_type>
   {
     myTable = DistanceTable::add(CenterSys,P);
     for(int i=0; i<LOBasisSet.size(); i++)
+    {
       LOBasisSet[i]->setTable(myTable);
+      LOBasisSet[i]->resetTargetParticleSet(P);
+    }
   }
 
   inline void
