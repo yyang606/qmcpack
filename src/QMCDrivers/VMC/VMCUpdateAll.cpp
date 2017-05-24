@@ -50,7 +50,6 @@ void VMCUpdateAll::advanceWalkers(WalkerIter_t it, WalkerIter_t it_end, bool mea
     RealType logpsi(Psi.evaluateLog(W));
    // app_log()<<logpsi<< std::endl;
     RealType g= std::exp(2.0*(logpsi-thisWalker.Properties(LOGPSI)));
-    RealType eloc=H.evaluate(W);
     if (RandomGen() > g)
     {
       thisWalker.Age++;
@@ -59,12 +58,13 @@ void VMCUpdateAll::advanceWalkers(WalkerIter_t it, WalkerIter_t it_end, bool mea
     }
     else
     {
+      RealType eloc=H.evaluate(W);
       thisWalker.R = W.R;
       thisWalker.resetProperty(logpsi,Psi.getPhase(),eloc);
+      H.auxHevaluate(W,thisWalker);
+      H.saveProperty(thisWalker.getPropertyBase());
       ++nAccept;
     }
-    H.auxHevaluate(W,thisWalker);
-    H.saveProperty(thisWalker.getPropertyBase());
   }
 }
 
@@ -213,7 +213,6 @@ void VMCUpdateAllWithDrift::advanceWalkers(WalkerIter_t it, WalkerIter_t it_end,
     //RealType logGb = -m_oneover2tau*Dot(deltaR,deltaR);
 
     RealType g= std::exp(logGb-logGf+2.0*(logpsi-thisWalker.Properties(LOGPSI)));
-    RealType eloc=H.evaluate(W);
     if (RandomGen() > g)
     {
       thisWalker.Age++;
@@ -223,11 +222,12 @@ void VMCUpdateAllWithDrift::advanceWalkers(WalkerIter_t it, WalkerIter_t it_end,
     else
     {
       W.saveWalker(thisWalker);
+      RealType eloc=H.evaluate(W);
       thisWalker.resetProperty(logpsi,Psi.getPhase(),eloc);
+      H.auxHevaluate(W,thisWalker);
+      H.saveProperty(thisWalker.getPropertyBase());
       ++nAccept;
     }
-    H.auxHevaluate(W,thisWalker);
-    H.saveProperty(thisWalker.getPropertyBase());
   }
 }
 
