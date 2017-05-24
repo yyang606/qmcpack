@@ -162,6 +162,16 @@ struct SphericalBasisSet
     RealType r(myTable->r(nn));
     RealType rinv(myTable->rinv(nn));
     PosType  dr(myTable->dr(nn));
+
+    // !!!! hack to run HCN
+    const int pidx=14; // hard-coded proton index
+    if (c==0 && iat!=pidx)
+    {
+      nn   = tpset->DistTables[0]->pair_loc(iat,pidx);
+      r    = tpset->DistTables[0]->r(nn);
+      rinv = tpset->DistTables[0]->rinv(nn);
+      dr   = tpset->DistTables[0]->dr(nn);
+    }
     if(useCartesian)
     {
       XYZ.evaluateAll(dr);
@@ -767,6 +777,15 @@ struct SphericalBasisSet
     RealType r(myTable->Temp[source].r1);
     RealType rinv(myTable->Temp[source].rinv1);
     PosType  dr(myTable->Temp[source].dr1);
+    // !!!! hack to run HCN
+    const int pidx=14; // hard-coded proton index
+    if (source==0 && iat!=pidx)
+    {
+      int nn   = tpset->DistTables[0]->pair_loc(iat,pidx);
+      r    = tpset->DistTables[0]->r(nn);
+      rinv = tpset->DistTables[0]->rinv(nn);
+      dr   = tpset->DistTables[0]->dr(nn);
+    }
     if(useCartesian)
     {
       XYZ.evaluateAll(dr);

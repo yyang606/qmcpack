@@ -519,6 +519,8 @@ bool LCOrbitalSetWithCorrection<BS,false>::transformSPOSet()
     xmlAddChild(spo,ctr);
   }
   corrBasisSet->setBasisSetSize(-1);
+  //pass a reference of the quantum particle set to the basis functions
+  corrBasisSet->resetTargetParticleSet(*targetPtcl);
   BS *dum3 = extractHighYLM(rmv);
   //dum3->setBasisSetSize(-1);
   int norb=0, cnt=0;

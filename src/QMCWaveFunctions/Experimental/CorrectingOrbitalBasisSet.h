@@ -150,7 +150,10 @@ struct CorrectingOrbitalBasisSet: public BasisSetBase<typename COT::value_type>
   {
     myTable = DistanceTable::add(CenterSys,P);
     for(int i=0; i<LOBasis.size(); i++)
+    {
       LOBasis[i]->setTable(myTable);
+      LOBasis[i]->resetTargetParticleSet(P);
+    }
   }
 
   inline void
