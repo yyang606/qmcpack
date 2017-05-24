@@ -781,10 +781,10 @@ struct SphericalBasisSet
     const int pidx=14; // hard-coded proton index
     if (source==0 && iat!=pidx)
     {
-      int nn   = tpset->DistTables[0]->pair_loc(iat,pidx);
-      r    = tpset->DistTables[0]->r(nn);
-      rinv = tpset->DistTables[0]->rinv(nn);
-      dr   = tpset->DistTables[0]->dr(nn);
+      //int nn   = tpset->DistTables[0]->pair_loc(iat,pidx);
+      r    = tpset->DistTables[0]->Temp[pidx].r1;
+      rinv = tpset->DistTables[0]->Temp[pidx].rinv1;
+      dr   = tpset->DistTables[0]->Temp[pidx].dr1;
     }
     if(useCartesian)
     {
