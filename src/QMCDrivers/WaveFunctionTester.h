@@ -62,7 +62,7 @@ private:
   ParticleSetPool &PtclPool;
   ParticleSet::ParticlePos_t deltaR;
   std::string checkRatio, checkClone, checkHamPbyP, sourceName, wftricks, checkEloc;
-  std::string checkBasic, checkRatioV;
+  std::string checkBasic, checkRatioV, checkEvaluateLog;
   xmlNodePtr myNode;
   double deltaParam;
   double toleranceParam;
@@ -77,6 +77,8 @@ private:
   {
     return *this;
   }
+  /** most basic tests for G and L, does not include single-particle updates */
+  void runEvaluateLogTest();
   /** basic tests for G and L */
   void runBasicTest();
   /** the basic ratios check */
@@ -109,6 +111,10 @@ private:
                       int indent=0);
 
   bool checkGradientAtConfiguration(MCWalkerConfiguration::Walker_t* W1,
+                                    std::stringstream &fail_log,
+                                    bool &ignore);
+
+  bool checkEvaluateLogAtConfiguration(MCWalkerConfiguration::Walker_t* W1,
                                     std::stringstream &fail_log,
                                     bool &ignore);
 
