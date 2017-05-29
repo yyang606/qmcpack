@@ -156,9 +156,15 @@ struct SphericalBasisSet
   inline void
   evaluateForWalkerMove(int c, int iat, int offset, ValueVector_t& psi, GradVector_t& dpsi, ValueVector_t& d2psi)
   {
+    const RealType eps=1e-6;
     int nn = myTable->M[c]+iat;
     RealType r(myTable->r(nn));
     RealType rinv(myTable->rinv(nn));
+    if (std::isinf(rinv))
+    { // avoid r=0 case
+      r = eps;
+      rinv = 1./r;
+    }
     PosType  dr(myTable->dr(nn));
     if(useCartesian)
     {
