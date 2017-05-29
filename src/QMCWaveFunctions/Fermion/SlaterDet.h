@@ -296,6 +296,10 @@ public:
       Dets[i]->evaluateDerivatives(P, active, dlogpsi, dhpsioverpsi);
   }
 
+  virtual void append_to_transform_det(bool trans){
+    APP_ABORT("SlaterDet::append_to_transform_det should not be called. Intended to SlaterDetWithBackflow.")
+  }
+
 #ifdef QMC_CUDA
   /////////////////////////////////////////////////////
   // Functions for vectorized evaluation and updates //

@@ -98,5 +98,22 @@ struct OhmmsAttributeSet
     }
     return true;
   }
+
+  /** assign true or false to a boolean input
+   * @param inp, the input string
+   * @return true, if input string is "yes"; false, if input string is "no"
+   */
+  inline bool yes_or_no(std::string inp)
+  {
+    if (inp=="yes")
+    {
+      return true;
+    } else if (inp=="no") {
+      return false;
+    } else {
+      throw std::runtime_error(inp+" is not 'yes' or 'no'");
+    }
+  }
+
 };
 #endif /*OHMMS_OHMMSPARAMETERSET_H*/

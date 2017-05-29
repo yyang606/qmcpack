@@ -44,11 +44,21 @@ void SlaterDetWithBackflow::resetTargetParticleSet(ParticleSet& P)
 {
   BFTrans->resetTargetParticleSet(P);
   for (int i = 0; i < Dets.size(); i++)
-    Dets[i]->resetTargetParticleSet(BFTrans->QP);
+  {
+    if (transform_det[i]) 
+    { // only transform requested determinants
+      Dets[i]->resetTargetParticleSet(BFTrans->QP);
+      // make sure distance tables propagate into sposet
+      SPOSetBasePtr sposet=Dets[i]->Phi;
+      // really only needed for LocalizedBasisSet
+      sposet->resetTargetParticleSet(BFTrans->QP);
+    }
+  }
   std::map<std::string, SPOSetBasePtr>::iterator sit(mySPOSet.begin());
   while (sit != mySPOSet.end())
   {
-    (*sit).second->resetTargetParticleSet(BFTrans->QP);
+    if ((*sit).first != "spo_p") // !!!! HACK to not transform proton orbitals
+      (*sit).second->resetTargetParticleSet(BFTrans->QP);
     ++sit;
   }
 }

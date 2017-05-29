@@ -437,6 +437,8 @@ bool SlaterDetBuilder::putDeterminant(xmlNodePtr cur, int spin_group)
   std::string detname("0"), refname("0");
   std::string s_detSize("0");
   std::string afm("no");
+  std::string s_no_bftrans("no"); // override backflow transform for one determinant (e.g. proton)
+  // When s_no_bftrans == "yes", initialize DiracDeterminantBase and avoid resetting its particle set and distance table. This flag only has an effect if UseBackflow==true.
 
   OhmmsAttributeSet aAttrib;
   aAttrib.add(basisName,basisset_tag);
@@ -455,7 +457,10 @@ bool SlaterDetBuilder::putDeterminant(xmlNodePtr cur, int spin_group)
   aAttrib.add(s_smallnumber,"eps");
   aAttrib.add(rntype,"primary");
   aAttrib.add(spin_name,"group");
+  aAttrib.add(s_no_bftrans,"no_bftrans");
   aAttrib.put(cur);
+
+  bool no_bftrans = aAttrib.yes_or_no(s_no_bftrans);
 
   { //check determinant@group
     int spin_group_in=spin_group;
@@ -562,7 +567,7 @@ bool SlaterDetBuilder::putDeterminant(xmlNodePtr cur, int spin_group)
 #ifdef QMC_CUDA
     adet = new DiracDeterminantCUDA(psi,firstIndex);
 #else
-    if(UseBackflow & spin_group < 2)
+    if(UseBackflow & !no_bftrans)
       adet = new DiracDeterminantWithBackflow(targetPtcl,psi,BFTrans,firstIndex);
     else if (afm=="AFM")
     {
@@ -577,6 +582,10 @@ bool SlaterDetBuilder::putDeterminant(xmlNodePtr cur, int spin_group)
   }
   adet->set(firstIndex,lastIndex-firstIndex);
   slaterdet_0->add(adet,spin_group);
+  if (UseBackflow)
+  {
+    slaterdet_0->append_to_transform_det(!no_bftrans);
+  }
   if (psi->Optimizable)
     slaterdet_0->Optimizable = true;
 

@@ -226,8 +226,15 @@ public:
 
   void testDerivGL(ParticleSet& P);
 
-  //private:
-  //SlaterDetWithBackflow() {}
+  void append_to_transform_det(bool trans)
+  {
+    transform_det.push_back(trans);
+  }
+
+  private:
+    std::vector<bool> transform_det; // a list of indices of determinants to transform
+    // If only electrons are present (u,d), then transform_det={true,true}
+    // If protons are present (u,d,p), then transform_det={true,true,false}
 };
 }
 #endif
