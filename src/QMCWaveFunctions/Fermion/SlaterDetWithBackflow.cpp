@@ -54,13 +54,6 @@ void SlaterDetWithBackflow::resetTargetParticleSet(ParticleSet& P)
       sposet->resetTargetParticleSet(BFTrans->QP);
     }
   }
-  std::map<std::string, SPOSetBasePtr>::iterator sit(mySPOSet.begin());
-  while (sit != mySPOSet.end())
-  {
-    if ((*sit).first != "spo_p") // !!!! HACK to not transform proton orbitals
-      (*sit).second->resetTargetParticleSet(BFTrans->QP);
-    ++sit;
-  }
 }
 
 SlaterDetWithBackflow::ValueType
