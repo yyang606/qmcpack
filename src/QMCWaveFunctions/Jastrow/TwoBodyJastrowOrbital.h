@@ -65,7 +65,6 @@ protected:
   ParticleSet *PtclRef;
   bool FirstTime;
   RealType KEcorr;
-  bool first_addFunc;
 
 public:
 
@@ -80,7 +79,6 @@ public:
     PtclRef = &p;
     init(p);
     FirstTime = true;
-    first_addFunc = true;
     OrbitalName = "TwoBodyJastrow";
   }
 
@@ -107,7 +105,8 @@ public:
     curVal=0.0;
     FirstAddressOfdU = &(dU[0][0]);
     LastAddressOfdU = FirstAddressOfdU + dU.size()*DIM;
-    PairID.resize(N,N);
+    PairID.resize(N,N); // map a pair of particle indices to pair function index
+    // pair functions are stored in F and indexed as F[ia*NumGroups+ib] for species pair (ia,ib)
     int nsp=NumGroups=p.groups();
     for(int i=0; i<N; ++i)
       for(int j=0; j<N; ++j)
@@ -115,31 +114,61 @@ public:
     F.resize(nsp*nsp,0);
   }
 
-  void addFunc(int ia, int ib, FT* j)
+  void addFunc(int ia, int ib, FT* rf)
   {
-    // make all pair terms equal to the first one initially
-    //   in case some terms are not provided explicitly
-    if(first_addFunc)
-    {
-      int ij=0;
-      for(int ig=0; ig<NumGroups; ++ig)
-	for(int jg=0; jg<NumGroups; ++jg, ++ij)
-	  if(F[ij]==0)
-	    F[ij]=j;
-      first_addFunc = false;
-    }
-
     // add the pair function
-    F[ia*NumGroups+ib]=j;
+    F[ia*NumGroups+ib]=rf;
     // enforce exchange symmetry
-    if(ia!=ib)
-      F[ib*NumGroups+ia]=j;
+    F[ib*NumGroups+ia]=rf;
 
     std::stringstream aname;
     aname<<ia<<ib;
-    J2Unique[aname.str()]=j;
-    ChiesaKEcorrection();
-    FirstTime = false;
+    J2Unique[aname.str()]=rf;
+    if (FirstTime)
+    {
+      ChiesaKEcorrection();
+      FirstTime = false;
+    }
+  }
+
+  void linkFunc(int ia, int ib, FT* rf)
+  { // assign FunctorType rf to species pair (ia,ib)
+    F[ia*NumGroups+ib]=rf;
+  }
+
+  FT* findFunc(std::string param_name)
+  {
+    FT* rf;
+    bool found_coeff = false;
+    typename std::map<std::string,FT*>::iterator it(J2Unique.begin()),it_end(J2Unique.end());
+    for (;it!=it_end;it++)
+    {
+      if (it->second->ParameterNames[0]==param_name)
+      {
+        rf = it->second;
+        found_coeff = true;
+      }
+    }
+    if (!found_coeff) APP_ABORT(param_name+" not found");
+    return rf;
+  }
+
+  bool checkInitialization()
+  {
+    bool all_found(true);
+    for (int ifunc=0;ifunc<F.size();ifunc++)
+    {
+      FT* bsp = F[ifunc];
+      // look for pair function in stored unique functions
+      bool found(false);
+      typename std::map<std::string,FT*>::iterator it(J2Unique.begin()),it_end(J2Unique.end());
+      for (;it!=it_end;it++)
+      {
+        if (bsp == it->second) found=true;
+      }
+      if (!found) all_found = false;
+    }
+    return all_found;
   }
 
   //evaluate the distance table with els

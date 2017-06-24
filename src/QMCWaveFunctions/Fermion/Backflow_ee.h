@@ -56,7 +56,6 @@ public:
   //  resize(NumTargets);
   //}
 
-
   ~Backflow_ee() {};
 
   void resetTargetParticleSet(ParticleSet& P)
@@ -98,18 +97,14 @@ public:
   void addFunc(int ia, int ib, FT* rf)
   {
     uniqueRadFun.push_back(rf);
-    if(first)
-    {
-      // initialize all with rf the first time
-      for(int i=0; i<RadFun.size(); i++)
-        RadFun[i]=rf;
-      first=false;
-    }
-    else
-    {
-      RadFun[ia*NumGroups+ib] = rf;
-      RadFun[ib*NumGroups+ia] = rf;
-    }
+    RadFun[ia*NumGroups+ib] = rf;
+    // enforce exchange symmetry
+    RadFun[ib*NumGroups+ia] = rf;
+  }
+
+  void linkFunc(int ia, int ib, FT* rf)
+  { // assign FunctorType rf to species pair (ia,ib)
+    RadFun[ia*NumGroups+ib] = rf;
   }
 
   void registerData(PooledData<RealType>& buf)

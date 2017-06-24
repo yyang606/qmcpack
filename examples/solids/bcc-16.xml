@@ -1,0 +1,193 @@
+<!--
+  16 hydrogen atoms, Slater-Jastrow-Backflow wavefunction
+   explicitly link two-body correlation terms
+-->
+<simulation>
+  <project id="bcc" series="0">
+    <application class="serial" name="qmcapp" role="molecu" version="1.0" />
+  </project>
+  <qmcsystem>
+    <simulationcell>
+      <parameter name="lattice" units="bohr">
+                  5.32117440        0.00000000        0.00000000
+                  0.00000000        5.32117440        0.00000000
+                  0.00000000        0.00000000        5.32117440
+      </parameter>
+      <parameter name="bconds">
+            p p p
+         </parameter>
+      <parameter name="LR_dim_cutoff">    15                 </parameter>
+    </simulationcell>
+    <particleset name="e">
+      <group mass="1.0" name="u" size="8">
+        <parameter name="charge">    -1                    </parameter>
+        <parameter name="mass">    1.0                   </parameter>
+        <attrib condition="0" datatype="posArray" name="position">
+0.0183510001342 -0.220915780759 -0.15218255032
+2.92811190631 -0.0850702240988 -0.222564695631
+-0.390466703345 2.64671604883 -0.132094978493
+3.101738711 3.19902687839 0.487764521443
+-0.250918528184 -0.439820597199 2.51782986285
+2.57585741606 -0.0573764500491 2.61171460785
+-0.422046888509 2.15784339183 3.03823477567
+2.81076086231 2.4789059186 2.7573543799
+        </attrib>
+      </group>
+      <group mass="1.0" name="d" size="8">
+        <parameter name="charge">    -1                    </parameter>
+        <parameter name="mass">    1.0                   </parameter>
+        <attrib condition="0" datatype="posArray" name="position">
+1.28445500935 1.77850611886 1.03265471784
+4.01534568898 1.56588067854 1.54793053012
+1.68102522735 3.45988645432 1.23707019849
+4.00485504231 4.07155355748 1.82276564848
+1.29303738696 1.00500004489 3.88720397431
+3.93782193172 1.26126960645 3.92177696279
+1.45589875425 3.78593648219 3.76231705874
+3.88329490339 4.13811624588 3.85006350612
+        </attrib>
+      </group>
+      <group mass="1836.15267376" name="p" size="16">
+        <parameter name="charge">    1    </parameter>
+        <parameter name="mass">    1836.15267376    </parameter>
+        <attrib condition="0" datatype="posArray" name="position">
+-0.237496223059 -0.0527532388053 0.0718720445239
+1.36834052137 1.20448646814 1.38333290304
+2.76827072394 0.00713574632894 -0.013944311397
+3.77965623921 1.02695512623 1.37865971564
+-0.265561480346 2.6941995366 -0.0150701237898
+1.38291995833 4.12707214612 1.33702657428
+2.51478510984 2.43310200012 -0.0346668894758
+3.90992350835 4.11222550284 1.55896175223
+-0.00380372610741 0.259072538609 2.55839137455
+1.37357265396 1.34772452646 3.9314042039
+2.51631424848 -0.229627163415 2.74307078736
+3.97492850411 1.09945137785 3.85013114936
+-0.0443738192172 2.65088461309 2.63281639382
+1.42507331012 3.99702478522 3.92081962512
+2.73914577887 3.18863459684 2.52629716748
+3.92343017342 3.7586995314 3.91696171375
+        </attrib>
+      </group>
+    </particleset>
+    <particleset name="wf_centers">
+      <group name="H" size="16">
+        <parameter name="charge">    0                     </parameter>
+        <attrib condition="0" datatype="posArray" name="position">
+                     0.00000000        0.00000000        0.00000000
+                     1.33029360        1.33029360        1.33029360
+                     2.66058720        0.00000000        0.00000000
+                     3.99088080        1.33029360        1.33029360
+                     0.00000000        2.66058720        0.00000000
+                     1.33029360        3.99088080        1.33029360
+                     2.66058720        2.66058720        0.00000000
+                     3.99088080        3.99088080        1.33029360
+                     0.00000000        0.00000000        2.66058720
+                     1.33029360        1.33029360        3.99088080
+                     2.66058720        0.00000000        2.66058720
+                     3.99088080        1.33029360        3.99088080
+                     0.00000000        2.66058720        2.66058720
+                     1.33029360        3.99088080        3.99088080
+                     2.66058720        2.66058720        2.66058720
+                     3.99088080        3.99088080        3.99088080
+        </attrib>
+      </group>
+    </particleset>
+    <wavefunction name="psi0" target="e">
+      <sposet_builder href="../nscf/pwscf_output/pwscf.pwscf.h5" meshfactor="1.0" precision="double" source="wf_centers" tilematrix="2 0 0 0 2 0 0 0 2" truncate="no" twistnum="0" type="bspline" version="0.10">
+        <sposet name="spo_ud" size="8" spindataset="0" type="bspline" />
+      </sposet_builder>
+      <sposet_builder name="proton_builder" source="wf_centers" transform="yes" type="mo">
+        <basisset>
+          <atomicBasisSet angular="cartesian" elementType="H" normalized="yes" type="GTO">
+            <grid npts="1001" rf="100" ri="1.e-6" type="log" />
+            <basisGroup l="0" n="1" rid="R0">
+              <radfunc contraction="1.0" exponent="9.0" />
+            </basisGroup>
+          </atomicBasisSet>
+        </basisset>
+        <sposet id="proton_orbs" name="spo_p" size="16" />
+      </sposet_builder>
+      <determinantset>
+        <backflow>
+          <transformation function="Bspline" name="eeB" type="e-e">
+            <correlation cusp="0.0" rcut="2.6605872" size="8" speciesA="u" speciesB="u">
+              <coefficients id="uuB" optimize="yes" type="Array"> 0.006865682468 0.006870538298 0.006174473686 0.006036551989 0.00501485361 0.005155114643 0.002797715608 0.002957226716</coefficients>
+            </correlation>
+            <correlation cusp="0.0" rcut="2.6605872" size="8" speciesA="u" speciesB="d">
+              <coefficients id="udB" optimize="yes" type="Array"> 0.1513920236 0.09693762169 0.06733807568 0.04520455064 0.02723751545 0.01653754699 0.008021849518 0.004097785046</coefficients>
+            </correlation>
+            <correlation cusp="0.0" rcut="2.6605872" size="8" speciesA="u" speciesB="p">
+              <coefficients id="upB" optimize="yes" type="Array"> -0.2652460759 -0.1097093548 -0.03940760563 -0.009863113235 -0.002689491059 -0.002048885642 -0.002739850036 -0.001674067488</coefficients>
+            </correlation>
+            <correlation link="uuB" speciesA="d" speciesB="d"/>
+            <correlation link="upB" speciesA="d" speciesB="p"/>
+            <correlation link="upB" speciesA="p" speciesB="d"/>
+            <correlation cusp="0.0" rcut="2.6605872" size="8" speciesA="p" speciesB="p">
+              <coefficients id="ppB" optimize="yes" type="Array"> 0 0 0 0 0 0 0 0 </coefficients>
+            </correlation>
+          </transformation>
+        </backflow>
+        <slaterdeterminant>
+          <determinant group="u" id="updet" size="8" sposet="spo_ud" />
+          <determinant group="d" id="downdet" size="8" sposet="spo_ud" />
+          <determinant group="p" id="pdet" no_bftrans="yes" size="16" sposet="spo_p" />
+        </slaterdeterminant>
+      </determinantset>
+      <jastrow function="bspline" name="J2" print="yes" type="Two-Body">
+        <correlation rcut="2.6605872" size="8" speciesA="u" speciesB="u">
+          <coefficients id="uu" optimize="no" type="Array"> 0.317966857 0.2492268453 0.1894666322 0.1399209872 0.09769529567 0.06500184941 0.03689187369 0.0196301066</coefficients>
+        </correlation>
+        <correlation rcut="2.6605872" size="8" speciesA="u" speciesB="d">
+          <coefficients id="ud" optimize="no" type="Array"> 0.5388982216 0.40699857 0.2983620714 0.2107199127 0.1408396872 0.088986809 0.04854145134 0.02454502957</coefficients>
+        </correlation>
+        <correlation cusp="1.0" rcut="2.6605872" size="8" speciesA="u" speciesB="p">
+          <coefficients id="up" optimize="no" type="Array"> -0.7800960732 -0.5105091259 -0.3141515836 -0.1805432222 -0.09593891966 -0.04524656019 -0.01678754007 -0.003627541545</coefficients>
+        </correlation>
+        <correlation speciesA="d" speciesB="d" link="uu"/>
+        <correlation speciesA="d" speciesB="p" link="up"/>
+        <correlation speciesA="p" speciesB="d" link="up"/>
+        <correlation cusp="0.0" rcut="2.6605872" size="8" speciesA="p" speciesB="p">
+          <coefficients id="pp" optimize="no" type="Array"> 0 0 0 0 0 0 0 0 </coefficients>
+        </correlation>
+      </jastrow>
+    </wavefunction>
+    <hamiltonian name="h0" target="e" type="generic">
+      <pairpot name="ElecElec" source="e" target="e" type="coulomb" />
+      <estimator name="flux" type="flux" />
+      <estimator name="skinetic" type="specieskinetic" />
+      <estimator hdf5="no" name="latdev" per_xyz="no" sgroup="H" source="wf_centers" target="e" tgroup="p" type="latticedeviation" />
+    </hamiltonian>
+  </qmcsystem>
+  <!--
+  <qmc method="wftest">
+    <basic>no</basic>
+    <delta>0.0001</delta>
+    <tolerance>0.1</tolerance>
+  </qmc>
+  -->
+  <qmc checkpoint="-1" method="vmc" move="wbyw">
+    <parameter name="usedrift">     yes  </parameter>
+    <parameter name="warmupsteps">  300  </parameter> 
+    <parameter name="blocks">       100  </parameter>
+    <parameter name="steps">         40  </parameter> 
+    <parameter name="timestep">     0.1  </parameter>
+    <parameter name="samples">      512  </parameter> 
+  </qmc>
+  <qmc method="dmc" move="wbyw">
+    <parameter name="targetwalkers">512  </parameter> 
+    <parameter name="usedrift">     yes  </parameter>
+    <parameter name="warmupsteps">  400  </parameter> 
+    <parameter name="blocks">       100  </parameter>
+    <parameter name="steps">         40  </parameter> 
+    <parameter name="timestep">    0.01  </parameter>
+  </qmc>
+  <qmc method="dmc" move="wbyw">
+    <parameter name="targetwalkers">512  </parameter> 
+    <parameter name="usedrift">     yes  </parameter>
+    <parameter name="warmupsteps">  400  </parameter> 
+    <parameter name="blocks">       100  </parameter>
+    <parameter name="steps">        200  </parameter> 
+    <parameter name="timestep">    0.002 </parameter>
+  </qmc>
+</simulation>

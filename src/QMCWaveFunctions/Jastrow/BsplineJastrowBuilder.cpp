@@ -241,7 +241,7 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
     //std::map<std::string,RadFuncType*> functorMap;
     bool Opt(false);
     while (kids != NULL)
-    {
+    { // process all <correlation> nodes
       std::string kidsname((const char*)kids->name);
       if (kidsname == "correlation")
       {
@@ -250,10 +250,12 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
         std::string pairType("0");
         std::string spA(species.speciesName[0]);
         std::string spB(species.speciesName[0]);
+        std::string link_coeff_name("none"); // link coefficients to a different xml node
         rAttrib.add(spA,"speciesA");
         rAttrib.add(spB,"speciesB");
         rAttrib.add(pairType,"pairType");
         rAttrib.add(cusp,"cusp");
+        rAttrib.add(link_coeff_name,"link");
         rAttrib.put(kids);
         if(pairType[0]=='0')
         {
@@ -280,51 +282,61 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
           RealType qq=species(chargeInd,ia)*species(chargeInd,ib);
           cusp = (ia==ib)? -0.25*qq:-0.5*qq;
         }
-        app_log() << "  BsplineJastrowBuilder adds a functor with cusp = " << cusp << std::endl;
-        RadFuncType *functor = new RadFuncType(cusp);
-        functor->periodic      = targetPtcl.Lattice.SuperCellEnum == SUPERCELL_BULK;
-        functor->cutoff_radius = targetPtcl.Lattice.WignerSeitzRadius;
-        bool initialized_p=functor->put(kids);
-        functor->elementType=pairType;
-        if (functor->cutoff_radius < 1.0e-6)
+        if (link_coeff_name == "none")
         {
-          if(targetPtcl.Lattice.SuperCellEnum == SUPERCELL_BULK)
+          app_log() << "  BsplineJastrowBuilder adds a functor with cusp = " << cusp << std::endl;
+          RadFuncType *functor = new RadFuncType(cusp);
+          functor->periodic      = targetPtcl.Lattice.SuperCellEnum == SUPERCELL_BULK;
+          functor->cutoff_radius = targetPtcl.Lattice.WignerSeitzRadius;
+          bool initialized_p=functor->put(kids);
+          functor->elementType=pairType;
+          if (functor->cutoff_radius < 1.0e-6)
           {
-            app_log()  << "  BsplineFunction rcut is currently zero.\n"
-                       << "  Setting to Wigner-Seitz radius = "
-                       << targetPtcl.Lattice.WignerSeitzRadius << std::endl;
-            functor->cutoff_radius = targetPtcl.Lattice.WignerSeitzRadius;
-            functor->reset();
+            if(targetPtcl.Lattice.SuperCellEnum == SUPERCELL_BULK)
+            {
+              app_log()  << "  BsplineFunction rcut is currently zero.\n"
+                         << "  Setting to Wigner-Seitz radius = "
+                         << targetPtcl.Lattice.WignerSeitzRadius << std::endl;
+              functor->cutoff_radius = targetPtcl.Lattice.WignerSeitzRadius;
+              functor->reset();
+            }
+            else
+            {
+              APP_ABORT("BsplineJastrowBuilder::put  rcut must be provided for two body jastrow since boundary conditions are not periodic");
+            }
           }
-          else
+          //RPA INIT
+          if(!initialized_p && init_mode =="rpa")
           {
-            APP_ABORT("BsplineJastrowBuilder::put  rcut must be provided for two body jastrow since boundary conditions are not periodic");
+            app_log() << "  Initializing Two-Body with RPA Jastrow " << std::endl;
+            j2Initializer.initWithRPA(targetPtcl,*functor,-cusp/0.5);
           }
+          J2->addFunc(ia,ib,functor);
+          dJ2->addFunc(ia,ib,functor);
+          Opt=(!functor->notOpt or Opt);
+          if(qmc_common.io_node)
+          {
+            char fname[32];
+            if(qmc_common.mpi_groups>1)
+              sprintf(fname,"J2.%s.g%03d.dat",pairType.c_str(),taskid);
+            else
+              sprintf(fname,"J2.%s.dat",pairType.c_str());
+            functor->setReportLevel(ReportLevel,fname);
+            functor->print();
+          }
+        } else { // look for linked coefficients and add to tbf
+          app_log() <<"BsplineJastrowBuilder linking radial component for species: " <<spA <<" " <<spB <<" " <<ia <<"  " <<ib << " to " << link_coeff_name << std::endl;
+          RadFuncType* bsp = J2->findFunc(link_coeff_name); // do not change me! - bsp
+          J2->linkFunc(ia,ib,bsp);
+          dJ2->linkFunc(ia,ib,bsp);
         }
-        //RPA INIT
-        if(!initialized_p && init_mode =="rpa")
-        {
-          app_log() << "  Initializing Two-Body with RPA Jastrow " << std::endl;
-          j2Initializer.initWithRPA(targetPtcl,*functor,-cusp/0.5);
-        }
-        J2->addFunc(ia,ib,functor);
-        dJ2->addFunc(ia,ib,functor);
-        Opt=(!functor->notOpt or Opt);
-        if(qmc_common.io_node)
-        {
-          char fname[32];
-          if(qmc_common.mpi_groups>1)
-            sprintf(fname,"J2.%s.g%03d.dat",pairType.c_str(),taskid);
-          else
-            sprintf(fname,"J2.%s.dat",pairType.c_str());
-          functor->setReportLevel(ReportLevel,fname);
-          functor->print();
-        }
-      }
+      } // end if (kidsname == "correlation")
       kids = kids->next;
-    }
+    } // processed all <correlation> nodes
     //dJ2->initialize();
     //J2->setDiffOrbital(dJ2);
+    bool success = J2->checkInitialization();
+    if (!success) APP_ABORT("failed to initialize two-body Jastrow");
     J2->dPsi=dJ2;
     targetPsi.addOrbital(J2,"J2_bspline");
     J2->setOptimizable(Opt);

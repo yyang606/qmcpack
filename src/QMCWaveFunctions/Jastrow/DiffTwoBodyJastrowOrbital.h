@@ -67,26 +67,15 @@ public:
 
   void addFunc(int ia, int ib, FT* j)
   {
-    if (ia==ib)
-    {
-      if (ia==0)//first time, assign everything
-      {
-        int ij=0;
-        for (int ig=0; ig<NumGroups; ++ig)
-          for (int jg=0; jg<NumGroups; ++jg, ++ij)
-            if (F[ij]==0)
-              F[ij]=j;
-      }
-    }
-    else
-    {
-      F[ia*NumGroups+ib]=j;
-      if (ia<ib)
-        F[ib*NumGroups+ia]=j;
-    }
+    F[ia*NumGroups+ib]=j;
+    F[ib*NumGroups+ia]=j;
     std::stringstream aname;
     aname<<ia<<ib;
     J2Unique[aname.str()]=j;
+  }
+  void linkFunc(int ia, int ib, FT* j)
+  {
+    F[ia*NumGroups+ib]=j;
   }
 
   ///reset the value of all the unique Two-Body Jastrow functions

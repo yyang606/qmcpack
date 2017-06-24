@@ -339,11 +339,13 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
           RealType cusp=0;
           std::string spA(species.speciesName[0]);
           std::string spB(species.speciesName[0]);
+          std::string link_coeff_name("none"); // link coefficients to a different xml node
           OhmmsAttributeSet anAttrib;
           anAttrib.add (cusp, "cusp");
           anAttrib.add(spA,"speciesA");
           anAttrib.add(spB,"speciesB");
           anAttrib.add(cusp,"cusp");
+          anAttrib.add(link_coeff_name,"link");
           anAttrib.put(cur);
           int ia = species.findSpecies(spA);
           int ib = species.findSpecies(spB);
@@ -351,29 +353,48 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
           {
             APP_ABORT("Failed. Species are incorrect in e-e backflow.");
           }
-          app_log() <<"Adding radial component for species: " <<spA <<" " <<spB <<" " <<ia <<"  " <<ib << std::endl;
-          BsplineFunctor<RealType> *bsp = new BsplineFunctor<RealType>();
-          bsp->cutoff_radius = targetPtcl.Lattice.WignerSeitzRadius;
-          bsp->put(cur);
-          if(bsp->cutoff_radius > cutOff)
-            cutOff = bsp->cutoff_radius;
-          bsp->myVars.setParameterType(optimize::BACKFLOW_P);
-          tbf->addFunc(ia,ib,bsp);
-          offsets.push_back(tbf->numParams);
-          tbf->numParams += bsp->NumParams;
-          if(OHMMS::Controller->rank()==0)
+          if (link_coeff_name == "none")
           {
-            char fname[64];
-            sprintf(fname,"BFe-e.%s.dat",(spA+spB).c_str());
-            std::ofstream fout(fname);
-            fout.setf(std::ios::scientific, std::ios::floatfield);
-            fout << "# Backflow radial function \n";
-            bsp->print(fout);
-            fout.close();
+            app_log() <<"Adding radial component for species: " <<spA <<" " <<spB <<" " <<ia <<"  " <<ib << std::endl;
+            BsplineFunctor<RealType> *bsp = new BsplineFunctor<RealType>();
+            bsp->cutoff_radius = targetPtcl.Lattice.WignerSeitzRadius;
+            bsp->put(cur);
+            if(bsp->cutoff_radius > cutOff)
+              cutOff = bsp->cutoff_radius;
+            bsp->myVars.setParameterType(optimize::BACKFLOW_P);
+            tbf->addFunc(ia,ib,bsp);
+            offsets.push_back(tbf->numParams);
+            tbf->numParams += bsp->NumParams;
+            if(OHMMS::Controller->rank()==0)
+            {
+              char fname[64];
+              sprintf(fname,"BFe-e.%s.dat",(spA+spB).c_str());
+              std::ofstream fout(fname);
+              fout.setf(std::ios::scientific, std::ios::floatfield);
+              fout << "# Backflow radial function \n";
+              bsp->print(fout);
+              fout.close();
+            }
+          } else {
+            // look for linked coefficients and add to tbf
+            app_log() <<"Linking radial component for species: " <<spA <<" " <<spB <<" " <<ia <<"  " <<ib << " to " << link_coeff_name << std::endl;
+            bool found_coeff = false;
+            for (int i=0;i<tbf->uniqueRadFun.size();i++)
+            {
+              BsplineFunctor<RealType> *bsp = tbf->uniqueRadFun[i]; // do not change me! - bsp
+              std::string coeffName = bsp->ParameterNames[0]; // assume all parameters in bsp have the same name
+              if (coeffName == link_coeff_name)
+              {
+                tbf->linkFunc(ia,ib,bsp);
+                found_coeff = true;
+              }
+            }
+            if (!found_coeff) APP_ABORT(link_coeff_name+" not found");
           }
-        }
+
+        } // end if (cname == "correlation")
         cur = cur->next;
-      }
+      } // processed all <correlation> nodes 
       tbf->derivs.resize(tbf->numParams);
       // setup offsets
       // could keep a std::map<std::pair<>,int>
@@ -393,7 +414,7 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
         {
           APP_ABORT("Error creating Backflow_ee object. \n");
         }
-      }
+      } // all radial functions have been initialized
       BFTrans->bfFuns.push_back((BackflowFunctionBase *)tbf);
     }
     else

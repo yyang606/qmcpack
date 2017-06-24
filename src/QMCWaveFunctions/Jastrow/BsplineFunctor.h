@@ -402,6 +402,7 @@ struct BsplineFunctor: public OptimizableFunctorBase
         cAttrib.add(type, "type");
         cAttrib.add(optimize, "optimize");
         cAttrib.put(xmlCoefs);
+        ParameterNames.push_back(id);
         if (type != "Array")
         {
           PRE.error("Unknown correlation type " + type + " in BsplineFunctor." + "Resetting to \"Array\"");
