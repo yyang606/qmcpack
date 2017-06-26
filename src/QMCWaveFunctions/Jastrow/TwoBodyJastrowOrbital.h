@@ -62,6 +62,7 @@ protected:
   std::vector<RealType> Uptcl;
 
   std::map<std::string,FT*> J2Unique;
+  std::vector<int> j2unique_idx; // index in F that belongs to J2Unique
   ParticleSet *PtclRef;
   bool FirstTime;
   RealType KEcorr;
@@ -121,6 +122,7 @@ public:
     // enforce exchange symmetry
     F[ib*NumGroups+ia]=rf;
 
+    j2unique_idx.push_back(ia*NumGroups+ib);
     std::stringstream aname;
     aname<<ia<<ib;
     J2Unique[aname.str()]=rf;
@@ -134,6 +136,11 @@ public:
   void linkFunc(int ia, int ib, FT* rf)
   { // assign FunctorType rf to species pair (ia,ib)
     F[ia*NumGroups+ib]=rf;
+  }
+
+  FT* getFunc(int ia, int ib)
+  {
+    return F[ia*NumGroups+ib];
   }
 
   FT* findFunc(std::string param_name)
@@ -742,27 +749,37 @@ public:
 
   OrbitalBasePtr makeClone(ParticleSet& tqp) const
   {
-    //TwoBodyJastrowOrbital<FT>* j2copy=new TwoBodyJastrowOrbital<FT>(tqp,Write_Chiesa_Correction);
     TwoBodyJastrowOrbital<FT>* j2copy=new TwoBodyJastrowOrbital<FT>(tqp,-1);
     if (dPsi)
       j2copy->dPsi = dPsi->makeClone(tqp);
-    std::map<const FT*,FT*> fcmap;
-    for(int ig=0; ig<NumGroups; ++ig)
-      for(int jg=ig; jg<NumGroups; ++jg)
-      {
-        int ij=ig*NumGroups+jg;
-        if(F[ij]==0)
-          continue;
-        typename std::map<const FT*,FT*>::iterator fit=fcmap.find(F[ij]);
-        if(fit == fcmap.end())
-        {
-          FT* fc=new FT(*F[ij]);
-          j2copy->addFunc(ig,jg,fc);
-          //if (dPsi) (j2copy->dPsi)->addFunc(aname.str(),ig,jg,fc);
-          fcmap[F[ij]]=fc;
-        }
-      }
     j2copy->Optimizable = Optimizable;
+
+    // 1. clone the map of unique pair functions "J2Unique"
+    typename std::map<std::string,FT*>::const_iterator 
+      it(J2Unique.begin()), it_end(J2Unique.end());
+    for (;it!=it_end;it++)
+    {
+      FT* rf = new FT(*it->second);
+      j2copy->J2Unique[it->first] = rf;
+    }
+
+    // 2. map the array of pair functions "F"
+    j2copy->F.resize(F.size());
+    for (int i=0;i<F.size();i++)
+    { // map unique functors into the non-unique functors,
+      //  also check that every pair of particles have been assigned a functor
+      bool done=false;
+      typename std::map<std::string,FT*>::const_iterator it(j2copy->J2Unique.begin()),it_end(j2copy->J2Unique.end());
+      for (;it!=it_end;it++)
+      {
+        done = true;
+        j2copy->F[i] = it->second;
+      }
+      if (!done)
+      {
+        APP_ABORT("Error cloning TwoBodyJastrowOrbital.\n")
+      }
+    }
     return j2copy;
   }
 

@@ -15,6 +15,7 @@
 #ifndef QMCPLUSPLUS_BSPLINE_JASTROW_BUILDER_H
 #define QMCPLUSPLUS_BSPLINE_JASTROW_BUILDER_H
 #include "QMCWaveFunctions/OrbitalBuilderBase.h"
+#include "QMCWaveFunctions/Jastrow/BsplineFunctor.h"
 
 namespace qmcplusplus
 {
@@ -23,6 +24,8 @@ class ParticleSet;
 
 struct BsplineJastrowBuilder: public OrbitalBuilderBase
 {
+  typedef BsplineFunctor<RealType> RadFuncType;
+
   ParticleSet *sourcePtcl;
   // One-body constructor
   BsplineJastrowBuilder(ParticleSet& target, TrialWaveFunction& psi,

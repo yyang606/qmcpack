@@ -17,7 +17,6 @@
 #include "Particle/DistanceTableData.h"
 #include "Particle/DistanceTable.h"
 #include "QMCWaveFunctions/Jastrow/BsplineJastrowBuilder.h"
-#include "QMCWaveFunctions/Jastrow/BsplineFunctor.h"
 #include "QMCWaveFunctions/Jastrow/OneBodyJastrowOrbital.h"
 #include "QMCWaveFunctions/Jastrow/DiffOneBodyJastrowOrbital.h"
 #include "QMCWaveFunctions/Jastrow/OneBodySpinJastrowOrbital.h"
@@ -190,7 +189,6 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
 {
   ReportEngine PRE(ClassName,"put(xmlNodePtr)");
   bool PrintTables=false;
-  typedef BsplineFunctor<RealType> RadFuncType;
   // Create a one-body Jastrow
   if (sourcePtcl)
   {
@@ -313,6 +311,7 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
           }
           J2->addFunc(ia,ib,functor);
           dJ2->addFunc(ia,ib,functor);
+
           Opt=(!functor->notOpt or Opt);
           if(qmc_common.io_node)
           {
@@ -333,8 +332,32 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
       } // end if (kidsname == "correlation")
       kids = kids->next;
     } // processed all <correlation> nodes
-    //dJ2->initialize();
-    //J2->setDiffOrbital(dJ2);
+
+    SpeciesSet &tSet = targetPtcl.getSpeciesSet();
+    if (targetPtcl.groups()==2 && tSet.speciesName[0]=="u" && tSet.speciesName[1]=="d") 
+    { // 2 species u,d for up and down electrons
+      // !!!! hard-code to preserve backward compatibility
+      //  now we know the mapping
+      //   (0,0)->0:uu (0,1)->1:ud
+      //   (1,0)->2:du (1,1)->3:dd
+      
+      if (targetPtcl.R.size()==2)
+      { // special case of 1 up + 1 down
+        // initialize uu,dd using ud
+        RadFuncType* bsp = J2->findFunc("ud");
+
+        // fill uu
+        J2->addFunc(0,0,bsp);
+        dJ2->addFunc(0,0,bsp);
+        //  dd will be linked after this
+      }
+
+      // identify 'dd' with 'uu' in general
+      RadFuncType *uu_term = J2->getFunc(0,0);
+      J2->linkFunc(1,1,uu_term);
+      dJ2->linkFunc(1,1,uu_term);
+    }
+
     bool success = J2->checkInitialization();
     if (!success) APP_ABORT("failed to initialize two-body Jastrow");
     J2->dPsi=dJ2;

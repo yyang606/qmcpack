@@ -222,21 +222,32 @@ public:
   DiffOrbitalBasePtr makeClone(ParticleSet& tqp) const
   {
     DiffTwoBodyJastrowOrbital<FT>* j2copy=new DiffTwoBodyJastrowOrbital<FT>(tqp);
-    std::map<const FT*,FT*> fcmap;
-    for (int ig=0; ig<NumGroups; ++ig)
-      for (int jg=ig; jg<NumGroups; ++jg)
+    // 1. clone the map of unique pair functions "J2Unique"
+    typename std::map<std::string,FT*>::const_iterator 
+      it(J2Unique.begin()), it_end(J2Unique.end());
+    for (;it!=it_end;it++)
+    {
+      FT* rf = new FT(*it->second);
+      j2copy->J2Unique[it->first] = rf;
+    }
+
+    // 2. map the array of pair functions "F"
+    j2copy->F.resize(F.size());
+    for (int i=0;i<F.size();i++)
+    { // map unique functors into the non-unique functors,
+      //  also check that every pair of particles have been assigned a functor
+      bool done=false;
+      typename std::map<std::string,FT*>::const_iterator it(j2copy->J2Unique.begin()),it_end(j2copy->J2Unique.end());
+      for (;it!=it_end;it++)
       {
-        int ij=ig*NumGroups+jg;
-        if (F[ij]==0)
-          continue;
-        typename std::map<const FT*,FT*>::iterator fit=fcmap.find(F[ij]);
-        if (fit == fcmap.end())
-        {
-          FT* fc=new FT(*F[ij]);
-          j2copy->addFunc(ig,jg,fc);
-          fcmap[F[ij]]=fc;
-        }
+        done = true;
+        j2copy->F[i] = it->second;
       }
+      if (!done)
+      {
+        APP_ABORT("Error cloning TwoBodyJastrowOrbital.\n")
+      }
+    }
     j2copy->myVars.clear();
     j2copy->myVars.insertFrom(myVars);
     j2copy->NumVars=NumVars;
