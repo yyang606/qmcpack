@@ -378,18 +378,8 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
           } else {
             // look for linked coefficients and add to tbf
             app_log() <<"Linking radial component for species: " <<spA <<" " <<spB <<" " <<ia <<"  " <<ib << " to " << link_coeff_name << std::endl;
-            bool found_coeff = false;
-            for (int i=0;i<tbf->uniqueRadFun.size();i++)
-            {
-              BsplineFunctor<RealType> *bsp = tbf->uniqueRadFun[i]; // do not change me! - bsp
-              std::string coeffName = bsp->ParameterNames[0]; // assume all parameters in bsp have the same name
-              if (coeffName == link_coeff_name)
-              {
-                tbf->linkFunc(ia,ib,bsp);
-                found_coeff = true;
-              }
-            }
-            if (!found_coeff) APP_ABORT(link_coeff_name+" not found");
+            BsplineFunctor<RealType> *bsp = tbf->findFunc(link_coeff_name);
+            tbf->linkFunc(ia,ib,bsp);
           }
 
         } // end if (cname == "correlation")

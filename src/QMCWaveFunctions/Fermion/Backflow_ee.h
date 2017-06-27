@@ -102,6 +102,23 @@ public:
     RadFun[ib*NumGroups+ia] = rf;
   }
 
+  FT* findFunc(std::string param_name)
+  {
+    FT* bsp;
+    bool found_coeff = false;
+    for (int i=0;i<uniqueRadFun.size();i++)
+    {
+      std::string coeffName = uniqueRadFun[i]->ParameterNames[0]; // !!!! assume all parameters in bsp have the same name
+      if (coeffName == param_name)
+      {
+        bsp = uniqueRadFun[i];
+        found_coeff = true;
+      }
+    }
+    if (!found_coeff) APP_ABORT(param_name+" not found");
+    return bsp;
+  }
+
   void linkFunc(int ia, int ib, FT* rf)
   { // assign FunctorType rf to species pair (ia,ib)
     RadFun[ia*NumGroups+ib] = rf;
