@@ -248,9 +248,9 @@ void BackflowBuilder::addOneBody(xmlNodePtr cur)
               }
           }
         }
-      }
+      } // end if (cname == "correlation")
       cur = cur->next;
-    }
+    } // processed all <correlation> nodes
     if(funct == "Bspline")
     {
       app_log() <<"Using BsplineFunctor type. \n";

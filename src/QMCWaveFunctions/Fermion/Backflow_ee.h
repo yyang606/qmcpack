@@ -32,6 +32,8 @@ public:
   //number of groups of the target particleset
   std::vector<FT*> RadFun;
   std::vector<FT*> uniqueRadFun;
+  std::map<std::string,FT*> B2Unique;  // intended to replace uniqueRadFun
+  ParticleSet* tpset; // point to target particle set
   std::vector<int> offsetPrms;
   int NumGroups;
   Matrix<int> PairID;
@@ -40,6 +42,7 @@ public:
   Backflow_ee(ParticleSet& ions, ParticleSet& els): BackflowFunctionBase(ions,els),first(true) //,RadFun(0)
   {
     myTable = DistanceTable::add(els);
+    tpset = &els;
     resize(NumTargets,NumTargets);
     NumGroups=els.groups();
     PairID.resize(NumTargets,NumTargets);
@@ -60,6 +63,7 @@ public:
 
   void resetTargetParticleSet(ParticleSet& P)
   {
+    tpset = &P;
     myTable = DistanceTable::add(P);
   }
 
@@ -97,25 +101,31 @@ public:
   void addFunc(int ia, int ib, FT* rf)
   {
     uniqueRadFun.push_back(rf);
+    std::string pair_name;
+    SpeciesSet& species(tpset->getSpeciesSet());
+    pair_name = species.speciesName[ia] + species.speciesName[ib];
+    B2Unique[pair_name] = rf;
+
     RadFun[ia*NumGroups+ib] = rf;
     // enforce exchange symmetry
     RadFun[ib*NumGroups+ia] = rf;
   }
 
-  FT* findFunc(std::string param_name)
+  FT* findFunc(std::string pair_name)
   {
     FT* bsp;
     bool found_coeff = false;
-    for (int i=0;i<uniqueRadFun.size();i++)
+    typename std::map<std::string,FT*>::const_iterator
+      it(B2Unique.begin()), it_end(B2Unique.end());
+    for (;it!=it_end;it++)
     {
-      std::string coeffName = uniqueRadFun[i]->ParameterNames[0]; // !!!! assume all parameters in bsp have the same name
-      if (coeffName == param_name)
+      if (it->first == pair_name)
       {
-        bsp = uniqueRadFun[i];
+        bsp = it->second;
         found_coeff = true;
       }
     }
-    if (!found_coeff) APP_ABORT(param_name+" not found");
+    if (!found_coeff) APP_ABORT(pair_name+" not found");
     return bsp;
   }
 

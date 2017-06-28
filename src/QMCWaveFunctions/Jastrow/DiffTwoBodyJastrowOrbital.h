@@ -48,12 +48,14 @@ class DiffTwoBodyJastrowOrbital: public DiffOrbitalBase
   std::vector<GradVectorType*> gradLogPsi;
   std::vector<ValueVectorType*> lapLogPsi;
   std::map<std::string,FT*> J2Unique;
+  ParticleSet* PtclRef;
 
 public:
 
   ///constructor
   DiffTwoBodyJastrowOrbital(ParticleSet& p):NumVars(0)
   {
+    PtclRef = &p;
     NumPtcls=p.getTotalNum();
     NumGroups=p.groups();
     F.resize(NumGroups*NumGroups,0);
@@ -65,17 +67,43 @@ public:
     delete_iter(lapLogPsi.begin(),lapLogPsi.end());
   }
 
-  void addFunc(int ia, int ib, FT* j)
-  {
-    F[ia*NumGroups+ib]=j;
-    F[ib*NumGroups+ia]=j;
-    std::stringstream aname;
-    aname<<ia<<ib;
-    J2Unique[aname.str()]=j;
+  void addFunc(int ia, int ib, FT* rf)
+  { // add radial function rf to J2Unique
+    SpeciesSet& species(PtclRef->getSpeciesSet());
+    std::string pair_name = species.speciesName[ia] + species.speciesName[ib];
+    J2Unique[pair_name]=rf;
+
+    // also assign rf to correlate species pairs (ia,ib), (ib,ia)
+    F[ia*NumGroups+ib]=rf;
+    F[ib*NumGroups+ia]=rf; // enforce exchange symmetry
   }
-  void linkFunc(int ia, int ib, FT* j)
-  {
-    F[ia*NumGroups+ib]=j;
+
+  void linkFunc(int ia, int ib, FT* rf)
+  { // assign FunctorType rf to species pair (ia,ib)
+    F[ia*NumGroups+ib]=rf;
+  }
+
+  FT* getFunc(int ia, int ib)
+  { // locate pair function by species indices (ia,ib)
+    return F[ia*NumGroups+ib];
+  }
+
+  FT* findFunc(std::string pair_name)
+  { // locate pair function by species pair name such as 'uu'
+    FT* rf;
+    bool found_coeff = false;
+    typename std::map<std::string,FT*>::const_iterator
+      it(J2Unique.begin()), it_end(J2Unique.end());
+    for (;it!=it_end;it++)
+    { // it->first: 'uu','ud'
+      if (it->first==pair_name)
+      {
+        rf = it->second;
+        found_coeff = true;
+      }
+    }
+    if (!found_coeff) APP_ABORT(pair_name+" not found");
+    return rf;
   }
 
   ///reset the value of all the unique Two-Body Jastrow functions
@@ -91,6 +119,7 @@ public:
   ///reset the distance table
   void resetTargetParticleSet(ParticleSet& P)
   {
+    PtclRef = &P;
   }
 
   void checkOutVariables(const opt_variables_type& active)
@@ -245,7 +274,7 @@ public:
       }
       if (!done)
       {
-        APP_ABORT("Error cloning TwoBodyJastrowOrbital.\n")
+        APP_ABORT("Error cloning DiffTwoBodyJastrowOrbital.\n")
       }
     }
     j2copy->myVars.clear();

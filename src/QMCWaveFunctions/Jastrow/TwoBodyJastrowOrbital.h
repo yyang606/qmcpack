@@ -62,7 +62,6 @@ protected:
   std::vector<RealType> Uptcl;
 
   std::map<std::string,FT*> J2Unique;
-  std::vector<int> j2unique_idx; // index in F that belongs to J2Unique
   ParticleSet *PtclRef;
   bool FirstTime;
   RealType KEcorr;
@@ -116,18 +115,17 @@ public:
   }
 
   void addFunc(int ia, int ib, FT* rf)
-  {
-    // add the pair function
-    F[ia*NumGroups+ib]=rf;
-    // enforce exchange symmetry
-    F[ib*NumGroups+ia]=rf;
+  { // add radial function rf to J2Unique
+    SpeciesSet& species(PtclRef->getSpeciesSet());
+    std::string pair_name = species.speciesName[ia] + species.speciesName[ib];
+    J2Unique[pair_name]=rf;
 
-    j2unique_idx.push_back(ia*NumGroups+ib);
-    std::stringstream aname;
-    aname<<ia<<ib;
-    J2Unique[aname.str()]=rf;
+    // also assign rf to correlate species pairs (ia,ib), (ib,ia)
+    F[ia*NumGroups+ib]=rf;
+    F[ib*NumGroups+ia]=rf; // enforce exchange symmetry
+
     if (FirstTime)
-    {
+    { // write Chiesa kinetic energy correction to file
       ChiesaKEcorrection();
       FirstTime = false;
     }
@@ -139,36 +137,39 @@ public:
   }
 
   FT* getFunc(int ia, int ib)
-  {
+  { // locate pair function by species indices (ia,ib)
     return F[ia*NumGroups+ib];
   }
 
-  FT* findFunc(std::string param_name)
-  {
+  FT* findFunc(std::string pair_name)
+  { // locate pair function by species pair name such as 'uu'
     FT* rf;
     bool found_coeff = false;
-    typename std::map<std::string,FT*>::iterator it(J2Unique.begin()),it_end(J2Unique.end());
+    typename std::map<std::string,FT*>::const_iterator 
+      it(J2Unique.begin()), it_end(J2Unique.end());
     for (;it!=it_end;it++)
-    {
-      if (it->second->ParameterNames[0]==param_name)
+    { // it->first: 'uu','ud'
+      if (it->first==pair_name)
       {
         rf = it->second;
         found_coeff = true;
       }
     }
-    if (!found_coeff) APP_ABORT(param_name+" not found");
+    if (!found_coeff) APP_ABORT(pair_name+" not found");
     return rf;
   }
 
   bool checkInitialization()
-  {
+  { // make sure all pair functions stored in F are valid.
+    //  namely, each functor pointer in F should exist in J2Unique, which is populated by addFunc
     bool all_found(true);
     for (int ifunc=0;ifunc<F.size();ifunc++)
     {
       FT* bsp = F[ifunc];
       // look for pair function in stored unique functions
       bool found(false);
-      typename std::map<std::string,FT*>::iterator it(J2Unique.begin()),it_end(J2Unique.end());
+      typename std::map<std::string,FT*>::const_iterator
+        it(J2Unique.begin()),it_end(J2Unique.end());
       for (;it!=it_end;it++)
       {
         if (bsp == it->second) found=true;
