@@ -131,9 +131,10 @@ public:
     }
   }
 
-  void linkFunc(int ia, int ib, FT* rf)
+  void linkFunc(int ia, int ib, FT* rf, bool exchange=true)
   { // assign FunctorType rf to species pair (ia,ib)
-    F[ia*NumGroups+ib]=rf;
+    F[ia*NumGroups+ib] = rf;
+    if (exchange) F[ib*NumGroups+ia] = rf;
   }
 
   FT* getFunc(int ia, int ib)

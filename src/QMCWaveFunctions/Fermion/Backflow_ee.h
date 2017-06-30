@@ -129,9 +129,10 @@ public:
     return bsp;
   }
 
-  void linkFunc(int ia, int ib, FT* rf)
+  void linkFunc(int ia, int ib, FT* rf, bool exchange=true)
   { // assign FunctorType rf to species pair (ia,ib)
     RadFun[ia*NumGroups+ib] = rf;
+    if (exchange) RadFun[ib*NumGroups+ia] = rf;
   }
 
   void registerData(PooledData<RealType>& buf)
