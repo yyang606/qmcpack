@@ -1391,8 +1391,7 @@ void GamesAsciiParser::getCI(std::istream& is)
     if(currentWords.size() < 3 )
       continue;
     if(currentWords[0].find("ALP") == 0 &&
-        currentWords[1].find("BET") == 0 &&
-        currentWords[2] == "COEFFICIENT" )
+        currentWords[1].find("BET") == 0 )
     {
       getwords(currentWords,is);  // --------
       notfound=false;

@@ -81,6 +81,10 @@ class GamessAnalyzer(SimulationAnalyzer):
             files = info.files
             for file,unit in GamessInput.file_units.iteritems():
                 files[file.lower()] = '{0}.F{1}'.format(prefix,str(unit).zfill(2))
+                if file.lower() == 'punch': # !!!! hack to take .dat as punch
+                    print 'hacking punch!'
+                    files[file.lower()] = '{0}.dat'.format(prefix)
+                # end if 
             #end for
             files.input  = infilename
             files.output = '{0}.out'.format(prefix)

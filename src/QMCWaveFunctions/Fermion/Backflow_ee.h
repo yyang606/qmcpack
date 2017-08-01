@@ -33,7 +33,7 @@ public:
   std::vector<FT*> RadFun;
   std::vector<FT*> uniqueRadFun;
   std::map<std::string,FT*> B2Unique;  // intended to replace uniqueRadFun
-  ParticleSet* tpset; // point to target particle set
+  ParticleSet* tpset; // pointer to target particle set
   std::vector<int> offsetPrms;
   int NumGroups;
   Matrix<int> PairID;
