@@ -568,7 +568,10 @@ bool SlaterDetBuilder::putDeterminant(xmlNodePtr cur, int spin_group)
     adet = new DiracDeterminantCUDA(psi,firstIndex);
 #else
     if(UseBackflow & !no_bftrans)
+    {
+      app_log() << "Using DiracDeterminantWithBackflow" << std::endl;
       adet = new DiracDeterminantWithBackflow(targetPtcl,psi,BFTrans,firstIndex);
+    }
     else if (afm=="AFM")
     {
       app_log()<<"Using the AFM determinant"<< std::endl;
