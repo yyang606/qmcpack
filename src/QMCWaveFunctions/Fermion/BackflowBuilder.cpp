@@ -385,6 +385,30 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
         } // end if (cname == "correlation")
         cur = cur->next;
       } // processed all <correlation> nodes 
+
+      SpeciesSet &tSet = targetPtcl.getSpeciesSet();
+      if (targetPtcl.groups()==2 && tSet.speciesName[0]=="u" && tSet.speciesName[1]=="d")
+      { // 2 species u,d for up and down electrons
+        // !!!! hard-code to preserve backward compatibility
+        //  now we know the mapping
+        //   (0,0)->0:uu (0,1)->1:ud
+        //   (1,0)->2:du (1,1)->3:dd
+
+        if (targetPtcl.R.size()==2)
+        { // special case of 1 up + 1 down
+          // initialize uu,dd using ud
+          BsplineFunctor<RealType> *bsp = tbf->findFunc("ud");
+
+          // fill uu
+          tbf->addFunc(0,0,bsp);
+          //  dd will be linked after this
+        }
+
+        // identify 'dd' with 'uu' in general
+        BsplineFunctor<RealType> *uu_term = tbf->findFunc("uu");
+        tbf->linkFunc(1,1,uu_term);
+      }
+
       tbf->derivs.resize(tbf->numParams);
       // setup offsets
       // could keep a std::map<std::pair<>,int>
