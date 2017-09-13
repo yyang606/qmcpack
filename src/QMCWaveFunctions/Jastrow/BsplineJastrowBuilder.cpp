@@ -22,6 +22,8 @@
 #include "QMCWaveFunctions/Jastrow/OneBodySpinJastrowOrbital.h"
 #include "QMCWaveFunctions/Jastrow/DiffOneBodySpinJastrowOrbital.h"
 #include "QMCWaveFunctions/Jastrow/TwoBodyJastrowOrbital.h"
+#include "QMCWaveFunctions/Jastrow/J1OrbitalSoA.h"
+#include "QMCWaveFunctions/Jastrow/J2OrbitalSoA.h"
 #include "QMCWaveFunctions/Jastrow/DiffTwoBodyJastrowOrbital.h"
 #ifdef QMC_CUDA
 #include "QMCWaveFunctions/Jastrow/OneBodyJastrowOrbitalBspline.h"
@@ -72,7 +74,7 @@ bool BsplineJastrowBuilder::createOneBodyJastrow(xmlNodePtr cur)
       BsplineFunctor<RealType> *functor = new BsplineFunctor<RealType>(cusp);
       functor->elementType = speciesA;
       int ig = sSet.findSpecies (speciesA);
-      functor->periodic = sourcePtcl->Lattice.SuperCellEnum == SUPERCELL_BULK;
+      functor->periodic = sourcePtcl->Lattice.SuperCellEnum != SUPERCELL_OPEN;
       functor->cutoff_radius = sourcePtcl->Lattice.WignerSeitzRadius;
       int jg=-1;
       if(speciesB.size())
@@ -81,21 +83,6 @@ bool BsplineJastrowBuilder::createOneBodyJastrow(xmlNodePtr cur)
       {
         //ignore
         functor->put (kids);
-        if (functor->cutoff_radius < 1.0e-6)
-        {
-          if(sourcePtcl->Lattice.SuperCellEnum == SUPERCELL_BULK)
-          {
-            app_log()  << "  BsplineFunction rcut is currently zero.\n"
-                       << "  Setting to Wigner-Seitz radius = "
-                       << sourcePtcl->Lattice.WignerSeitzRadius << std::endl;
-            functor->cutoff_radius = sourcePtcl->Lattice.WignerSeitzRadius;
-            functor->reset();
-          }
-          else
-          {
-            APP_ABORT("BsplineJastrowBuilder::put  rcut must be provided for one body jastrow since boundary conditions are not periodic");
-          }
-        }
         J1->addFunc (ig,functor,jg);
         success = true;
         dJ1->addFunc(ig,functor,jg);
@@ -212,7 +199,12 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
     if(j1spin=="yes")
       return createOneBodyJastrow<OneBodySpinJastrowOrbital<RadFuncType>,DiffOneBodySpinJastrowOrbital<RadFuncType> >(cur);
     else
+#if defined(ENABLE_SOA)
+      return createOneBodyJastrow<J1OrbitalSoA<RadFuncType>,DiffOneBodyJastrowOrbital<RadFuncType> >(cur);
+#else
       return createOneBodyJastrow<OneBodyJastrowOrbital<RadFuncType>,DiffOneBodyJastrowOrbital<RadFuncType> >(cur);
+#endif
+
 #endif
   }
   else // Create a two-body Jastrow
@@ -228,7 +220,13 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
 #ifdef QMC_CUDA
     typedef TwoBodyJastrowOrbitalBspline J2Type;
 #else
+
+#if defined(ENABLE_SOA)
+    typedef J2OrbitalSoA<BsplineFunctor<RealType> > J2Type;
+#else
     typedef TwoBodyJastrowOrbital<BsplineFunctor<RealType> > J2Type;
+#endif
+
 #endif
     typedef DiffTwoBodyJastrowOrbital<BsplineFunctor<RealType> > dJ2Type;
     int taskid=(targetPsi.is_manager())?targetPsi.getGroupID():-1;
@@ -363,6 +361,7 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
     J2->dPsi=dJ2;
     targetPsi.addOrbital(J2,"J2_bspline");
     J2->setOptimizable(Opt);
+
   }
   return true;
 }

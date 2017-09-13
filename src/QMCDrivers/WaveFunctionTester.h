@@ -62,11 +62,12 @@ private:
   ParticleSetPool &PtclPool;
   ParticleSet::ParticlePos_t deltaR;
   std::string checkRatio, checkClone, checkHamPbyP, sourceName, wftricks, checkEloc;
-  std::string checkBasic, checkRatioV, checkEvaluateLog;
+  std::string checkBasic, checkRatioV;
   xmlNodePtr myNode;
   double deltaParam;
   double toleranceParam;
   bool outputDeltaVsError;
+  bool wbyw; // flag to only test walker-by-walker moves, i.e. skip particle-by-particle test
   FiniteDiffErrData DeltaVsError;
  
   /// Copy Constructor (disabled)
@@ -77,8 +78,6 @@ private:
   {
     return *this;
   }
-  /** most basic tests for G and L, does not include single-particle updates */
-  void runEvaluateLogTest();
   /** basic tests for G and L */
   void runBasicTest();
   /** the basic ratios check */
@@ -111,10 +110,6 @@ private:
                       int indent=0);
 
   bool checkGradientAtConfiguration(MCWalkerConfiguration::Walker_t* W1,
-                                    std::stringstream &fail_log,
-                                    bool &ignore);
-
-  bool checkEvaluateLogAtConfiguration(MCWalkerConfiguration::Walker_t* W1,
                                     std::stringstream &fail_log,
                                     bool &ignore);
 

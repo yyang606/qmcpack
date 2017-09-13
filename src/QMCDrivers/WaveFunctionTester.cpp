@@ -46,7 +46,7 @@ WaveFunctionTester::WaveFunctionTester(MCWalkerConfiguration& w,
                                        ParticleSetPool &ptclPool, WaveFunctionPool& ppool):
   QMCDriver(w,psi,h,ppool),checkRatio("no"),checkClone("no"), checkHamPbyP("no"),
   PtclPool(ptclPool), wftricks("no"),checkEloc("no"), checkBasic("yes"), checkRatioV("no"),
-  deltaParam(0.0), toleranceParam(0.0), checkEvaluateLog("yes")
+  deltaParam(0.0), toleranceParam(0.0), outputDeltaVsError(false), wbyw(false)
 {
   m_param.add(checkRatio,"ratio","string");
   m_param.add(checkClone,"clone","string");
@@ -98,7 +98,7 @@ WaveFunctionTester::run()
   put(qmcNode);
   if (checkRatio == "yes")
   {
-    runRatioTest();
+    //runRatioTest();
     runRatioTest2();
   }
   else if (checkClone == "yes")
@@ -123,10 +123,13 @@ WaveFunctionTester::run()
     runwftricks();
   else if (wftricks =="plot")
     runNodePlot();
-  else if (checkEvaluateLog == "yes")
-    runEvaluateLogTest();
   else if (checkBasic == "yes")
     runBasicTest();
+  else if (checkBasic == "wbyw")
+  {
+    wbyw = true; // skip pbyp test
+    runBasicTest();
+  }
   else if (checkRatioV == "yes")
     runRatioV();
   else
@@ -686,64 +689,6 @@ bool WaveFunctionTester::checkGradients(int lower_iat, int upper_iat,
   return all_okay;
 }
 
-bool WaveFunctionTester::checkEvaluateLogAtConfiguration(MCWalkerConfiguration::Walker_t *W1, std::stringstream &fail_log, bool &ignore)
-{
-  int nat = W.getTotalNum();
-  ParticleSet::ParticleGradient_t G(nat), G1(nat);
-  ParticleSet::ParticleLaplacian_t L(nat), L1(nat);
-
-  W.loadWalker(*W1, true);
-
-  // compute analytic values
-  RealType logpsi_orig = Psi.evaluateLog(W);
-  G = W.G;
-  L = W.L;
-
-  // Use a single delta with a fairly large tolerance
-  //computeNumericalGrad(delta, G1, L1);
-
-  RealType delta = 1.0e-4;
-  if (deltaParam > 0.0)
-  {
-    delta = deltaParam;
-  } 
-  FiniteDifference fd(FiniteDifference::FiniteDiff_LowOrder);
-  //RealType delta = 1.0;
-  //FiniteDifference fd(FiniteDifference::FiniteDiff_Richardson);
-
-  FiniteDifference::PosChangeVector positions;
-
-  fd.finiteDifferencePoints(delta, W, positions);
-
-  FiniteDifference::ValueVector logpsi_vals;
-  FiniteDifference::PosChangeVector::iterator it;
-
-  for (it = positions.begin(); it != positions.end(); it++)
-  {
-    PosType r0 = W.R[it->index];
-    W.R[it->index] = it->r;
-    W.update();
-    RealType logpsi0 = Psi.evaluateLog(W);
-    RealType phase0 = Psi.getPhase();
-#if defined(QMC_COMPLEX)
-    ValueType logpsi = std::complex<OHMMS_PRECISION>(logpsi0,phase0);
-#else
-    ValueType logpsi = logpsi0;
-#endif
-    logpsi_vals.push_back(logpsi);
-
-    W.R[it->index] = r0;
-    W.update();
-    Psi.evaluateLog(W);
-  }
-
-  fd.computeFiniteDiff(delta, positions, logpsi_vals, G1, L1);
-
-  fout << "delta = " << delta << std::endl;
-  bool all_okay = checkGradients(0, nat, G, L, G1, L1, fail_log);
-  return all_okay;
-}
-
 bool WaveFunctionTester::checkGradientAtConfiguration(MCWalkerConfiguration::Walker_t *W1, std::stringstream &fail_log, bool &ignore)
 {
 
@@ -809,6 +754,7 @@ bool WaveFunctionTester::checkGradientAtConfiguration(MCWalkerConfiguration::Wal
   {
     tol = toleranceParam;
   } 
+  if (wbyw) return all_okay; // !!!! hack to skip pybp test
 
   for (int iorb = 0; iorb < Psi.getOrbitals().size(); iorb++)
   {
@@ -943,58 +889,6 @@ bool WaveFunctionTester::checkGradientAtConfiguration(MCWalkerConfiguration::Wal
     }
   }
   return all_okay;
-}
-
-void WaveFunctionTester::runEvaluateLogTest()
-{
-  RealType sig2Enloc=0, sig2Drift=0;
-
-  int nat = W.getTotalNum();
-  fout << "Most basic numerical gradient and Laplacian test" << std::endl;
-  fout << " always reevaluate the entire wave function." << std::endl;
-
-  std::stringstream fail_log;
-  bool all_okay = true;
-  int fails = 0;
-  int nconfig = 0;
-  int nignore = 0;
-
-  MCWalkerConfiguration::iterator Wit(W.begin());
-  for (; Wit != W.end(); Wit++)
-  {
-    fout << "Walker # " << nconfig << std::endl;
-    std::stringstream fail_log1;
-    bool ignore = false;
-    bool this_okay =  checkEvaluateLogAtConfiguration(*Wit, fail_log1, ignore);
-    if (ignore)
-    {
-      nignore++;
-    }
-    if (!this_okay && !ignore)
-    {
-      fail_log << "Walker # " << nconfig << std::endl;
-      fail_log << fail_log1.str();
-      fail_log << std::endl;
-      fails++;
-      all_okay = false;
-    }
-    nconfig++;
-  }
-
-  app_log() << "Number of samples = " << nconfig << std::endl;
-  app_log() << "Number ignored (bad positions) = " << nignore << std::endl << std::endl;
-  app_log() << "Number of fails = " << fails << std::endl << std::endl;
-
-  if (!all_okay)
-  {
-    std::string fail_name("wf_fails.dat");
-    app_log() << "More detail on finite difference failures in " << fail_name << std::endl;
-    std::ofstream eout(fail_name.c_str());
-    eout << fail_log.str();
-    eout.close();
-  }
-
-  app_log() << "Finite difference test: " << (all_okay?"PASS":"FAIL") << std::endl;
 }
 
 void WaveFunctionTester::runBasicTest()
@@ -1157,6 +1051,7 @@ void WaveFunctionTester::runBasicTest()
 
 void WaveFunctionTester::runRatioTest()
 {
+#if 0
   int nat = W.getTotalNum();
   ParticleSet::ParticleGradient_t Gp(nat), dGp(nat);
   ParticleSet::ParticleLaplacian_t Lp(nat), dLp(nat);
@@ -1346,6 +1241,7 @@ void WaveFunctionTester::runRatioTest()
   //  W.updateBuffer(**it,w_buffer);
   //  RealType logpsi=Psi.updateBuffer(W,w_buffer,true);
   //}
+ #endif
 }
 
 void WaveFunctionTester::runRatioTest2()
@@ -1430,6 +1326,7 @@ inline void randomize(ParticleAttrib<TinyVector<T,D> >& displ, T fac)
 
 void WaveFunctionTester::runRatioV()
 {
+#if 0
   app_log() << "WaveFunctionTester::runRatioV " << std::endl;
   int nat = W.getTotalNum();
   Tau=0.025;
@@ -1487,6 +1384,7 @@ void WaveFunctionTester::runRatioV()
     }
     ++it;
   }
+#endif
 }
 
 void WaveFunctionTester::runGradSourceTest()

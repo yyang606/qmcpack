@@ -107,7 +107,6 @@ IF(OHMMS_DIM MATCHES 3)
       )
     IF(HAVE_EINSPLINE)
       SET(FERMION_SRCS ${FERMION_SRCS}
-        EinsplineSet.cpp
         EinsplineSetCuda.cpp
         PhaseFactors.cu
         AtomicOrbitalCuda.cu
@@ -118,6 +117,7 @@ IF(OHMMS_DIM MATCHES 3)
 
   IF(HAVE_EINSPLINE)
     SET(FERMION_SRCS ${FERMION_SRCS}
+      EinsplineSet.cpp
       EinsplineSetBuilderCommon.cpp
       EinsplineSetBuilderOld.cpp
       MuffinTin.cpp
@@ -125,9 +125,19 @@ IF(OHMMS_DIM MATCHES 3)
       EinsplineSetBuilderReadBands_ESHDF.cpp
       EinsplineSetBuilderESHDF.fft.cpp
       EinsplineSetBuilder_createSPOs.cpp
+      BsplineFactory/createComplexDouble.cpp
+      BsplineFactory/createComplexSingle.cpp
       BandInfo.cpp
       BsplineReaderBase.cpp
       )
+
+    IF(NOT QMC_COMPLEX)
+      SET(FERMION_SRCS ${FERMION_SRCS}
+        BsplineFactory/createRealSingle.cpp
+        BsplineFactory/createRealDouble.cpp
+        )
+    ENDIF()
+
   ENDIF(HAVE_EINSPLINE)
 
   #  IF(QMC_BUILD_LEVEL GREATER 1)
@@ -167,6 +177,7 @@ ENDIF(OHMMS_DIM MATCHES 3)
 
 SET(FERMION_SRCS ${FERMION_SRCS}
   Fermion/DiracDeterminantBase.cpp
+  Fermion/DiracDeterminantSoA.cpp
   Fermion/DiracDeterminantOpt.cpp
   Fermion/DiracDeterminantAFM.cpp
   Fermion/SlaterDet.cpp

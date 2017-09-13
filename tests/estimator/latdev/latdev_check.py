@@ -3,6 +3,15 @@ import numpy as np
 import pandas as pd
 import h5py
 
+def print_fail_2d(a1_name, a1, a2_name, a2):
+  close = np.isclose(a1, a2)
+  print '  Index  %s  %s  Difference'%(a1_name, a2_name)
+  for i in range(close.shape[0]):
+    for j in range(close.shape[1]):
+      if not close[i,j]:
+        print ' ',i,j,a1[i,j],a2[i,j],abs(a1[i,j]-a2[i,j])
+
+
 if __name__ == '__main__':
 
     natom = 1
@@ -25,11 +34,18 @@ if __name__ == '__main__':
     lat_cols = [col for col in df.columns if col.startswith('latdev')]
     slatdir  = df.loc[:,lat_cols].values
 
+    passed = True
+    # check h5 against scalar.dat
     if not np.allclose(latdir,slatdir):
-        print "lattice deviation estimator test failed"
+        print "lattice deviation estimator test failed - the values in the HDF file do not match the values in the .scalar.dat file"
+        print_fail_2d("h5 latdev",latdir,"scalar.dat latdev",slatdir)
+        passed = False
+    # end if
 
-        import matplotlib.pyplot as plt
-        fig,ax = plt.subplots(1,1)
-        ax.plot(latdir,ls='--',lw=2)
-        ax.plot(slatdir)
-        plt.show()
+    if passed:
+        exit(0)
+    else:
+        exit(1)
+    # end if
+
+# end __main__

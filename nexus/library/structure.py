@@ -766,6 +766,26 @@ class Structure(Sobj):
     #end def __init__
 
 
+    def check_consistent(self,tol=1e-8,exit=True,message=False):
+        msg = ''
+        if self.has_axes():
+            kaxes = 2*pi*inv(self.axes).T
+            abs_diff = abs(self.kaxes-kaxes).sum()
+            if abs_diff>tol:
+                msg += 'direct and reciprocal space axes are not consistent\naxes present:\n{0}\nkaxes present:\n{1}\nconsistent kaxes:\n{2}\nabsolute difference: {3}\n'.format(self.axes,self.kaxes,kaxes,abs_diff)
+            #end if
+        #end if
+        consistent = len(msg)==0
+        if not consistent and exit:
+            self.error(msg)
+        #end if
+        if not message:
+            return consistent
+        else:
+            return consistent,msg
+        #end if
+    #end def check_consistent
+
 
     def set_axes(self,axes):
         self.reset_axes(axes)
@@ -3181,8 +3201,11 @@ class Structure(Sobj):
     #end def add_kmesh
 
     
-    def kpoints_unit(self):
-        return dot(self.kpoints,inv(self.kaxes))
+    def kpoints_unit(self,kpoints=None):
+        if kpoints is None:
+            kpoints = self.kpoints
+        #end if
+        return dot(kpoints,inv(self.kaxes))
     #end def kpoints_unit
 
 
@@ -3798,14 +3821,19 @@ class Structure(Sobj):
     #end def interpolate
 
 
+    # returns madelung potential constant v_M
+    #   see equation 7 in PRB 78 125106 (2008) 
     def madelung(self,axes=None,tol=1e-10):
         if self.dim!=3:
             self.error('madelung is currently only implemented for 3 dimensions')
         #end if
-        if axes==None:
-            a = self.axes.T
+        if axes is None:
+            a = self.axes.T.copy()
         else:
-            a = axes.T
+            a = axes.T.copy()
+        #end if
+        if self.units!='B':
+            a = convert(a,self.units,'B')
         #end if
         volume = abs(det(a))
         b = 2*pi*inv(a).T
@@ -3829,7 +3857,7 @@ class Structure(Sobj):
             p.R  = R[0:izero]
             p.G2 = G2[0:izero]
             m.R  = R[izero+1:]
-            m.G2  = G2[izero+1:]
+            m.G2 = G2[izero+1:]
             domains = [p,m]
             vshell.append(0.)
             for d in domains:
@@ -3841,11 +3869,28 @@ class Structure(Sobj):
         #end for
         vm = vmc + vshell[-1]
 
-        if axes==None:
+        if axes is None:
             self.Vmadelung = vm
         #end if
         return vm
     #end def madelung
+
+
+    def makov_payne(self,q=1,eps=1.0,units='Ha',order=1):
+        if order!=1:
+            self.error('Only first order Makov-Payne correction is currently supported.')
+        #end if
+        if 'Vmadelung' not in self:
+            vm = self.madelung()
+        else:
+            vm = self.Vmadelung
+        #end if
+        mp = -0.5*q**2*vm/eps
+        if units!='Ha':
+            mp = convert(mp,'Ha',units)
+        #end if
+        return mp
+    #end def makov_payne
 
 
     def read(self,filepath,format=None,elem=None,block=None,grammar='1.1',cell='prim',contents=False):
@@ -5387,6 +5432,9 @@ def generate_crystal_structure(lattice=None,cell=None,centering=None,
         if kgrid is not None:
             structure.add_kmesh(kgrid,kshift)
         #end if        
+        if tiling!=None:
+            structure = structure.tile(tiling)
+        #end if
         return structure
     #end if
 

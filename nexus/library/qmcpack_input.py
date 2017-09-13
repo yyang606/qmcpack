@@ -1940,6 +1940,14 @@ class kspace_jastrow(QIxml):
     write_types = obj(optimize=yesno)
 #end class kspace_jastrow
 
+class rpa_jastrow(QIxml):
+    tag = 'jastrow'
+    attributes = ['type','name','source','function','kc']
+    parameters = ['longrange']
+    identifier = 'name'
+    write_types = obj(longrange=yesno)
+#end class rpa_jastrow
+
 class correlation(QIxml):
     attributes = ['elementtype','speciesa','speciesb','size','ispecies','especies',
                   'especies1','especies2','isize','esize','rcut','cusp','pairtype',
@@ -1977,7 +1985,7 @@ class distancetable(QIxml):
 
 jastrow = QIxmlFactory(
     name = 'jastrow',
-    types   = dict(one_body=jastrow1,two_body=jastrow2,jastrow1=jastrow1,jastrow2=jastrow2,eei=jastrow3,jastrow3=jastrow3,kspace=kspace_jastrow),
+    types   = dict(one_body=jastrow1,two_body=jastrow2,jastrow1=jastrow1,jastrow2=jastrow2,eei=jastrow3,jastrow3=jastrow3,kspace=kspace_jastrow,kspace_jastrow=kspace_jastrow,rpa=rpa_jastrow,rpa_jastrow=rpa_jastrow),
     typekey = 'type'
     )
 
@@ -2133,9 +2141,9 @@ class structurefactor(QIxml):
 class force(QIxml):
     tag = 'estimator'
     attributes = ['type','name','mode','source','species','target','addionion']
-    write_types= obj(addionion=yesno)
     parameters = ['rcut','nbasis','weightexp']
     identifier = 'name'
+    write_types= obj(addionion=yesno)
 #end class force
 
 class forwardwalking(QIxml):
@@ -2183,7 +2191,7 @@ class skall(QIxml):
     tag = 'estimator'
     attributes = ['name','type','hdf5','source','target','writeionion']
     identifier = 'name'
-    write_types = obj(hdf5=yesno)
+    write_types = obj(hdf5=yesno,writeionion=yesno)
 #end class skall
 
 class gofr(QIxml):
@@ -2197,6 +2205,13 @@ class flux(QIxml):
     attributes = ['type','name']
     identifier = 'name'
 #end class flux
+
+class momentum(QIxml):
+    tag = 'estimator'
+    attributes = ['type','name','grid','samples','hdf5','wavefunction']
+    identifier = 'name'
+    write_types = obj(hdf5=yesno)
+#end class momentum
     
 estimator = QIxmlFactory(
     name  = 'estimator',
@@ -2218,6 +2233,7 @@ estimator = QIxmlFactory(
                  skall               = skall,
                  gofr                = gofr,
                  flux                = flux,
+                 momentum            = momentum,
                  ),
     typekey  = 'type',
     typekey2 = 'name'
@@ -2449,7 +2465,7 @@ classes = [   #standard classes
     header,local,force,forwardwalking,observable,record,rmc,pressure,dmccorrection,
     nofk,mpc_est,flux,distancetable,cpp,element,spline,setparams,
     backflow,transformation,cubicgrid,molecular_orbital_builder,cmc,sk,skall,gofr,
-    host,date,user,
+    host,date,user,rpa_jastrow,momentum
     ]
 types = dict( #simple types and factories
     #host           = param,
@@ -2624,7 +2640,18 @@ density.defaults.set(
 spindensity.defaults.set(
     type='spindensity',name='SpinDensity'
     )
-
+skall.defaults.set(
+    type='skall',name='skall'
+    )
+force.defaults.set(
+    type='Force',name='force'
+    )
+pressure.defaults.set(
+    type='Pressure'
+    )
+momentum.defaults.set(
+    type='momentum'
+    )
 
 
 linear.defaults.set(
