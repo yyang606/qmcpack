@@ -42,7 +42,6 @@ public:
   Backflow_ee(ParticleSet& ions, ParticleSet& els): BackflowFunctionBase(ions,els),first(true) //,RadFun(0)
   {
     myTable = DistanceTable::add(els,DT_AOS);
-    myTable = DistanceTable::add(els);
     tpset = &els;
     resize(NumTargets,NumTargets);
     NumGroups=els.groups();
