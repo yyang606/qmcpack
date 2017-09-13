@@ -44,6 +44,7 @@ public:
   std::vector<int> M;
   std::vector<int> DetID;
   std::map<std::string,SPOSetBasePtr> mySPOSet;
+  int ndet; // track the number of determinants added to this SlaterDet
 
   /**  constructor
    * @param targetPtcl target Particleset
@@ -56,6 +57,9 @@ public:
 
   ///add a SPOSet
   void add(SPOSetBasePtr sposet, const std::string& aname);
+
+  ///set the number of determinants to be added
+  void resize_dets(int ndet);
 
   ///add a new DiracDeterminant to the list of determinants
   virtual

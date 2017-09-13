@@ -24,24 +24,32 @@
 namespace qmcplusplus
 {
 
-SlaterDet::SlaterDet(ParticleSet& targetPtcl)
+SlaterDet::SlaterDet(ParticleSet& targetPtcl) : ndet(0)
 {
   Optimizable = false;
   OrbitalName = "SlaterDet";
-  M.resize(targetPtcl.groups() + 1, 0);
+  int ngroup = targetPtcl.groups();
+  M.resize(ngroup + 1, 0); // YY: Is 'M' used anywhere?
   for (int i = 0; i < M.size(); ++i)
     M[i] = targetPtcl.first(i);
   DetID.resize(targetPtcl.getTotalNum());
-  for (int i = 0; i < targetPtcl.groups(); ++i)
+  for (int i = 0; i < ngroup; ++i)
     for (int j = targetPtcl.first(i); j < targetPtcl.last(i); ++j)
       DetID[j] = i;
-  Dets.resize(targetPtcl.groups(), 0);
+  //Dets.resize(targetPtcl.groups(), 0);
+  // have the builder count the number of <determinant> tags in this <slaterdeterminan>
+  //  this way each determinant is added on a per need basis
 }
 
 ///destructor
 SlaterDet::~SlaterDet()
 {
   ///clean up SPOSet
+}
+
+void SlaterDet::resize_dets(int ndet)
+{
+  Dets.resize(ndet,0);
 }
 
 ///add a new SPOSet to the list of determinants
@@ -67,7 +75,11 @@ void SlaterDet::add(Determinant_t* det, int ispin)
     APP_ABORT("SlaterDet::add(Determinant_t* det, int ispin) is alreaded instantiated.");
   }
   else
+  {
+    ndet += 1;
+    Dets.resize(ndet,0);
     Dets[ispin] = det;
+  }
   Optimizable = Optimizable || det->Optimizable;
   //int last=Dets.size();
   //Dets.push_back(det);

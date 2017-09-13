@@ -252,8 +252,23 @@ bool SlaterDetBuilder::put(xmlNodePtr cur)
       {
         slaterdet_0->add(iter->second,iter->first);
       }
-      int spin_group = 0;
+
+      // step 1: count the number of determinants to be added to slaterdet_0
+      int ndet = 0;
       xmlNodePtr tcur = cur->children;
+      while (tcur != NULL)
+      {
+        getNodeName(tname,tcur);
+        if (tname == det_tag || tname == rn_tag) ndet++;
+        tcur = tcur->next;
+      }
+
+      // step 2: make space 
+      slaterdet_0->resize_dets(ndet);
+
+      // step 3: actually add the determinants
+      int spin_group = 0;
+      tcur = cur->children; // rewind
       while (tcur != NULL)
       {
         getNodeName(tname,tcur);
