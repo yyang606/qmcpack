@@ -71,13 +71,12 @@ IonOrbitalBuilder:: put(xmlNodePtr cur)
       orb->ParticleAlpha[iat]  = 0.0;
     }
   }
-  //if (num_nonzero != sourcePtcl->getTotalNum())
-  //{
-  //  app_error() << "  The number of nonzero widths should be the same as the number of\n"
-  //              << "  centers for the ionwf.\n";
-  //  abort();
-  //}
-  //assert (num_nonzero == sourcePtcl->getTotalNum());
+  if (num_nonzero != sourcePtcl->getTotalNum())
+  {
+    app_error() << "  The number of nonzero widths should be the same as the number of\n"
+                << "  centers for the ionwf.\n";
+    abort();
+  }
   targetPsi.addOrbital (orb, nameOpt);
   return true;
 }
