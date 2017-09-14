@@ -637,18 +637,21 @@ EinsplineSetBuilder::AnalyzeTwists2()
       app_log().flush();
     }
   }
+  // !!!! HACK HACK HACK Always use complex orbitals
+  //  real orbitals are broken for backflow
   // Find out if we can make real orbitals
-  UseRealOrbitals = true;
-  for (int i=0; i < DistinctTwists.size(); i++)
-  {
-    int ti = DistinctTwists[i];
-    PosType twist = TwistAngles[ti];
-    for (int j=0; j<OHMMS_DIM; j++)
-      if (std::abs(twist[j]-0.0) > MatchingTol &&
-          std::abs(twist[j]-0.5) > MatchingTol &&
-          std::abs(twist[j]+0.5) > MatchingTol)
-        UseRealOrbitals = false;
-  }
+  //UseRealOrbitals = true;
+  //for (int i=0; i < DistinctTwists.size(); i++)
+  //{
+  //  int ti = DistinctTwists[i];
+  //  PosType twist = TwistAngles[ti];
+  //  for (int j=0; j<OHMMS_DIM; j++)
+  //    if (std::abs(twist[j]-0.0) > MatchingTol &&
+  //        std::abs(twist[j]-0.5) > MatchingTol &&
+  //        std::abs(twist[j]+0.5) > MatchingTol)
+  //      UseRealOrbitals = false;
+  //}
+  UseRealOrbitals = false;
   if (UseRealOrbitals && (DistinctTwists.size() > 1))
   {
     app_log() << "***** Use of real orbitals is possible, but not currently implemented\n"
