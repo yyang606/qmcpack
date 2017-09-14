@@ -146,7 +146,7 @@ EinsplineSet* EinsplineSetBuilder::create_einspline_extended(xmlNodePtr cur, int
     APP_ABORT("use_einspline_set_extended only support complex orbitals");
   if (Format != ESHDF)
     APP_ABORT("use_einspline_set_extended only support ESHDF format");
-  // if (spo_prec!="double") // TODO: pass spo_prec in here to abort
+  // if (spo_prec!="double") check in caller, which has access to spo_prec
 
   // create EinsplineSetExtended
   OrbitalSet = new EinsplineSetExtended<complex<double>>;
@@ -322,11 +322,45 @@ EinsplineSetBuilder::createSPOSetFromXML(xmlNodePtr cur)
   Timer mytimer;
   if (use_einspline_set_extended=="yes")
   { // create EinsplineSet and finish this function (EinsplineSetBuilder::createSPOSetFromXML) right here
+    if (spo_prec != "double") APP_ABORT("use_einspline_set_extended only support double precision");
     OrbitalSet = create_einspline_extended(cur,spinSet,sortBands,numOrbs);
     SPOSetMap[aset] = OrbitalSet;
     spo_timer->stop();
     return OrbitalSet;
-  }
+  } else { // check to make sure you do not need EinsplineSet
+
+    // look for <backflow>, would be a lot easier with xpath, but I cannot get it to work
+    bool has_backflow = false;
+
+    xmlNodePtr wf  = XMLRoot->parent; // <wavefuntion>
+    xmlNodePtr kid = wf->children; 
+    while (kid != NULL)
+    {
+      std::string tag((const char*)(kid->name));
+      if (tag=="determinantset" || tag=="sposet_builder")
+      {
+        xmlNodePtr kid1 = kid->children;
+        while (kid1 != NULL)
+        {
+          std::string tag1((const char*)(kid1->name));
+          if (tag1=="backflow")
+          {
+            has_backflow = true;
+          }
+          kid1 = kid1->next;
+        }
+      }
+      kid = kid->next;
+    }
+
+    if (has_backflow)
+    {
+      std::string builder_tag( (const char*)(XMLRoot->name) );
+      APP_ABORT("backflow needs grad_hess and complex orbitals, please set use_old_spline=\"yes\" in "
+        + builder_tag);
+    }
+
+  } // end if use_einspline_set_extended
 
   mytimer.restart();
   OccupyBands(spinSet, sortBands, numOrbs);
