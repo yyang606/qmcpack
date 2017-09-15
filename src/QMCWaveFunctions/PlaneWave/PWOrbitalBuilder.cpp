@@ -113,6 +113,24 @@ bool PWOrbitalBuilder::putSlaterDet(xmlNodePtr cur)
   typedef DiracDeterminantBase Det_t;
   SlaterDeterminant_t* sdet(new SlaterDeterminant_t(targetPtcl));
   int spin_group=0;
+
+  // count the number of determinants
+  int ndet=0;
+  xmlNodePtr kid=cur->children;
+  while(kid != NULL)
+  {
+    std::string cname((const char*)(kid->name));
+    if(cname == "determinant")
+    {
+      ndet++;
+    }
+    kid = kid->next;
+  }
+
+  // make some space
+  sdet->resize_dets(ndet);
+
+  // now build the determinants
   cur=cur->children;
   while(cur != NULL)
   {

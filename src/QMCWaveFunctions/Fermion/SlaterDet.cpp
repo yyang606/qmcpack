@@ -77,7 +77,6 @@ void SlaterDet::add(Determinant_t* det, int ispin)
   else
   {
     ndet += 1;
-    Dets.resize(ndet,0);
     Dets[ispin] = det;
   }
   Optimizable = Optimizable || det->Optimizable;
@@ -327,6 +326,7 @@ SlaterDet::RealType SlaterDet::evaluateLog(ParticleSet& P,
 OrbitalBasePtr SlaterDet::makeClone(ParticleSet& tqp) const
 {
   SlaterDet* myclone = new SlaterDet(tqp);
+  myclone->resize_dets(Dets.size());
   myclone->Optimizable=Optimizable;
   if (mySPOSet.size() > 1)
   {
@@ -392,6 +392,11 @@ OrbitalBasePtr SlaterDet::makeClone(ParticleSet& tqp) const
       newD->resetTargetParticleSet(tqp);
       myclone->add(newD, i);
     }
+  }
+  // check cloning
+  for (int idet=0;idet<myclone->Dets.size();idet++)
+  {
+    if (myclone->Dets[idet] == NULL) APP_ABORT("SlaterDet::makeClone failed");
   }
   //map<SPOSetBase*,SPOSetBase*> spomap;
   //SlaterDet* myclone= new SlaterDet(*this);
