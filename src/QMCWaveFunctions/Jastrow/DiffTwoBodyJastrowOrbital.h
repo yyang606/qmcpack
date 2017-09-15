@@ -48,6 +48,7 @@ class DiffTwoBodyJastrowOrbital: public DiffOrbitalBase
   std::vector<GradVectorType*> gradLogPsi;
   std::vector<ValueVectorType*> lapLogPsi;
   std::map<std::string,FT*> J2Unique;
+  std::vector<RealType> mass_vec;
   ParticleSet* PtclRef;
 
 public:
@@ -59,6 +60,18 @@ public:
     NumPtcls=p.getTotalNum();
     NumGroups=p.groups();
     F.resize(NumGroups*NumGroups,0);
+    
+    // save particle masses for kinetic energy (needed in evaluateDerivatives)
+    mass_vec.resize(NumPtcls);
+    SpeciesSet& tspecies(p.getSpeciesSet());
+    int massind = tspecies.getAttribute("mass");
+    int num_species = tspecies.size();
+    for (int iptcl=0;iptcl<NumPtcls;iptcl++)
+    {
+      int ispec = p.GroupID(iptcl);
+      mass_vec[iptcl] = tspecies(massind,ispec);
+    }
+
   }
 
   ~DiffTwoBodyJastrowOrbital()
@@ -281,7 +294,13 @@ public:
         if (rcsingles[k])
         {
           dlogpsi[kk]=dLogPsi[k];
-          dhpsioverpsi[kk]=-0.5*Sum(*lapLogPsi[k])-Dot(P.G,*gradLogPsi[k]);
+          RealType dH=0.0;
+          for (int iptcl=0;iptcl<NumPtcls;iptcl++)
+          {
+            dH += -1./(2.*mass_vec[iptcl]) * (*lapLogPsi[k])[iptcl]
+              - 1./(mass_vec[iptcl]) * dot(P.G[iptcl],(*gradLogPsi[k])[iptcl]);
+          }
+          dhpsioverpsi[kk]=dH;
         }
         //optVars.setDeriv(p,dLogPsi[ip],-0.5*Sum(*lapLogPsi[ip])-Dot(P.G,*gradLogPsi[ip]));
       }
