@@ -209,6 +209,7 @@ public:
   };
 #endif
   int NumParticles;
+  std::vector<RealType> mass_vec;
   GradMatrix_t dFa;
   HessMatrix_t grad_grad_psiM;
   HessVector_t grad_gradV;

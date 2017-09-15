@@ -36,8 +36,20 @@ DiracDeterminantWithBackflow::DiracDeterminantWithBackflow(ParticleSet &ptcl, SP
   OrbitalName="DiracDeterminantWithBackflow";
   registerTimers();
   BFTrans=BF;
-  NumParticles = ptcl.getTotalNum();
+  NumParticles = ptcl.getTotalNum(); // NumParticles is the total number of particles
+  // NumPtcls is reserved to be the number of particles in a particular species
   NP=0;
+
+  // read particle masses
+  mass_vec.resize(NumParticles);
+  SpeciesSet& spec_set(ptcl.getSpeciesSet());
+  int mass_idx = spec_set.getAttribute("mass");
+  for (int iptcl=0;iptcl<NumParticles;iptcl++)
+  {
+    int ispec = ptcl.GroupID(iptcl);
+    mass_vec[iptcl] = spec_set(mass_idx,ispec);
+  }
+
 }
 
 ///default destructor
@@ -945,7 +957,7 @@ DiracDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
       for(int i=0; i<num; i++)
         B_j += BFTrans->Bmat_full(i,FirstIndex+j);
       dLa += (rcdot(Fmat(j,j),BFTrans->Ymat(pa,FirstIndex+j)) +
-              dot(B_j,dFa(j,j)));
+              dot(B_j,dFa(j,j)))/mass_vec[j];
       dpsia += rcdot(Fmat(j,j),BFTrans->Cmat(pa,FirstIndex+j));
     }
     for(int j=0; j<NumPtcls; j++)
@@ -970,7 +982,7 @@ DiracDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
                                     ) - rcdot(BFTrans->Cmat(pa,FirstIndex+k),Fmat(j,k))
                        *Qmat(k,j) );
       }
-      dLa += (traceAtB(a_j_prime,Qmat(j,j)) + traceAtB(Ajk_sum(j,j),q_j_prime));
+      dLa += (traceAtB(a_j_prime,Qmat(j,j)) + traceAtB(Ajk_sum(j,j),q_j_prime))/mass_vec[j];
     }
     for(int j=0; j<NumPtcls; j++)
     {
@@ -982,17 +994,22 @@ DiracDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
           a_jk_prime += ( dot(transpose(BFTrans->Xmat(pa,i,FirstIndex+j)),BFTrans->Amat(i,FirstIndex+k)) + dot(transpose(BFTrans->Amat(i,FirstIndex+j)),BFTrans->Xmat(pa,i,FirstIndex+k)) );
         dLa -= (traceAtB(a_jk_prime, outerProduct(Fmat(k,j),Fmat(j,k)))
                 + traceAtB(Ajk_sum(j,k), outerProduct(dFa(k,j),Fmat(j,k))
-                           + outerProduct(Fmat(k,j),dFa(j,k)) ));
+                           + outerProduct(Fmat(k,j),dFa(j,k)) ))/mass_vec[j];
       }  // k
     }   // j
+    ValueType dGra = 0.0;
+    for (int iptcl=0;iptcl<NumParticles;iptcl++)
+    {
+      dGra += dot( P.G[iptcl],Gtemp[iptcl] )/mass_vec[iptcl];
+    }
     //int kk = pa; //BFTrans->optIndexMap[pa];
     int kk = BFTrans->optIndexMap[pa];
 #if defined(QMC_COMPLEX)
     dlogpsi[kk]+=real(dpsia);
-    dhpsioverpsi[kk] -= real(0.5*static_cast<ParticleSet::ParticleValue_t>(dLa)+Dot(P.G,Gtemp));
+    dhpsioverpsi[kk] -= real(0.5*static_cast<ParticleSet::ParticleValue_t>(dLa)+dGra);
 #else
     dlogpsi[kk]+=dpsia;
-    dhpsioverpsi[kk] -= (0.5*static_cast<ParticleSet::ParticleValue_t>(dLa)+Dot(P.G,Gtemp));
+    dhpsioverpsi[kk] -= (0.5*static_cast<ParticleSet::ParticleValue_t>(dLa)+dGra);
 #endif
   }
 }
