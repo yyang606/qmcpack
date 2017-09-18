@@ -294,13 +294,13 @@ public:
         if (rcsingles[k])
         {
           dlogpsi[kk]=dLogPsi[k];
-          RealType dH=0.0;
+          ValueType dH=0.0;
           for (int iptcl=0;iptcl<NumPtcls;iptcl++)
           {
-            dH += -1./(2.*mass_vec[iptcl]) * (*lapLogPsi[k])[iptcl]
-              - 1./(mass_vec[iptcl]) * dot(P.G[iptcl],(*gradLogPsi[k])[iptcl]);
+            dH -= ( 0.5*(*lapLogPsi[k])[iptcl]
+                + dot(P.G[iptcl],(*gradLogPsi[k])[iptcl]) )/(mass_vec[iptcl]);
           }
-          dhpsioverpsi[kk]=dH;
+          convert(dH,dhpsioverpsi[kk]);
         }
         //optVars.setDeriv(p,dLogPsi[ip],-0.5*Sum(*lapLogPsi[ip])-Dot(P.G,*gradLogPsi[ip]));
       }
