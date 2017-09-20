@@ -430,6 +430,7 @@ struct BsplineFunctor: public OptimizableFunctorBase
     app_log() << " rcut = " << cutoff_radius << std::endl;
     resize(NumParams);
     // Now read coefficents
+    bool coeff_initialized=false;
     xmlNodePtr xmlCoefs = cur->xmlChildrenNode;
     while (xmlCoefs != NULL)
     {
@@ -497,9 +498,11 @@ struct BsplineFunctor: public OptimizableFunctorBase
         }
         app_log() << "Parameter     Name      Value\n";
         myVars.print(app_log());
-      }
+        coeff_initialized = true;
+      } // coefficients
       xmlCoefs = xmlCoefs->next;
     }
+    if (!coeff_initialized) APP_ABORT("failed to parse coefficients");
     reset();
     real_type zeros=0;
     for (int i=0; i< NumParams; i++)

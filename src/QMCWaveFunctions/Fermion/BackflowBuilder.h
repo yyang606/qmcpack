@@ -32,6 +32,7 @@
 #include "LongRange/LRRPABFeeHandlerTemp.h"
 #include "Particle/ParticleSet.h"
 #include "Configuration.h"
+#include "qmc_common.h"
 #include <map>
 #include <cmath>
 

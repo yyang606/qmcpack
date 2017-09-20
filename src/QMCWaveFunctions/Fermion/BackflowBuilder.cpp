@@ -271,9 +271,9 @@ void BackflowBuilder::addOneBody(xmlNodePtr cur)
         dum->uniqueRadFun.push_back(bsp);
         offsets.push_back(tbf->numParams);
         tbf->numParams += bsp->NumParams;
-        if(OHMMS::Controller->rank()==0 & i==0)
+        if(qmc_common.io_node)
         {
-          char fname[64];
+          char fname[128];
           sprintf(fname,"BFe-I.%s.dat",(bsp->myVars.NameAndValue[0].first).c_str());
           std::ofstream fout(fname);
           fout.setf(std::ios::scientific, std::ios::floatfield);
