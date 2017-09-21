@@ -916,7 +916,7 @@ DiracDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
       HessType& a_jk = Ajk_sum(j,k);
       a_jk=0;
       for(int n=0; n<num; n++)
-        a_jk += dot(transpose(BFTrans->Amat(n,FirstIndex+j)),BFTrans->Amat(n,FirstIndex+k));
+        a_jk += dot(transpose(BFTrans->Amat(n,FirstIndex+j)),BFTrans->Amat(n,FirstIndex+k))/mass_vec[n];
     }
   // this is a mess, there should be a better way
   // to rearrange this
@@ -955,9 +955,9 @@ DiracDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
       GradType B_j;
       B_j=0;
       for(int i=0; i<num; i++)
-        B_j += BFTrans->Bmat_full(i,FirstIndex+j);
+        B_j += BFTrans->Bmat_full(i,FirstIndex+j)/mass_vec[i];
       dLa += (rcdot(Fmat(j,j),BFTrans->Ymat(pa,FirstIndex+j)) +
-              dot(B_j,dFa(j,j)))/mass_vec[j];
+              dot(B_j,dFa(j,j)));
       dpsia += rcdot(Fmat(j,j),BFTrans->Cmat(pa,FirstIndex+j));
     }
     for(int j=0; j<NumPtcls; j++)
@@ -965,7 +965,7 @@ DiracDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
       HessType a_j_prime;
       a_j_prime=0;
       for(int i=0; i<num; i++)
-        a_j_prime += ( dot(transpose(BFTrans->Xmat(pa,i,FirstIndex+j)),BFTrans->Amat(i,FirstIndex+j)) + dot(transpose(BFTrans->Amat(i,FirstIndex+j)),BFTrans->Xmat(pa,i,FirstIndex+j)) );
+        a_j_prime += ( dot(transpose(BFTrans->Xmat(pa,i,FirstIndex+j)),BFTrans->Amat(i,FirstIndex+j)) + dot(transpose(BFTrans->Amat(i,FirstIndex+j)),BFTrans->Xmat(pa,i,FirstIndex+j)) )/mass_vec[i];
       HessType q_j_prime;
       q_j_prime=0;
       PosType& cj = BFTrans->Cmat(pa,FirstIndex+j);
@@ -982,7 +982,7 @@ DiracDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
                                     ) - rcdot(BFTrans->Cmat(pa,FirstIndex+k),Fmat(j,k))
                        *Qmat(k,j) );
       }
-      dLa += (traceAtB(a_j_prime,Qmat(j,j)) + traceAtB(Ajk_sum(j,j),q_j_prime))/mass_vec[j];
+      dLa += (traceAtB(a_j_prime,Qmat(j,j)) + traceAtB(Ajk_sum(j,j),q_j_prime));
     }
     for(int j=0; j<NumPtcls; j++)
     {
@@ -991,10 +991,10 @@ DiracDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
         HessType a_jk_prime;
         a_jk_prime=0;
         for(int i=0; i<num; i++)
-          a_jk_prime += ( dot(transpose(BFTrans->Xmat(pa,i,FirstIndex+j)),BFTrans->Amat(i,FirstIndex+k)) + dot(transpose(BFTrans->Amat(i,FirstIndex+j)),BFTrans->Xmat(pa,i,FirstIndex+k)) );
+          a_jk_prime += ( dot(transpose(BFTrans->Xmat(pa,i,FirstIndex+j)),BFTrans->Amat(i,FirstIndex+k)) + dot(transpose(BFTrans->Amat(i,FirstIndex+j)),BFTrans->Xmat(pa,i,FirstIndex+k)) )/mass_vec[i];
         dLa -= (traceAtB(a_jk_prime, outerProduct(Fmat(k,j),Fmat(j,k)))
                 + traceAtB(Ajk_sum(j,k), outerProduct(dFa(k,j),Fmat(j,k))
-                           + outerProduct(Fmat(k,j),dFa(j,k)) ))/mass_vec[j];
+                           + outerProduct(Fmat(k,j),dFa(j,k)) ));
       }  // k
     }   // j
     ValueType dGra = 0.0;
