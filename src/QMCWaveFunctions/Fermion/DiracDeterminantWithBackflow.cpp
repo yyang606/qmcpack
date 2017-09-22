@@ -952,11 +952,15 @@ DiracDeterminantWithBackflow::evaluateDerivatives(ParticleSet& P,
     }
     for(int j=0; j<NumPtcls; j++)
     {
-      GradType B_j;
-      B_j=0;
+      GradType B_j,Y_j;
+      B_j=0; Y_j=0;
       for(int i=0; i<num; i++)
+      {
         B_j += BFTrans->Bmat_full(i,FirstIndex+j)/mass_vec[i];
-      dLa += (rcdot(Fmat(j,j),BFTrans->Ymat(pa,FirstIndex+j)) +
+        Y_j += BFTrans->Ymat_full(pa,i,FirstIndex+j)/mass_vec[i];
+      }
+      //Y_j = BFTrans->Ymat(pa,FirstIndex+j);
+      dLa += (rcdot(Fmat(j,j),Y_j) +
               dot(B_j,dFa(j,j)));
       dpsia += rcdot(Fmat(j,j),BFTrans->Cmat(pa,FirstIndex+j));
     }

@@ -53,10 +53,10 @@ public:
   typedef Matrix<HessType>      HessMatrix_t;
 
   typedef Array<HessType,3>       HessArray_t;
+  typedef Array<GradType,3>       GradArray_t;
 
   typedef MCWalkerConfiguration::Walker_t Walker_t;
   typedef std::map<std::string,ParticleSet*>   PtclPoolType;
-  //typedef Array<GradType,3>       GradArray_t;
   //typedef Array<PosType,3>        PosArray_t;
 
   ///number of quantum particles
@@ -118,6 +118,8 @@ public:
 
   // \sum_i \nabla_a B_{i,j}^{\alpha}
   GradMatrix_t Ymat;
+  // \nabla_a B_{i,j}^{\alpha}
+  GradArray_t Ymat_full;
 
   // \nabla_a x_i^{\alpha}
   GradMatrix_t Cmat;
@@ -547,6 +549,7 @@ public:
       Cmat.resize(numParams,NumTargets);
       Xmat.resize(numParams,NumTargets,NumTargets);
       Ymat.resize(numParams,NumTargets);
+      Ymat_full.resize(numParams,NumTargets,NumTargets);
     }
     // Uncomment to test calculation of Cmat,Xmat,Ymat
     //testDeriv(P);
@@ -557,13 +560,15 @@ public:
     Ymat=0.0;
     for(int i=0; i<Xmat.size(); i++)
       Xmat(i)=0;
+    for(int i=0; i<Ymat_full.size(); i++)
+      Ymat_full(i)=0;
     for(int i=0; i<NumTargets; i++)
     {
       QP.R[i] = P.R[i];
       Amat(i,i).diagonal(1.0);
     }
     for(int i=0; i<bfFuns.size(); i++)
-      bfFuns[i]->evaluateWithDerivatives(P,QP,Bmat_full,Amat,Cmat,Ymat,Xmat);
+      bfFuns[i]->evaluateWithDerivatives(P,QP,Bmat_full,Amat,Cmat,Ymat,Xmat,Ymat_full);
     QP.update(0);
   }
 
@@ -584,13 +589,15 @@ public:
 //       Xmat=DummyHess;
     for(int i=0; i<Xmat.size(); i++)
       Xmat(i)=0;
+    for(int i=0; i<Ymat_full.size(); i++)
+      Ymat_full(i)=0;
     for(int i=0; i<NumTargets; i++)
     {
       QP.R[i] = P.R[i];
       Amat(i,i).diagonal(1.0);
     }
     for(int i=0; i<bfFuns.size(); i++)
-      bfFuns[i]->evaluateWithDerivatives(P,QP,Bmat_full,Amat,Cmat,Ymat,Xmat);
+      bfFuns[i]->evaluateWithDerivatives(P,QP,Bmat_full,Amat,Cmat,Ymat,Xmat,Ymat_full);
     ParticleSet::ParticlePos_t qp_0;
     ParticleSet::ParticlePos_t qp_1;
     ParticleSet::ParticlePos_t qp_2;

@@ -647,7 +647,7 @@ public:
    *  calculate derivatives wrt to variational parameters
    */
   inline void
-  evaluateWithDerivatives(const ParticleSet& P, ParticleSet& QP, GradMatrix_t& Bmat_full, HessMatrix_t& Amat, GradMatrix_t& Cmat, GradMatrix_t& Ymat, HessArray_t& Xmat)
+  evaluateWithDerivatives(const ParticleSet& P, ParticleSet& QP, GradMatrix_t& Bmat_full, HessMatrix_t& Amat, GradMatrix_t& Cmat, GradMatrix_t& Ymat, HessArray_t& Xmat, GradArray_t& Ymat_full)
   {
     RealType du,d2u,temp;
     for(int i=0; i<myTable->size(SourceIndex); i++)
@@ -708,9 +708,13 @@ public:
           Xmat(la,j,i) += Xmat(la,i,j);
           Xmat(la,i,i) -= Xmat(la,i,j);
           Xmat(la,j,j) -= Xmat(la,i,j);
-          uk = 2.0*(derivsju[prm][2]+(OHMMS_DIM+1)*derivsju[prm][1]*myTable->rinv(nn))*myTable->dr(nn);
-          Ymat(la,i) -= uk;
-          Ymat(la,j) += uk;
+          uk = (derivsju[prm][2]+(OHMMS_DIM+1)*derivsju[prm][1]*myTable->rinv(nn))*myTable->dr(nn);
+          Ymat(la,i) -= 2.0*uk;
+          Ymat(la,j) += 2.0*uk;
+          Ymat_full(la,i,i) -= uk;
+          Ymat_full(la,j,j) += uk;
+          Ymat_full(la,i,j) += uk;
+          Ymat_full(la,j,i) -= uk;
         }
       }
     }

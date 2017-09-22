@@ -482,7 +482,7 @@ public:
    *  calculate derivatives wrt to variational parameters
    */
   inline void
-  evaluateWithDerivatives(const ParticleSet& P, ParticleSet& QP, GradMatrix_t& Bmat_full, HessMatrix_t& Amat, GradMatrix_t& Cmat, GradMatrix_t& Ymat, HessArray_t& Xmat)
+  evaluateWithDerivatives(const ParticleSet& P, ParticleSet& QP, GradMatrix_t& Bmat_full, HessMatrix_t& Amat, GradMatrix_t& Cmat, GradMatrix_t& Ymat, HessArray_t& Xmat, GradArray_t& Ymat_full)
   {
     RealType du,d2u,temp;
     for(int sg=0; sg<RadFunc.rows(); ++sg)
@@ -523,6 +523,7 @@ public:
                 Xmat(la,jat,jat)[4] += derivsju[prm][0];
                 Xmat(la,jat,jat)[8] += derivsju[prm][0];
                 Ymat(la,jat) += (derivsju[prm][2]+4.0*derivsju[prm][1]*myTable->rinv(nn))*myTable->dr(nn);
+                Ymat_full(la,jat,jat) += (derivsju[prm][2]+4.0*derivsju[prm][1]*myTable->rinv(nn))*myTable->dr(nn);
               }
             }
           else

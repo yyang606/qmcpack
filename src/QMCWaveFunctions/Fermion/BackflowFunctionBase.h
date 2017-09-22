@@ -46,7 +46,7 @@ public:
   typedef Matrix<HessType>      HessMatrix_t;
 
   typedef Array<HessType,3>       HessArray_t;
-  //typedef Array<GradType,3>       GradArray_t;
+  typedef Array<GradType,3>       GradArray_t;
   //typedef Array<PosType,3>        PosArray_t;
 
   ///recasting enum of DistanceTableData to maintain consistency
@@ -229,7 +229,7 @@ public:
   /** calculate quasi-particle coordinates, Bmat and Amat
    *  calculate derivatives wrt to variational parameters
    */
-  virtual void evaluateWithDerivatives(const ParticleSet& P, ParticleSet& QP, GradMatrix_t& Bmat, HessMatrix_t& Amat, GradMatrix_t& Cmat, GradMatrix_t& Ymat, HessArray_t& Xmat)=0;
+  virtual void evaluateWithDerivatives(const ParticleSet& P, ParticleSet& QP, GradMatrix_t& Bmat, HessMatrix_t& Amat, GradMatrix_t& Cmat, GradMatrix_t& Ymat, HessArray_t& Xmat, GradArray_t& Ymat_full)=0;
 
 };
 
