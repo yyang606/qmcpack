@@ -23,6 +23,7 @@
 #include "QMCWaveFunctions/Jastrow/JastrowBuilder.h"
 #include "QMCWaveFunctions/Fermion/SlaterDetBuilder.h"
 #include "QMCWaveFunctions/IonOrbitalBuilder.h"
+#include "QMCWaveFunctions/Boltzmannon/HartreeProductBuilder.h"
 
 #if defined(QMC_COMPLEX)
 #include "QMCWaveFunctions/ElectronGas/ElectronGasComplexOrbitalBuilder.h"
@@ -87,6 +88,12 @@ bool WaveFunctionFactory::build(xmlNodePtr cur, bool buildtree)
     {
       BasisSetFactory basisFactory(*targetPtcl,*targetPsi,ptclPool);
       basisFactory.build_sposet_collection(cur);
+    }
+    else if (cname == OrbitalBuilderBase::product_tag)
+    {
+      HartreeProductBuilder *builder = new HartreeProductBuilder(*targetPtcl,*targetPsi);
+      success = builder->put(cur);
+      addNode(builder,cur);
     }
     else if (cname == OrbitalBuilderBase::detset_tag)
     {

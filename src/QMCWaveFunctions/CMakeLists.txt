@@ -35,6 +35,8 @@ SET(WFBASE_SRCS
   CompositeSPOSet.cpp
   HarmonicOscillator/SHOSet.cpp
   HarmonicOscillator/SHOSetBuilder.cpp
+  Boltzmannon/HartreeProduct.cpp
+  Boltzmannon/HartreeProductBuilder.cpp
   )
 
 
