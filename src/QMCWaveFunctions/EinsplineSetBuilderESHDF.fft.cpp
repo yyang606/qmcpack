@@ -134,7 +134,7 @@ bool EinsplineSetBuilder::ReadOrbitalInfo_ESHDF()
   // Read atom orbital info from xml //
   /////////////////////////////////////
   // construct Super2Prim mapping.
-  if(Super2Prim.size()==0)
+  if(Super2Prim.size()==0 && !skip_h5_atom_check)
   {
     //SourcePtcl->convert2Cart(SourcePtcl->R);
     Super2Prim.resize(SourcePtcl->R.size(),-1);

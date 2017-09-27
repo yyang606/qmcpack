@@ -40,7 +40,8 @@ EinsplineSetBuilder::EinsplineSetBuilder(ParticleSet& p, PtclPoolType& psets, xm
   TileFactor(1,1,1), TwistNum(0), LastSpinSet(-1),
   NumOrbitalsRead(-1), NumMuffinTins(0), NumCoreStates(0),
   NumBands(0), NumElectrons(0), NumSpins(0), NumTwists(0),
-  H5FileID(-1), makeRotations(false), MeshFactor(1.0), MeshSize(0,0,0)
+  H5FileID(-1), makeRotations(false), MeshFactor(1.0), MeshSize(0,0,0),
+  skip_h5_atom_check(false)
 {
   //assume one, not safe!! 
   myTableIndex=1;
@@ -90,10 +91,13 @@ EinsplineSetBuilder::~EinsplineSetBuilder()
 bool
 EinsplineSetBuilder::put(xmlNodePtr cur)
 {
-  std::string hdfName;
+  std::string hdfName,skipOpt;
   OhmmsAttributeSet attribs;
   attribs.add (hdfName, "href");
-  return attribs.put(XMLRoot);
+  attribs.add (skipOpt, "skip_h5_atom_check");
+  bool success = attribs.put(XMLRoot);
+  if (skipOpt == "yes") skip_h5_atom_check=true;
+  return success;
 }
 
 bool

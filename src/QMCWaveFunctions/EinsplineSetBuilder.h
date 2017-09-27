@@ -193,6 +193,7 @@ public:
   bool ReadOrbitalInfo_ESHDF ();
   void BroadcastOrbitalInfo();
   bool CheckLattice();
+  bool skip_h5_atom_check;
 
   /** read gvectors for each twist
    * @return true, if psi_g is found
