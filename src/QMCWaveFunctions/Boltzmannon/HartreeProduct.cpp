@@ -31,7 +31,7 @@ namespace qmcplusplus
     ,ParticleSet::ParticleGradient_t& G
     ,ParticleSet::ParticleLaplacian_t& L)
   {
-    // YY: Is there an SPO function for jsut the diagonal of psiM etc.?
+    // YY: Is there an SPO function for just the diagonal of psiM etc.?
     SPOVGLTimer.start();
     Phi->evaluate(P,FirstIndex,LastIndex,psiM,dpsiM,d2psiM);
     SPOVGLTimer.stop();
@@ -47,8 +47,8 @@ namespace qmcplusplus
       wf_val *= val;
       grad = dpsiM(iptcl,iptcl)/val;
       lap  = d2psiM(iptcl,iptcl)/val-dot(grad,grad);
-      G[iptcl] += grad;
-      L[iptcl] += lap;
+      G[FirstIndex+iptcl] += grad;
+      L[FirstIndex+iptcl] += lap;
     }
     LogValue = std::log(wf_val); // wf_val should be positive by definition
     return LogValue;
