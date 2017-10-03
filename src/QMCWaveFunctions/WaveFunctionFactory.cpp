@@ -89,7 +89,7 @@ bool WaveFunctionFactory::build(xmlNodePtr cur, bool buildtree)
       BasisSetFactory basisFactory(*targetPtcl,*targetPsi,ptclPool);
       basisFactory.build_sposet_collection(cur);
     }
-    else if (cname == OrbitalBuilderBase::product_tag)
+    else if (cname == OrbitalBuilderBase::hartree_product_tag)
     {
       HartreeProductBuilder *builder = new HartreeProductBuilder(*targetPtcl,*targetPsi);
       success = builder->put(cur);

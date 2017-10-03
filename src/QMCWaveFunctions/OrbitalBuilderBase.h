@@ -57,7 +57,7 @@ public:
   /// the element name for a distancetable
   static std::string dtable_tag;
   /// the element name for Hartree product of single-particle orbital set
-  static std::string product_tag;
+  static std::string hartree_product_tag;
   /// the element name for jatrow
   static std::string jastrow_tag;
   /// the element name for a set of Slater determinants, contains 1..* Slater determinants

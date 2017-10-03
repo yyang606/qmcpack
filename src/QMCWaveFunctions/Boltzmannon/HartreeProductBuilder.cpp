@@ -11,11 +11,22 @@ namespace qmcplusplus
 
   bool HartreeProductBuilder::put(xmlNodePtr cur)
   {
-    // set defaults
-    std::string group_name  = "p";
-    std::string sposet_name = "spo_p";
+    // This function reads the xml node 'cur' and builds the HartreeProduct wavefunction.
+    //  A pointer to the built wavefunction is passed to targetPsi->Z.
+    // Returns:
+    //   bool: success
+    // Effect:
+    //   add a term to targetPsi->Z
+    
+    // check that the builder is reading the correct xml node
+    std::string tag;
+    getNodeName(tag,cur);
+    if (tag!=hartree_product_tag) APP_ABORT("Dev. Error: HartreeProductBuilder is intended to read <"<<OrbitalBuilderBase::hartree_product_tag<<"> not <"<<tag<<">. Disable abort with caution.");
+
+    // read and validate inputs
     std::string orb_name    = "HartreeProduct";
-    // use inputs to over-ride defaults
+    std::string group_name  = "";
+    std::string sposet_name = "";
     std::string nameOpt,sposetOpt,groupOpt;
     OhmmsAttributeSet attrib;
     attrib.add(nameOpt,"name");
@@ -23,8 +34,10 @@ namespace qmcplusplus
     attrib.add(sposetOpt,"sposet");
     attrib.put(cur);
     if (nameOpt != "") orb_name = nameOpt;
-    if (sposetOpt != "") sposet_name = sposetOpt;
-    if (groupOpt != "") group_name = groupOpt;
+    sposet_name = sposetOpt;
+    group_name  = groupOpt;
+    if (sposet_name=="") APP_ABORT("HartreeProduct requires sposet attribute.");
+    if (group_name =="") APP_ABORT("HartreeProduct requires group attribute.");
 
     // find desired particles
     int first,last; first=last=-1;
@@ -38,11 +51,11 @@ namespace qmcplusplus
         last  = targetPtcl.last(ispec);
       }
     }
-
-    if (first==-1 || last==-1) APP_ABORT("failed to find particle species "+group_name); 
+    if (first==-1 || last==-1) APP_ABORT("failed to find particle species: "+group_name); 
 
     // find desired SPO set
     SPOSetBasePtr sposet = get_sposet(sposet_name); // get_sposet is from BasisSetFactory
+    if (sposet==NULL) APP_ABORT("failed to find single-particle orbital set: "+sposet_name);
 
     // make sure #particles = #spos
     if (last-first!=sposet->size())
@@ -56,6 +69,8 @@ namespace qmcplusplus
     HartreeProduct *wf = new HartreeProduct(sposet,first,last);
     // add to wavefunction
     targetPsi.addOrbital(wf,orb_name);
+
+    return true; // this needs to be true for WaveFunctionPool::primaryPsi to be set
   }
 
 }

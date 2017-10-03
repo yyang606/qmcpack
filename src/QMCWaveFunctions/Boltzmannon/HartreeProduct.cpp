@@ -50,7 +50,7 @@ namespace qmcplusplus
       G[FirstIndex+iptcl] += grad;
       L[FirstIndex+iptcl] += lap;
     }
-    LogValue = std::log(wf_val); // wf_val should be positive by definition
+    LogValue = evaluateLogAndPhase(wf_val,PhaseValue); // assign LogValue and PhaseValue
     return LogValue;
   }
 

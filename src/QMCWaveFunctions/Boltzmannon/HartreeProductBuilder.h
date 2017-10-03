@@ -11,10 +11,7 @@ class HartreeProductBuilder: public OrbitalBuilderBase
 
   public:
     HartreeProductBuilder(ParticleSet& p, TrialWaveFunction& psi);
-    bool put(xmlNodePtr cur);
-
-  private:
-    SPOSetBasePtr Phi;
+    bool put(xmlNodePtr cur); // parse xml node pointed to by cur (should be <hartree_product>)
 
 };
 
