@@ -12,15 +12,27 @@ namespace qmcplusplus
     registerTimers();
 
     // allocate matrices to hold SPO set data
-    //  assume ground-state occupation i.e. number of orbitals = number of particles
     int nptcl = last-first;
     assert(nptcl>0);
-    psiM.resize(nptcl,nptcl);
-    dpsiM.resize(nptcl,nptcl);
-    d2psiM.resize(nptcl,nptcl);
+    int norb = nptcl; //  assume ground-state occupation i.e. number of orbitals = number of particles
+    psiM.resize(nptcl,norb);
+    dpsiM.resize(nptcl,norb);
+    d2psiM.resize(nptcl,norb);
   }
 
-  HartreeProduct::~HartreeProduct(){}
+  OrbitalBasePtr HartreeProduct::makeClone(ParticleSet& qp) const
+  { // need to clone SPO set and point it to new particle set qp
+    SPOSetBasePtr spo = Phi->makeClone();
+    spo->resetTargetParticleSet(qp);
+    HartreeProduct* myclone = new HartreeProduct(spo,FirstIndex,LastIndex);
+    return myclone;
+  }
+  
+  void HartreeProduct::resetTargetParticleSet(ParticleSet& qp)
+  {
+    Phi->resetTargetParticleSet(qp);
+  }
+
   void HartreeProduct::registerTimers()
   {
     TimerManager.addTimer(&SPOVGLTimer);
@@ -44,9 +56,11 @@ namespace qmcplusplus
     for (int iptcl=0;iptcl<nptcl;iptcl++)
     {
       val  = psiM(iptcl,iptcl);
+      grad = dpsiM(iptcl,iptcl)/val; // grad_psi_over_psi
+      lap  = d2psiM(iptcl,iptcl)/val-dot(grad,grad); // lap_psi_over_psi
+
+      // accumulate VGL changes
       wf_val *= val;
-      grad = dpsiM(iptcl,iptcl)/val;
-      lap  = d2psiM(iptcl,iptcl)/val-dot(grad,grad);
       G[FirstIndex+iptcl] += grad;
       L[FirstIndex+iptcl] += lap;
     }

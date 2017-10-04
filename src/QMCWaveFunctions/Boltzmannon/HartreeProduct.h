@@ -19,7 +19,7 @@ namespace qmcplusplus
 class HartreeProduct: public OrbitalBase
 {
 public:
-  /* constructor
+  /* Constructor
    *  make space in psiM,dpsiM,d2psiM to hold SPO data
    *  also initialize variables and timers
    *
@@ -29,10 +29,23 @@ public:
    *  last: index of the last particle.
    */
   HartreeProduct(SPOSetBasePtr const &spo, int first, int last);
-  ~HartreeProduct();
 
-  /* evaluate wavefunction value, (particle) gradient, (particle) laplacian
-   *  most basic functionality of a wavefunction. This function:
+  /* Destructor
+   *  do nothing
+   *  assume psiM, dpsiM, d2psiM classes have proper destructors
+   *  assume SPO set is deallocated elsewhere 
+   *   (because SPO set is not allocated in this class)
+   */
+  ~HartreeProduct(){};
+
+  /* Clone method for OpenMP
+   *  SPO set needs to be cloned?
+   */
+  OrbitalBasePtr makeClone(ParticleSet& qp) const;
+
+  /* evaluateLog method
+   * evaluate wavefunction value, (particle) gradient, (particle) laplacian
+   *  this is the most basic functionality of a wavefunction. This function:
    *   1. calculates and stores LogValue and PhaseValue
    *   2. calculates grdient and store in G
    *   3. calculates laplaciant and store in L
@@ -41,6 +54,10 @@ public:
   evaluateLog(ParticleSet& P,
               ParticleSet::ParticleGradient_t& G,
               ParticleSet::ParticleLaplacian_t& L);
+
+  /* evaluate method
+   *  same as evaluateLog but returns wavefunction value instead of its log
+   */
   ValueType 
   evaluate(ParticleSet& P,
            ParticleSet::ParticleGradient_t& G,
@@ -49,7 +66,9 @@ public:
     return std::exp(evaluateLog(P,G,L));
   }
 
-  void resetTargetParticleSet(ParticleSet& P){}; // no internal data depend on particle set
+  // SPO set 'Phi' is hard-wired to a particle set at build time,
+  //  thus Phi needs to be updated if particle set changes
+  void resetTargetParticleSet(ParticleSet& P); 
   void registerTimers();
 
   // ---- override pure virtual functions using vacuous functions ---- //
@@ -101,7 +120,6 @@ public:
    APP_ABORT("restore not implemented");
   }
 
-
   // ---- accessors and private variables ---- //
   SPOSetBasePtr getPhi()
   {
@@ -111,7 +129,7 @@ public:
 private:
   int FirstIndex, LastIndex; // index of first and last particles in global quantum particle set
   SPOSetBasePtr Phi;         // pointer to single-particle orbital (SPO) set
-  ValueMatrix_t psiM;        // values of SPOs (Phi_j(r_i))
+  ValueMatrix_t psiM;        // values of SPOs (psiM[i,j]=Phi_j(r_i))
   GradMatrix_t  dpsiM;       // particle gradients of SPOs
   ValueMatrix_t d2psiM;      // particle laplacians of SPOs
   NewTimer SPOVGLTimer;      // timer for evaluating the value, gradient, and laplacian (VGL) of SPOs

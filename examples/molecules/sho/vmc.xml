@@ -10,25 +10,27 @@
          </parameter>
       </simulationcell>
       <particleset name="e">
-         <group name="u" size="1">
+         <group name="u" size="2">
             <parameter name="charge"              >    -1                    </parameter>
             <attrib name="position" datatype="posArray" condition="0">
               0.0001 -0.0001 0.0002
+              1.0001 -0.0001 0.0002
             </attrib>
          </group>
       </particleset>
-      <particleset name="ion0" size="1">
+      <particleset name="ion0" size="2">
          <group name="H">
             <parameter name="charge"              >    1                     </parameter>
             <parameter name="valence"             >    1                     </parameter>
             <parameter name="atomicnumber"        >    1                     </parameter>
             <attrib name="position" datatype="posArray" condition="0">
                  0 0 0
+                 1 0 0
             </attrib>
          </group>
       </particleset>
       <wavefunction target="e" id="psi0">
-         <sposet_builder name="proton_builder" source="ion0" transform="yes" type="mo">
+         <sposet_builder name="gaussbb" source="ion0" transform="yes" type="mo">
            <basisset>
              <atomicBasisSet angular="cartesian" elementType="H" normalized="yes" type="GTO">
                <grid npts="1001" rf="100" ri="1.e-6" type="log"/>
@@ -37,12 +39,12 @@
                </basisGroup>
              </atomicBasisSet>
            </basisset>
-           <sposet id="proton_orbs" name="spo_p" size="1"/>
+           <sposet name="gauss_spo" size="2"/>
          </sposet_builder>
-         <product group="u"/>
+         <hartree_product group="u" sposet="gauss_spo"/>
       </wavefunction>
       <hamiltonian name="h0" type="generic" target="e">
-         <extpot type="HarmonicExt"/>
+         <extpot type="HarmonicExt"/> <!-- default mass=1.0 and omega=1.0 -->
          <estimator name="skinetic" type="specieskinetic"/>
          <estimator type="latticedeviation" name="latdev" hdf5="no" per_xyz="no"
             target="e" tgroup="u" source="ion0" sgroup="H"/>
@@ -51,7 +53,7 @@
    <!--
    <qmc method="wftest"/>
    -->
-   <qmc method="vmc" move="wbyw">
+   <qmc method="vmc" move="not_pbyp_or_whatever">
      <parameter name="blocks"> 40 </parameter>
      <parameter name="steps"> 10 </parameter>
      <parameter name="timestep"> 0.8 </parameter>
