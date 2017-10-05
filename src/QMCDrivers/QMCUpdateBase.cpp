@@ -90,18 +90,8 @@ bool QMCUpdateBase::put(xmlNodePtr cur)
   return s;
 }
 
-void QMCUpdateBase::resetRun(BranchEngineType* brancher, EstimatorManager* est)
+void QMCUpdateBase::resetTau(BranchEngineType* brancher)
 {
-  Estimators=est;
-  branchEngine=brancher;
-  branchEngine->setEstimatorManager(est);
-  NumPtcl = W.getTotalNum();
-  deltaR.resize(NumPtcl);
-  drift.resize(NumPtcl);
-  G.resize(NumPtcl);
-  dG.resize(NumPtcl);
-  L.resize(NumPtcl);
-  dL.resize(NumPtcl);
   //set the default tau-mass related values with electrons
   Tau=brancher->getTau();
   m_tauovermass = Tau*MassInvS[0];
@@ -114,12 +104,26 @@ void QMCUpdateBase::resetRun(BranchEngineType* brancher, EstimatorManager* est)
     for(int iat=0; iat<W.getTotalNum(); ++iat)
       SqrtTauOverMass[iat]=std::sqrt(Tau*MassInvP[iat]);
   }
-  //app_log() << "  QMCUpdateBase::resetRun m/tau=" << m_tauovermass << std::endl;
+  //app_log() << "  QMCUpdateBase::resetTau m/tau=" << m_tauovermass << std::endl;
+}
+
+void QMCUpdateBase::resetRun(BranchEngineType* brancher, EstimatorManager* est)
+{
+  Estimators=est;
+  branchEngine=brancher;
+  branchEngine->setEstimatorManager(est);
+  NumPtcl = W.getTotalNum();
+  deltaR.resize(NumPtcl);
+  drift.resize(NumPtcl);
+  G.resize(NumPtcl);
+  dG.resize(NumPtcl);
+  L.resize(NumPtcl);
+  dL.resize(NumPtcl);
+  resetTau(brancher);
   if (m_r2max<0)
     m_r2max =  W.Lattice.LR_rc* W.Lattice.LR_rc;
   //app_log() << "  Setting the bound for the displacement std::max(r^2) = " <<  m_r2max << std::endl;
 }
-
 
 void QMCUpdateBase::resetRun(BranchEngineType* brancher, EstimatorManager* est, TraceManager* traces)
 {

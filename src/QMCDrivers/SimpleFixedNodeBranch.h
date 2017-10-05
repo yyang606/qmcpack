@@ -109,7 +109,7 @@ struct SimpleFixedNodeBranch: public QMCTraits
     B_TAU=0, B_TAUEFF , B_ETRIAL , B_EREF
     , B_ENOW, B_BRANCHMAX, B_BRANCHCUTOFF, B_BRANCHFILTER
     , B_SIGMA2, B_ACC_ENERGY, B_ACC_SAMPLES, B_FEEDBACK
-    , B_FILTERSCALE, B_VPARAM_MAX=17
+    , B_WARMUP_TIMESTEP, B_FILTERSCALE, B_VPARAM_MAX=17
   };
 
   /** controlling parameters of real type
@@ -342,6 +342,11 @@ struct SimpleFixedNodeBranch: public QMCTraits
     return std::exp(taueff*0.5*(s1+s0));
   }
 
+  inline void setTau(RealType new_tau)
+  {
+    vParam[B_TAU] = new_tau;
+  }
+
   inline RealType getEref() const
   {
     return vParam[B_EREF];
@@ -357,6 +362,10 @@ struct SimpleFixedNodeBranch: public QMCTraits
   inline RealType getTauEff() const
   {
     return vParam[B_TAUEFF];
+  }
+  inline RealType getWarmUpTau() const
+  {
+    return vParam[B_WARMUP_TIMESTEP];
   }
 
   inline void setTrialEnergy(RealType etot, RealType wtot=1.0)

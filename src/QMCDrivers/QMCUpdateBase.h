@@ -93,6 +93,7 @@ public:
    * Update time-step variables to move walkers
    */
   void resetRun(BranchEngineType* brancher, EstimatorManager* est);
+  void resetTau(BranchEngineType* brancher); // reset time step Tau without resizing a bunch of arrays
 
   void resetRun(BranchEngineType* brancher, EstimatorManager* est, TraceManager* traces);
 

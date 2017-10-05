@@ -251,13 +251,21 @@ void VMCSingleOMP::resetRun()
       Movers[ip]->initWalkersForPbyP(W.begin()+wPerNode[ip],W.begin()+wPerNode[ip+1]);
     else
       Movers[ip]->initWalkers(W.begin()+wPerNode[ip],W.begin()+wPerNode[ip+1]);
-//       if (UseDrift != "rn")
-//       {
+
+    // reduce timestep for warmup, reset after warmup 
+    // a smaller time step helps the walker get out of a bad initial configuration, this 
+    //  is especially important if all particles are being moved in a step
+    // perhaps an adaptive time step that changes to maintain resonable acceptance would be better?
+    RealType Tau0 = Tau;
+    branchClones[ip]->setTau(branchClones[ip]->getWarmUpTau());
+    Movers[ip]->resetTau(branchClones[ip]);
+
+    // warmup
     for (int prestep=0; prestep<nWarmupSteps; ++prestep)
       Movers[ip]->advanceWalkers(W.begin()+wPerNode[ip],W.begin()+wPerNode[ip+1],false);
-    //if (nWarmupSteps && QMCDriverMode[QMC_UPDATE_MODE])
-    //  Movers[ip]->updateWalkers(W.begin()+wPerNode[ip],W.begin()+wPerNode[ip+1]);
-//       }
+
+    branchClones[ip]->setTau(Tau0);
+    Movers[ip]->resetTau(branchClones[ip]);
   }
 
   if(movers_created)

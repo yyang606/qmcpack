@@ -51,6 +51,7 @@ SimpleFixedNodeBranch::SimpleFixedNodeBranch(RealType tau, int nideal)
   BranchMode.set(B_CLEARHISTORY,0); //clear history and start with the current average
   BranchMode.set(B_KILLNODES,0); //when killing walkers at nodes etrial is updated differently
   vParam[B_TAU]=tau;
+  vParam[B_WARMUP_TIMESTEP]=tau;
   vParam[B_TAUEFF]=tau;
   vParam[B_FEEDBACK]=1.0;
   vParam[B_FILTERSCALE]=10;
@@ -92,6 +93,7 @@ void SimpleFixedNodeBranch::registerParameters()
 {
   m_param.add(iParam[B_WARMUPSTEPS],"warmupSteps","int");
   m_param.add(iParam[B_WARMUPSTEPS],"warmupsteps","int");
+  m_param.add(vParam[B_WARMUP_TIMESTEP],"warmuptimestep","AU");
   m_param.add(iParam[B_ENERGYUPDATEINTERVAL],"energyUpdateInterval","int");
   m_param.add(iParam[B_BRANCHINTERVAL],"branchInterval","int");
   m_param.add(iParam[B_TARGETWALKERS],"targetWalkers","int");
