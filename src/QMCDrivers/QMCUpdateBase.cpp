@@ -200,16 +200,14 @@ void QMCUpdateBase::initWalkers(WalkerIter_t it, WalkerIter_t it_end)
     RealType logpsi(Psi.evaluateLog(W));
     (*it)->G=W.G;
     (*it)->L=W.L;
-    assignDrift(Tau,MassInvP,W.G,drift);
-    //RealType nodecorr=setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift);
+    RealType nodecorr=setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift);
     RealType ene = H.evaluate(W);
-    (*it)->resetProperty(logpsi,Psi.getPhase(),ene);
     // cannot call auxHevalate() here because walkers are not initialized
     // for example, DensityEstimator needs the weights of the walkers
     //H.auxHevaluate(W);
-    //(*it)->resetProperty(logpsi,Psi.getPhase(),ene,0.0,0.0, nodecorr);
+    (*it)->resetProperty(logpsi,Psi.getPhase(),ene,0.0,0.0, nodecorr);
     (*it)->Weight=1;
-    //H.saveProperty((*it)->getPropertyBase());
+    H.saveProperty((*it)->getPropertyBase());
   }
 }
 
