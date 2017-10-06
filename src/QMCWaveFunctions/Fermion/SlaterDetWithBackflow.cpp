@@ -199,6 +199,7 @@ OrbitalBasePtr SlaterDetWithBackflow::makeClone(ParticleSet& tqp) const
   myclone->transform_det.resize(transform_det.size());
   std::copy(transform_det.begin(),transform_det.end(),myclone->transform_det.begin());
   myclone->Optimizable=Optimizable;
+  myclone->resize_dets(Dets.size());
   if(mySPOSet.size()>1)//each determinant owns its own set
   {
     for(int i=0; i<Dets.size(); ++i)
