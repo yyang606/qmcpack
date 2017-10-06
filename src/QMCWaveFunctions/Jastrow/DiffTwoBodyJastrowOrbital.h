@@ -97,12 +97,12 @@ public:
     if (exchange) F[ib*NumGroups+ia] = rf;
   }
 
-  FT* getFunc(int ia, int ib)
+  FT* getFunc(int ia, int ib) const
   { // locate pair function by species indices (ia,ib)
     return F[ia*NumGroups+ib];
   }
 
-  FT* findFunc(std::string pair_name)
+  FT* findFunc(std::string pair_name) const
   { // locate pair function by species pair name such as 'uu'
     FT* rf;
     bool found_coeff = false;
@@ -118,6 +118,25 @@ public:
     }
     if (!found_coeff) APP_ABORT(pair_name+" not found");
     return rf;
+  }
+
+  std::string findName(const FT* rf) const
+  { // locate name of pair function rf in J2Unique
+    //  essentially the inverse of findFunc
+    std::string pair_name("");
+    bool found(false);
+    typename std::map<std::string,FT*>::const_iterator
+      it(J2Unique.begin()),it_end(J2Unique.end());
+    for (;it!=it_end;it++)
+    {
+      if (rf == it->second)
+      {
+        found=true;
+        pair_name = it->first;
+      }
+    }
+    if (!found) APP_ABORT("failed to find radial function");
+    return pair_name;
   }
 
   ///reset the value of all the unique Two-Body Jastrow functions
@@ -322,19 +341,9 @@ public:
     // 2. map the array of pair functions "F"
     j2copy->F.resize(F.size());
     for (int i=0;i<F.size();i++)
-    { // map unique functors into the non-unique functors,
-      //  also check that every pair of particles have been assigned a functor
-      bool done=false;
-      typename std::map<std::string,FT*>::const_iterator it(j2copy->J2Unique.begin()),it_end(j2copy->J2Unique.end());
-      for (;it!=it_end;it++)
-      {
-        done = true;
-        j2copy->F[i] = it->second;
-      }
-      if (!done)
-      {
-        APP_ABORT("Error cloning DiffTwoBodyJastrowOrbital.\n")
-      }
+    {
+      std::string pair_name = findName(F[i]);
+      j2copy->F[i] = j2copy->J2Unique[pair_name];
     }
     j2copy->myVars.clear();
     j2copy->myVars.insertFrom(myVars);
