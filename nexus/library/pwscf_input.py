@@ -2085,7 +2085,7 @@ def generate_scf_input(prefix       = 'pwscf',
         #end if
     #end if
 
-    if kgrid!=None:
+    if kgrid is not None:
         pw.k_points.clear()
         pw.k_points.set(
             specifier = 'automatic',
@@ -2152,6 +2152,7 @@ def generate_relax_input(prefix       = 'pwscf',
                          disk_io      = 'low',
                          wf_collect   = False,
                          verbosity    = 'high',
+                         tstress      = False
                          ):
     if pseudos is None:
         pseudos = []
@@ -2174,7 +2175,7 @@ def generate_relax_input(prefix       = 'pwscf',
         calculation  = 'relax',
         prefix       = prefix,
         restart_mode = 'from_scratch',
-        #tstress      = True,
+        tstress      = tstress,
         #tprnfor      = True,
         pseudo_dir   = './',
         outdir       = outdir,
@@ -2284,7 +2285,7 @@ def generate_relax_input(prefix       = 'pwscf',
         #end if
     #end if
 
-    if kgrid!=None:
+    if kgrid is not None:
         pw.k_points.clear()
         pw.k_points.set(
             specifier = 'automatic',
