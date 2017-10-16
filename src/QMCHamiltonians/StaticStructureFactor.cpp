@@ -105,7 +105,7 @@ namespace qmcplusplus
   void StaticStructureFactor::addObservables(PropertySetType& plist,BufferType& collectables)
   {
     myIndex=collectables.current();
-    std::vector<RealType> tmp(nspecies*2*nkpoints); // real & imag parts
+    std::vector<RealType> tmp(nspecies*3*nkpoints); // real & imag parts of rho_k + rho_k*rho_-k
     collectables.add(tmp.begin(),tmp.end());
   }
 
@@ -114,7 +114,7 @@ namespace qmcplusplus
   {
     hid_t sgid=H5Gcreate(gid,myName.c_str(),0);
     std::vector<int> ng(2);
-    ng[0] = 2;
+    ng[0] = 3; // 3 columns: real(rho_k), imag(rho_k), rho_k*rho_-k
     ng[1] = nkpoints;
     for(int s=0;s<nspecies;++s)
     {
@@ -134,16 +134,20 @@ namespace qmcplusplus
     int nkptot = rhok_r.cols();
     for(int s=0;s<nspecies;++s)
     {
+      // kc is the starting point in P.Collectables allocated to this observable
       int kc      = myIndex + s*2*nkpoints;
-      //int kstart  = s*nkptot;
-      //for(int k=kstart;k<kstart+nkpoints;++k,++kc)
-      //  P.Collectables[kc] += w*rhok_r(k);
-      //for(int k=kstart;k<kstart+nkpoints;++k,++kc)
-      //  P.Collectables[kc] += w*rhok_i(k);
+      //   kc will be incremented in each of the following loops to utilize 
+      //  the allocated space for this observable (real,imag,sk)
+
+      // record real part of rhok_k
       for(int k=0;k<nkpoints;++k,++kc)
         P.Collectables[kc] += w*rhok_r(s,k);
+      // record imaginary part of rhok_k
       for(int k=0;k<nkpoints;++k,++kc)
         P.Collectables[kc] += w*rhok_i(s,k);
+      // record rhok_k*rhok_-k
+      for(int k=0;k<nkpoints;++k,++kc)
+        P.Collectables[kc] += w*(rhok_r(s,k)*rhok_r(s,k)+rhok_i(s,k)*rhok_i(s,k));
     }
     return 0.0;
   }
