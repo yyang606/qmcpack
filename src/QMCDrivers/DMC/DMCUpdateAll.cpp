@@ -97,6 +97,7 @@ void DMCUpdateAllWithRejection::advanceWalker(Walker_t& thisWalker, bool recompu
         enew=eold;
         thisWalker.Properties(R2ACCEPTED)=0.0;
         thisWalker.Properties(R2PROPOSED)=rr_proposed;
+        H.auxHevaluate(W,thisWalker);
         H.rejectedMove(W,thisWalker);
       }
       else
@@ -196,6 +197,7 @@ void DMCUpdateAllWithKill::advanceWalker(Walker_t& thisWalker, bool recompute)
         thisWalker.Age++;
         thisWalker.Properties(R2ACCEPTED)=0.0;
         thisWalker.Properties(R2PROPOSED)=rr_proposed;
+        H.auxHevaluate(W,thisWalker);
         H.rejectedMove(W,thisWalker);
       }
       else

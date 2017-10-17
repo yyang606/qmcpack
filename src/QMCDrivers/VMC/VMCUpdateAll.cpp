@@ -51,6 +51,7 @@ void VMCUpdateAll::advanceWalker(Walker_t& thisWalker, bool recompute)
     {
       thisWalker.Age++;
       ++nReject;
+      H.auxHevaluate(W,thisWalker);
       H.rejectedMove(W,thisWalker);
     }
     else
@@ -210,6 +211,7 @@ void VMCUpdateAllWithDrift::advanceWalker(Walker_t& thisWalker, bool recompute)
     {
       thisWalker.Age++;
       ++nReject;
+      H.auxHevaluate(W,thisWalker);
       H.rejectedMove(W,thisWalker);
     }
     else
