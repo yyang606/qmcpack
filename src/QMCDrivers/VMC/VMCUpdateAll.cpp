@@ -139,7 +139,7 @@ void VMCUpdateAllWithDrift::advanceWalker(Walker_t& thisWalker, bool recompute)
   }
 
   if(!updated)
-  { //W.G and W.L have to be computed because the last move was rejected
+  { // W.G and W.L have to be computed because the last move was rejected
     W.update(thisWalker.R);
     logpsi_old=Psi.evaluateLog(W);
   }
