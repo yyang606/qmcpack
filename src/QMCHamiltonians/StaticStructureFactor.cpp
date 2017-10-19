@@ -21,7 +21,7 @@ namespace qmcplusplus
 {
 
   StaticStructureFactor::StaticStructureFactor(ParticleSet& P)
-      : Pinit(P)
+      : Pinit(P), ncol(3) // real(rho_k),imag(rho_k),Sc(k)
   {
 #ifndef USE_REAL_STRUCT_FACTOR
     APP_ABORT("StaticStructureFactor: please recompile with USE_REAL_STRUCT_FACTOR=1");
@@ -31,9 +31,14 @@ namespace qmcplusplus
 
     // get particle information
     SpeciesSet& species = P.getSpeciesSet();
+    int charge_idx = species.getAttribute("charge");
     nspecies = species.size();
+    charge_vec.resize(nspecies);
     for(int s=0;s<nspecies;++s)
+    {
       species_name.push_back(species.speciesName[s]);
+      charge_vec[s] = species(charge_idx,s);
+    }
     reset();
   }
 
@@ -85,6 +90,9 @@ namespace qmcplusplus
     if(write_report=="yes")
       report("  ");
 
+    crhok_r.resize(nkpoints);
+    crhok_i.resize(nkpoints);
+
     return true;
   }
 
@@ -105,7 +113,7 @@ namespace qmcplusplus
   void StaticStructureFactor::addObservables(PropertySetType& plist,BufferType& collectables)
   {
     myIndex=collectables.current();
-    std::vector<RealType> tmp(nspecies*3*nkpoints); // real & imag parts of rho_k + rho_k*rho_-k
+    std::vector<RealType> tmp(nspecies*ncol*nkpoints); // real & imag parts of rho_k, Sc(k)
     collectables.add(tmp.begin(),tmp.end());
   }
 
@@ -114,12 +122,12 @@ namespace qmcplusplus
   {
     hid_t sgid=H5Gcreate(gid,myName.c_str(),0);
     std::vector<int> ng(2);
-    ng[0] = 3; // 3 columns: real(rho_k), imag(rho_k), rho_k*rho_-k
+    ng[0] = ncol; // 3 columns: real(rho_k), imag(rho_k), Sc(k)
     ng[1] = nkpoints;
     for(int s=0;s<nspecies;++s)
     {
       observable_helper* oh = new observable_helper(species_name[s]);
-      oh->set_dimensions(ng,myIndex+s*2*nkpoints);
+      oh->set_dimensions(ng,myIndex+s*ncol*nkpoints);
       oh->open(sgid);
       h5desc.push_back(oh);
     }
@@ -132,22 +140,45 @@ namespace qmcplusplus
     const Matrix<RealType>& rhok_r = P.SK->rhok_r;
     const Matrix<RealType>& rhok_i = P.SK->rhok_i;
     int nkptot = rhok_r.cols();
+    int kc_max = myIndex + nspecies*ncol*nkpoints; // max index in P.Collectables for this observable
+    // abort if kc goes beyond kc_max, because unintended memory locations will be written!
     for(int s=0;s<nspecies;++s)
     {
-      // kc is the starting point in P.Collectables allocated to this observable
-      int kc      = myIndex + s*2*nkpoints;
+      // kc is initalized to be the starting point in P.Collectables allocated to this observable
+      int kc      = myIndex + s*ncol*nkpoints;
       //   kc will be incremented in each of the following loops to utilize 
-      //  the allocated space for this observable (real,imag,sk)
-
+      //  the allocated space for this observable (real,imag,skc)
+      
       // record real part of rhok_k
       for(int k=0;k<nkpoints;++k,++kc)
         P.Collectables[kc] += w*rhok_r(s,k);
       // record imaginary part of rhok_k
       for(int k=0;k<nkpoints;++k,++kc)
         P.Collectables[kc] += w*rhok_i(s,k);
-      // record rhok_k*rhok_-k
-      for(int k=0;k<nkpoints;++k,++kc)
-        P.Collectables[kc] += w*(rhok_r(s,k)*rhok_r(s,k)+rhok_i(s,k)*rhok_i(s,k));
+
+      // HACK HACK HACK
+      if (s==0)
+      {// hijack this observable to record the charged structure factor Sc(k)
+        for(int k=0;k<nkpoints;++k,++kc)
+        {
+          crhok_r[k] = 0.0;
+          crhok_i[k] = 0.0;
+          for (int s1=0;s1<nspecies;++s1)
+          {
+            crhok_r[k] += charge_vec[s1]*rhok_r(s1,k);
+            crhok_i[k] += charge_vec[s1]*rhok_i(s1,k);
+          }
+          RealType sc = crhok_r[k]*crhok_r[k]+crhok_i[k]*crhok_i[k];
+          P.Collectables[kc] += w*sc;
+        }
+      } else
+      { // fill unused spaces with zeros to avoid confusion
+        for(int k=0;k<nkpoints;++k,++kc)
+        {
+          P.Collectables[kc] += 0.0;
+        }
+      }
+      if (kc > kc_max) APP_ABORT("StaticStructureFactor is overwriting memory");
     }
     return 0.0;
   }

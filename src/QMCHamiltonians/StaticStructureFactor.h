@@ -30,7 +30,10 @@ class StaticStructureFactor : public QMCHamiltonianBase
 
   //data members
   int nspecies;
+  const int ncol;
   std::vector<std::string> species_name;
+  std::vector<RealType> charge_vec;
+  std::vector<RealType> crhok_r,crhok_i; // for charged structure factor
   RealType ecut;
   int nkpoints;
   const ParticleSet& Pinit;
