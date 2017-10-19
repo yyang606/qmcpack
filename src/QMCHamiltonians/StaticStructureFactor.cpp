@@ -172,10 +172,18 @@ namespace qmcplusplus
           P.Collectables[kc] += w*sc;
         }
       } else
-      { // fill unused spaces with zeros to avoid confusion
+      { // fill unused spaces with un-charged species-summed S(k)
         for(int k=0;k<nkpoints;++k,++kc)
         {
-          P.Collectables[kc] += 0.0;
+          crhok_r[k] = 0.0;
+          crhok_i[k] = 0.0;
+          for (int s1=0;s1<nspecies;++s1)
+          {
+            crhok_r[k] += rhok_r(s1,k);
+            crhok_i[k] += rhok_i(s1,k);
+          }
+          RealType sc = crhok_r[k]*crhok_r[k]+crhok_i[k]*crhok_i[k];
+          P.Collectables[kc] += w*sc;
         }
       }
       if (kc > kc_max) APP_ABORT("StaticStructureFactor is overwriting memory");
