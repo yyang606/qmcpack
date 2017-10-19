@@ -1758,7 +1758,8 @@ class bspline_builder(QIxml):
     identifier  = 'type'
     attributes  = ['type','href','sort','tilematrix','twistnum','twist','source',
                    'version','meshfactor','gpu','transform','precision','truncate',
-                   'lr_dim_cutoff','shell','randomize','key','buffer','rmax_core','dilation','tag']
+                   'lr_dim_cutoff','shell','randomize','key','buffer','rmax_core','dilation','tag'
+                   ,'use_old_spline']
     elements    = ['sposet']
     write_types = obj(gpu=yesno,sort=onezero,transform=yesno,truncate=yesno,randomize=truefalse)
 #end class bspline_builder
@@ -1803,7 +1804,7 @@ class wavefunction(QIxml):
 #end class wavefunction
 
 class determinantset(QIxml):
-    attributes = ['type','href','sort','tilematrix','twistnum','twist','source','version','meshfactor','gpu','transform','precision','truncate','lr_dim_cutoff','shell','randomize','key','rmax_core','dilation','name','cuspcorrection','tiling','usegrid','meshspacing','shell2','src','buffer','bconds','keyword']
+    attributes = ['type','href','sort','tilematrix','twistnum','twist','source','version','meshfactor','gpu','transform','precision','truncate','lr_dim_cutoff','shell','randomize','key','rmax_core','dilation','name','cuspcorrection','tiling','usegrid','meshspacing','shell2','src','buffer','bconds','keyword','use_old_spline']
     elements   = ['basisset','sposet','slaterdeterminant','multideterminant','spline','backflow','cubicgrid']
     h5tags     = ['twistindex','twistangle','rcut']
     write_types = obj(gpu=yesno,sort=onezero,transform=yesno,truncate=yesno,randomize=truefalse,cuspcorrection=yesno,usegrid=yesno)
@@ -2347,7 +2348,7 @@ class optimize_qmc(QIxml):
                   'minke','samples','warmupsteps','minweight','warmupblocks',
                   'maxdispl','tau','tolerance','stepsize','epsilon',
                   'en_ref','usebuffer','substeps','stepsbetweensamples',
-                  'samplesperthread','max_steps','nonlocalpp']
+                  'samplesperthread','max_steps','nonlocalpp','warmuptimestep']
     elements = ['optimize','optimizer','estimator']
     costs    = ['energy','variance','difference','weight','unreweightedvariance','reweightedvariance']
     write_types = obj(renew=yesno,completed=yesno)
@@ -2365,7 +2366,7 @@ class linear(QIxml):
                   'walkers','nonlocalpp','usebuffer','gevmethod','steps','substeps',
                   'stabilizermethod','rnwarmupsteps','walkersperthread','minke',
                   'gradtol','alpha','tries','min_walkers','samplesperthread',
-                  'use_nonlocalpp_deriv']
+                  'use_nonlocalpp_deriv','warmuptimestep']
     costs      = ['energy','unreweightedvariance','reweightedvariance','variance','difference']
     write_types = obj(gpu=yesno,usedrift=yesno,nonlocalpp=yesno,usebuffer=yesno,use_nonlocalpp_deriv=yesno)
 #end class linear
@@ -2528,7 +2529,7 @@ Names.set_expanded_names(
     two_body         = 'Two-Body',
     usedrift         = 'useDrift',
     maxweight        = 'maxWeight',
-    warmupsteps      = 'warmupSteps',
+    warmupsteps      = 'warmupsteps',
     twistindex       = 'twistIndex',
     twistangle       = 'twistAngle',
     usebuffer        = 'useBuffer',
@@ -2550,6 +2551,7 @@ Names.set_expanded_names(
     exctlvl          = 'exctLvl',
     pairtype         = 'pairType',
     printeloc        = 'printEloc',
+    warmuptimestep   = 'warmuptimestep',
    )
 for c in classes:
     c.init_class()
@@ -5349,6 +5351,7 @@ def generate_basic_input(id             = 'qmc',
                          traces         = None,
                          calculations   = None,
                          det_format     = 'new',
+                         backflow       = None,
                          **invalid_kwargs
                          ):
 
@@ -5359,7 +5362,7 @@ def generate_basic_input(id             = 'qmc',
                  'twist','spin_polarized','partition','orbitals_h5',
                  'system','pseudos','jastrows','interactions',
                  'corrections','observables','estimators','traces',
-                 'calculations','det_format']
+                 'calculations','det_format','backflow']
         QmcpackInput.class_error('invalid input parameters encountered\ninvalid input parameters: {0}\nvalid options are: {1}'.format(sorted(invalid_kwargs.keys()),sorted(valid)),'generate_qmcpack_input')
     #end if
 
@@ -5479,6 +5482,16 @@ def generate_basic_input(id             = 'qmc',
         QmcpackInput.class_error('generate_basic_input argument det_format is invalid\n  received: {0}\n  valid options are: new,old'.format(det_format))
     #end if
 
+    if backflow is not None:
+      dset.backflow = backflow
+      if det_format == 'old':
+        dset['use_old_spline'] = 'yes'
+      else:
+        for ssb in spobuilders:
+          ssb['use_old_spline'] = 'yes'
+        # end for
+      # end if
+    #end if backflow
 
     wfn = wavefunction(        
         name           = 'psi0',
