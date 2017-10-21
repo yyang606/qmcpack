@@ -2311,6 +2311,7 @@ def generate_relax_input(prefix       = 'pwscf',
 
 def generate_vcrelax_input(
     press          = None, # None = use pw.x default
+    cell_dofree    = None,
     cell_factor    = None, 
     forc_conv_thr  = None,
     ion_dynamics   = None,
@@ -2322,9 +2323,11 @@ def generate_vcrelax_input(
         calculation = 'vc-relax'
     )
     pw['ions'] = pw.element_types['ions']()
-    pw['cell'] = pw.element_types['cell'](
-        press       = press,
-    )
+    pw['cell'] = pw.element_types['cell']()
+    if press is not None:
+      pw['cell']['press'] = press
+    if cell_dofree is not None:
+      pw['cell']['cell_dofree'] = cell_dofree
 
     # expand this section if you need more control over the input
     if forc_conv_thr is not None:
