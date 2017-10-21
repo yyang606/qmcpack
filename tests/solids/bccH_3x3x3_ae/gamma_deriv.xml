@@ -90,7 +90,7 @@
          </group>
       </particleset>
       <wavefunction name="psi0" target="e">
-         <sposet_builder type="bspline" href="pwscf.pwscf.h5" tilematrix="3 0 0 0 3 0 0 0 3" twistnum="0" source="ion0" size="27" use_old_spline="yes">
+         <sposet_builder type="bspline" href="gamma.pwscf.h5" tilematrix="1 0 0 0 1 0 0 0 1" twistnum="0" source="ion0" size="27" use_old_spline="yes">
            <sposet type="bspline" name="spo_ud" size="27" spindataset="0"/> 
          </sposet_builder>
          <determinantset>
@@ -139,7 +139,6 @@
       </hamiltonian>
    </qmcsystem>
    <qmc method="wftest">
-     <sd> no  </sd>
-     <delta> 0.0001 </delta>
+     <ratio> deriv </ratio>
    </qmc>
 </simulation>
