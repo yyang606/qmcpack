@@ -845,15 +845,12 @@ void ParticleSet::loadWalker(Walker_t& awalker, bool pbyp)
   G = awalker.G;
   L = awalker.L;
 #endif
-  if (pbyp)
-  {
-    // in certain cases, full tables must be ready
-    for (int i=0; i< DistTables.size(); i++)
-      if(DistTables[i]->Need_full_table_loadWalker) DistTables[i]->evaluate(*this);
-    //computed so that other objects can use them, e.g., kSpaceJastrow
-    if(SK && SK->DoUpdate)
-      SK->UpdateAllPart(*this);
-  }
+  // in certain cases, full tables must be ready
+  for (int i=0; i< DistTables.size(); i++)
+    if(DistTables[i]->Need_full_table_loadWalker) DistTables[i]->evaluate(*this);
+  //computed so that other objects can use them, e.g., kSpaceJastrow
+  if(SK && SK->DoUpdate)
+    SK->UpdateAllPart(*this);
 
   Ready4Measure=false;
 }
