@@ -289,6 +289,9 @@ protected:
   std::vector<RealType> MassInvS;
   ///1/Mass per particle
   std::vector<RealType> MassInvP;
+  ///allow boosting timestep for a particular species, e.g. protons
+  std::vector<RealType> ts_boost_species;
+  std::vector<RealType> ts_boost_factor; // multiply timestep by boost factor
   ///sqrt(tau/Mass) per particle
   std::vector<RealType> SqrtTauOverMass;
   ///non local operator

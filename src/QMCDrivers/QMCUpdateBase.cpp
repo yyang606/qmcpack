@@ -70,13 +70,21 @@ void QMCUpdateBase::setDefaults()
   SpeciesSet tspecies(W.getSpeciesSet());
   int massind=tspecies.addAttribute("mass");
   MassInvS.resize(tspecies.getTotalNum());
+  ts_boost_species.resize(tspecies.getTotalNum());
   for(int ig=0; ig<tspecies.getTotalNum(); ++ig)
+  {
     MassInvS[ig]=1.0/tspecies(massind,ig);
+    ts_boost_species[ig] = 1.0; // no boost to timestep by default
+  }
   MassInvP.resize(W.getTotalNum());
+  ts_boost_factor.resize(W.getTotalNum());
   for(int ig=0; ig<W.groups(); ++ig)
   {
     for(int iat=W.first(ig); iat<W.last(ig); ++iat)
+    {
       MassInvP[iat]=MassInvS[ig];
+      ts_boost_factor[iat] = 1.0; // no boost to timestep by default
+    }
   }
 }
 
@@ -87,11 +95,60 @@ bool QMCUpdateBase::put(xmlNodePtr cur)
   bool s=myParams.put(cur);
   if (branchEngine)
     branchEngine->put(cur);
+
+  // parse timestep boost
+  // <ts_boost group="p" factor="5"/>
+  SpeciesSet tspecies(W.getSpeciesSet());
+  xmlNodePtr pnode = cur->children;
+  while (pnode != NULL)
+  { // look for ts_boost
+    std::string tag((const char*)(pnode->name));
+    if (tag == "ts_boost")
+    {
+      std::string group; // particle group name
+      RealType factor(-1);   // factor to enlarge timestep by
+      OhmmsAttributeSet attrib;
+      attrib.add(group,"group");
+      attrib.add(factor,"factor");
+      attrib.put(pnode);
+      // check for missing factor input
+      if (factor<0) APP_ABORT(tag+" must have \"factor\" attribute");
+      bool found = false; // loop for particle group requested
+      for(int ig=0; ig<W.groups(); ++ig)
+      {
+        if (tspecies.speciesName[ig] == group)
+        {
+          ts_boost_species[ig] = factor;
+          found = true;
+        }
+      }
+      // check for miss-spelled group
+      if (!found) APP_ABORT("cannot find particle group "+group+" for " + tag);
+    }
+    pnode = pnode->next;
+  }
+  for(int ig=0; ig<W.groups(); ++ig)
+  {
+    for(int iat=W.first(ig); iat<W.last(ig); ++iat)
+    {
+      ts_boost_factor[iat] = ts_boost_species[ig];
+    }
+  }
+
   return s;
 }
 
 void QMCUpdateBase::resetTau(BranchEngineType* brancher)
 {
+  SpeciesSet tspecies(W.getSpeciesSet());
+  for(int ig=0; ig<W.groups(); ++ig)
+  {
+    RealType boost_factor = ts_boost_species[ig];
+    for(int iat=W.first(ig); iat<W.last(ig); ++iat)
+    {
+        ts_boost_factor[iat] = boost_factor;
+    }
+  }
   //set the default tau-mass related values with electrons
   Tau=brancher->getTau();
   m_tauovermass = Tau*MassInvS[0];
@@ -102,7 +159,7 @@ void QMCUpdateBase::resetTau(BranchEngineType* brancher)
     // store sqrt(tau/mass)
     SqrtTauOverMass.resize(W.getTotalNum());
     for(int iat=0; iat<W.getTotalNum(); ++iat)
-      SqrtTauOverMass[iat]=std::sqrt(Tau*MassInvP[iat]);
+      SqrtTauOverMass[iat]=std::sqrt(Tau*MassInvP[iat])*ts_boost_factor[iat];
   }
   //app_log() << "  QMCUpdateBase::resetTau m/tau=" << m_tauovermass << std::endl;
 }
