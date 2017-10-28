@@ -289,7 +289,10 @@ bool SkAllEstimator::put(xmlNodePtr cur)
 
   pAttrib.put(cur);
   if (hdf5_flag=="yes")
+  {
+    APP_ABORT("SkAllEstimator hdf5 output not implemented.");
     hdf5_out=true;
+  }
   else
     hdf5_out=false;
 
