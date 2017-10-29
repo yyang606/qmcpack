@@ -2390,7 +2390,7 @@ class vmc(QIxml):
     tag = 'qmc'
     attributes = ['method','multiple','warp','move','gpu','checkpoint','trace','target','completed','id']
     elements   = ['estimator','record']
-    parameters = ['walkers','blocks','steps','substeps','timestep','usedrift','warmupsteps','samples','nonlocalpp','stepsbetweensamples','samplesperthread','tau','walkersperthread','reconfiguration','dmcwalkersperthread','current','ratio','firststep','minimumtargetwalkers']
+    parameters = ['walkers','blocks','steps','substeps','timestep','usedrift','warmupsteps','warmuptimestep','samples','nonlocalpp','stepsbetweensamples','samplesperthread','tau','walkersperthread','reconfiguration','dmcwalkersperthread','current','ratio','firststep','minimumtargetwalkers']
     write_types = obj(gpu=yesno,usedrift=yesno,nonlocalpp=yesno,reconfiguration=yesno,ratio=yesno,completed=yesno)
 #end class vmc
 
