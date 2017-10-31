@@ -3417,7 +3417,6 @@ class QmcpackInput(SimulationInput,Names):
         #end for
     #end def generate_jastrows
 
-
     def incorporate_system(self,system):
         self.warn('incorporate_system may or may not work\n  please check the qmcpack input produced\n  if it is wrong, please contact the developer')
         system = system.copy()
@@ -5050,6 +5049,91 @@ def generate_jastrow3(function='polynomial',esize=3,isize=3,rcut=4.,coeff=None,i
         )
     return jastrow
 #end def generate_jastrow3
+
+def generate_transformation1(atom_list,csize=8,cusp=0,optimize=True,coeff=None):
+  """ generate <transformation type="e-I" function="Bspline" source="ion0">
+  Example:
+    generate_transformation1('H')
+
+  <transformation> should be a child of <backflow>
+  <backflow> is simply a collection of <transformation> nodes
+  Example: 
+    bf = backflow( transformations=collection([tr1,tr2]) )
+
+  Args:
+    atom_list (list): a list of element symbol e.g. ['H','He','Li','Be','B']
+  Returns:
+    transformation: nexus object, which can be fed to backflow. 
+     backflow can be fed to QmcpackInput
+  """
+  # construct <correlation>
+  for atom in atom_list:
+    # default names
+    bf_name = 'e'+atom+'B'
+    cid     = bf_name # id for <coefficients>
+
+    if coeff is None:
+      coeff = [0]*csize
+    # end if
+    # specify Bspline functor
+    bsfunc = correlation(elementType=atom,size=csize,cusp=cusp
+      ,coefficients = section(id=cid,type='Array',optimize=optimize,coeff=coeff) )
+  # end for atom
+  
+  # assemble <transformation>
+  tr = transformation(name=bf_name,type='e-I',function='Bspline',source='ion0'
+        ,correlation = bsfunc)
+  return tr
+#end def generate_transformation1
+
+def generate_transformation2(pair_list,csize_list=None,cusp_list=None,optimize=True,coeff_list=None):
+  """ generate <transformation type="e-e" function="Bspline">
+  Example:
+    generate_transformation2([('u','u'),('u','d')])
+  """
+
+  # default name
+  bf_name = 'eeB'
+
+  # input validation, set default if not specified
+  npair = len(pair_list)
+  if csize_list is None:
+    csize_list = [8]*npair # default 8 knots in 1D Bspline
+  else:
+    assert len(csize_list) == npair
+  # end if
+  if cusp_list is None:
+    cusp_list = [0]*npair # default no cusp
+  else:
+    assert len(cusp_list) == npair
+  # end if
+  if coeff_list is None:
+    coeff_list = []
+    for ipair in range(npair):
+      coeff_list.append( [0]*csize_list[ipair] ) # default zero spline knots
+  else:
+    assert len(coeff_list) == npair
+  # end if
+
+  corrs = []
+  # construct <correlation>
+  for ipair in range(len(pair_list)):
+    spA,spB = pair_list[ipair]
+    # default names
+    cid     = spA+spB+'B' # id for <coefficients>
+    csize = csize_list[ipair]
+    coeff = coeff_list[ipair]
+    cusp  = cusp_list[ipair]
+    bsfunc = correlation(speciesA=spA,speciesB=spB,size=csize,cusp=cusp
+      ,coefficients = section(id=cid,type='Array',optimize=optimize,coeff=coeff) )
+    corrs.append(bsfunc)
+  # end for ipair
+  
+  # assemble <transformation>
+  tr = transformation(name=bf_name,type='e-e',function='Bspline'
+        ,correlations = collection(corrs))
+  return tr
+#end def generate_transformation2
 
 
 
