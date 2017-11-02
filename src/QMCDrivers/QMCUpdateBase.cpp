@@ -124,6 +124,9 @@ bool QMCUpdateBase::put(xmlNodePtr cur)
       }
       // check for miss-spelled group
       if (!found) APP_ABORT("cannot find particle group "+group+" for " + tag);
+      // announce the timestep boost
+      #pragma omp master
+      app_log() << "  QMCDriver will boost (i.e. multiply) the timestep for particles " << std::endl << "   in group '" << group << "' by a factor of " << std::setw(8) << std::setprecision(6) << factor << std::endl;
     }
     pnode = pnode->next;
   }
