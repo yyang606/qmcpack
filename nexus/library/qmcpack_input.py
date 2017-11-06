@@ -1788,6 +1788,7 @@ class composite_builder(QIxml):
 sposet_builder = QIxmlFactory(
     name    = 'sposet_builder',
     types   = dict(bspline=bspline_builder,
+                   mo=bspline_builder,
                    einspline=bspline_builder,
                    heg=heg_builder,
                    composite=composite_builder,
@@ -2213,6 +2214,21 @@ class momentum(QIxml):
     identifier = 'name'
     write_types = obj(hdf5=yesno)
 #end class momentum
+
+class specieskinetic(QIxml):
+    tag = 'estimator'
+    attributes = ['name','type','hdf5']
+    identifier = 'name'
+    write_types = obj(hdf5=yesno)
+#end class specieskinetic
+
+class latticedeviation(QIxml):
+    tag = 'estimator'
+    attributes = ['name','type','hdf5','per_xyz'
+      ,'target','tgroup','source','sgroup']
+    identifier = 'name'
+    write_types = obj(hdf5=yesno,per_xyz=yesno)
+#end class specieskinetic
     
 estimator = QIxmlFactory(
     name  = 'estimator',
@@ -2235,6 +2251,8 @@ estimator = QIxmlFactory(
                  gofr                = gofr,
                  flux                = flux,
                  momentum            = momentum,
+                 specieskinetic      = specieskinetic,
+                 latticedeviation    = latticedeviation,
                  ),
     typekey  = 'type',
     typekey2 = 'name'
@@ -2466,7 +2484,7 @@ classes = [   #standard classes
     header,local,force,forwardwalking,observable,record,rmc,pressure,dmccorrection,
     nofk,mpc_est,flux,distancetable,cpp,element,spline,setparams,
     backflow,transformation,cubicgrid,molecular_orbital_builder,cmc,sk,skall,gofr,
-    host,date,user,rpa_jastrow,momentum
+    host,date,user,rpa_jastrow,momentum,specieskinetic,latticedeviation
     ]
 types = dict( #simple types and factories
     #host           = param,
@@ -2644,6 +2662,12 @@ spindensity.defaults.set(
     )
 skall.defaults.set(
     type='skall',name='skall'
+    )
+specieskinetic.defaults.set(
+    type='specieskinetic',name='skinetic'
+    )
+latticedeviation.defaults.set(
+    type='latticedeviation',name='latdev',hdf5=True,per_xyz=True
     )
 force.defaults.set(
     type='Force',name='force'
