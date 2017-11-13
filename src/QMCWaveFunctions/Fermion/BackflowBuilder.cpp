@@ -251,6 +251,7 @@ void BackflowBuilder::addOneBody(xmlNodePtr cur)
       } // end if (cname == "correlation")
       cur = cur->next;
     } // processed all <correlation> nodes
+    int taskid = targetPsi.getGroupID();
     if(funct == "Bspline")
     {
       app_log() <<"Using BsplineFunctor type. \n";
@@ -274,12 +275,22 @@ void BackflowBuilder::addOneBody(xmlNodePtr cur)
         if(qmc_common.io_node)
         {
           char fname[128];
-          sprintf(fname,"BFe-I.%s.dat",(bsp->myVars.NameAndValue[0].first).c_str());
-          std::ofstream fout(fname);
-          fout.setf(std::ios::scientific, std::ios::floatfield);
-          fout << "# Backflow radial function \n";
-          bsp->print(fout);
-          fout.close();
+          if(qmc_common.mpi_groups>1)
+          {
+            sprintf(fname,"BFe-I.%s.g%03d.dat",(bsp->myVars.NameAndValue[0].first).c_str(),taskid);
+          } else 
+          {
+            sprintf(fname,"BFe-I.%s.dat",(bsp->myVars.NameAndValue[0].first).c_str());
+          }
+          
+          if (taskid==0)
+          {
+            std::ofstream fout(fname);
+            fout.setf(std::ios::scientific, std::ios::floatfield);
+            fout << "# Backflow radial function \n";
+            bsp->print(fout);
+            fout.close();
+          }
         }
       }
       tbf->derivs.resize(tbf->numParams);
@@ -320,6 +331,7 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
   Backflow_ee<BsplineFunctor<RealType> > *tbf = new Backflow_ee<BsplineFunctor<RealType> >(targetPtcl,targetPtcl);
   SpeciesSet& species(targetPtcl.getSpeciesSet());
   std::vector<int> offsets;
+  int taskid = targetPsi.getGroupID();
   if(funct == "Gaussian")
   {
     APP_ABORT("Disabled GaussianFunctor for now, \n");
@@ -368,12 +380,21 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
             if(OHMMS::Controller->rank()==0)
             {
               char fname[64];
-              sprintf(fname,"BFe-e.%s.dat",(spA+spB).c_str());
-              std::ofstream fout(fname);
-              fout.setf(std::ios::scientific, std::ios::floatfield);
-              fout << "# Backflow radial function \n";
-              bsp->print(fout);
-              fout.close();
+              if(qmc_common.mpi_groups>1)
+              {
+                sprintf(fname,"BFe-e.%s.g%03d.dat",(spA+spB).c_str(),taskid);
+              } else 
+              {
+                sprintf(fname,"BFe-e.%s.dat",(spA+spB).c_str());
+              }
+              if (taskid==0)
+              {
+                std::ofstream fout(fname);
+                fout.setf(std::ios::scientific, std::ios::floatfield);
+                fout << "# Backflow radial function \n";
+                bsp->print(fout);
+                fout.close();
+              }
             }
           } else {
             // look for linked coefficients and add to tbf

@@ -755,11 +755,14 @@ public:
     int nsp = PtclRef->groups();
     //FILE *fout=(Write_Chiesa_Correction)?fopen ("uk.dat", "w"):0;
     FILE *fout=0;
-    if(qmc_common.io_node && TaskID > -1) //taskid=-1
+    if (TaskID == 0)
     {
-      char fname[16];
-      sprintf(fname,"uk.g%03d.dat",TaskID);
-      fout=fopen(fname,"w");
+      if(qmc_common.io_node && TaskID > -1) //taskid=-1
+      {
+        char fname[16];
+        sprintf(fname,"uk.g%03d.dat",TaskID);
+        fout=fopen(fname,"w");
+      }
     }
     for (int iG=0; iG<PtclRef->SK->KLists.ksq.size(); iG++)
     {

@@ -105,7 +105,8 @@ bool BsplineJastrowBuilder::createOneBodyJastrow(xmlNodePtr cur)
               sprintf(fname,"%s.%s.dat",j1name.c_str(),speciesA.c_str());
           }
           functor->setReportLevel(ReportLevel,fname);
-          functor->print();
+          if (taskid == 0)
+            functor->print();
         }
       }
     }
@@ -319,7 +320,8 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
             else
               sprintf(fname,"J2.%s.dat",pairType.c_str());
             functor->setReportLevel(ReportLevel,fname);
-            functor->print();
+            if (taskid == 0)
+              functor->print();
           }
         } else { // look for linked coefficients and add to tbf
           app_log() <<"BsplineJastrowBuilder linking radial component for species: " <<spA <<" " <<spB <<" " <<ia <<"  " <<ib << " to " << link_coeff_name << std::endl;
