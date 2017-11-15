@@ -37,6 +37,7 @@ SET(HAMSRCS
   CoulombPotentialFactory.cpp
   model/HarmonicExternalPotential.cpp
   StaticStructureFactor.cpp
+  ChargedSk.cpp
   OrbitalImages.cpp
   SpinDensity.cpp
   SpeciesKineticEnergy.cpp

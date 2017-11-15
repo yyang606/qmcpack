@@ -39,6 +39,7 @@
 #include "QMCHamiltonians/SkEstimator.h"
 #include "QMCHamiltonians/model/HarmonicExternalPotential.h"
 #include "QMCHamiltonians/StaticStructureFactor.h"
+#include "QMCHamiltonians/ChargedSk.h"
 #include "QMCHamiltonians/SpinDensity.h"
 #include "QMCHamiltonians/OrbitalImages.h"
 #if !defined(REMOVE_TRACEMANAGER)
@@ -419,6 +420,13 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
       {
         app_log()<<"  Adding StaticStructureFactor"<< std::endl;
         StaticStructureFactor* apot=new StaticStructureFactor(*targetPtcl);
+        apot->put(cur);
+        targetH->addOperator(apot,potName,false);
+      }
+      else if(potType == "csk")
+      {
+        app_log()<<"  Adding ChargedSk"<< std::endl;
+        ChargedSk* apot=new ChargedSk(*targetPtcl);
         apot->put(cur);
         targetH->addOperator(apot,potName,false);
       }
