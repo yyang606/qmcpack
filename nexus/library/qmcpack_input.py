@@ -2189,6 +2189,12 @@ class sk(QIxml):
     write_types = obj(hdf5=yesno)
 #end class sk
 
+class csk(QIxml):
+    tag = 'estimator'
+    attributes = ['name','type']
+    identifier = 'name'
+#end class sk
+
 class skall(QIxml):
     tag = 'estimator'
     attributes = ['name','type','hdf5','source','target','writeionion']
@@ -2247,6 +2253,7 @@ estimator = QIxmlFactory(
                  nofk                = nofk,
                  mpc                 = mpc_est,
                  sk                  = sk,
+                 csk                 = csk,
                  skall               = skall,
                  gofr                = gofr,
                  flux                = flux,
@@ -2483,7 +2490,7 @@ classes = [   #standard classes
     optimize,cg_optimizer,flex_optimizer,optimize_qmc,wftest,kspace_jastrow,
     header,local,force,forwardwalking,observable,record,rmc,pressure,dmccorrection,
     nofk,mpc_est,flux,distancetable,cpp,element,spline,setparams,
-    backflow,transformation,cubicgrid,molecular_orbital_builder,cmc,sk,skall,gofr,
+    backflow,transformation,cubicgrid,molecular_orbital_builder,cmc,sk,csk,skall,gofr,
     host,date,user,rpa_jastrow,momentum,specieskinetic,latticedeviation
     ]
 types = dict( #simple types and factories
@@ -2662,6 +2669,9 @@ spindensity.defaults.set(
     )
 skall.defaults.set(
     type='skall',name='skall'
+    )
+csk.defaults.set(
+    type='csk',name='csk'
     )
 specieskinetic.defaults.set(
     type='specieskinetic',name='skinetic'
