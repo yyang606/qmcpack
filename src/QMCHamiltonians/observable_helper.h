@@ -119,11 +119,11 @@ struct observable_helper
       hid_t memspace = H5Screate_simple(rank, &mydims[0], NULL);
       herr_t ret = H5Dwrite(value1_id, h5_observable_type, memspace, space1_id, H5P_DEFAULT, &zeros[0]);
       H5Sclose(memspace);
-      space2_id=H5Screate_simple(rank, &mydims[0], &maxdims[0]);
-      value2_id= H5Dcreate(data_id,"value_squared",h5_observable_type,space2_id,p);
-      memspace = H5Screate_simple(rank, &mydims[0], NULL);
-      ret = H5Dwrite(value2_id, h5_observable_type, memspace, space2_id, H5P_DEFAULT, &zeros[0]);
-      H5Sclose(memspace);
+      //space2_id=H5Screate_simple(rank, &mydims[0], &maxdims[0]);
+      //value2_id= H5Dcreate(data_id,"value_squared",h5_observable_type,space2_id,p);
+      //memspace = H5Screate_simple(rank, &mydims[0], NULL);
+      //ret = H5Dwrite(value2_id, h5_observable_type, memspace, space2_id, H5P_DEFAULT, &zeros[0]);
+      //H5Sclose(memspace);
       H5Pclose(p);
     }
   }
@@ -196,12 +196,12 @@ struct observable_helper
       hid_t memspace = H5Screate_simple(rank, &mydims[0], NULL);
       herr_t ret = H5Dwrite(value1_id, h5_observable_type, memspace, space1_id, H5P_DEFAULT, first_v+lower_bound);
       H5Sclose(memspace);
-      H5Sset_extent_simple(space2_id,rank,&curdims[0],&maxdims[0]);
-      H5Sselect_hyperslab(space2_id, H5S_SELECT_SET, &offsets[0], NULL, &mydims[0], NULL);
-      H5Dextend(value2_id,&curdims[0]);
-      memspace = H5Screate_simple(rank, &mydims[0], NULL);
-      ret = H5Dwrite(value2_id, h5_observable_type, memspace, space2_id, H5P_DEFAULT, first_vv+lower_bound);
-      H5Sclose(memspace);
+      //H5Sset_extent_simple(space2_id,rank,&curdims[0],&maxdims[0]);
+      //H5Sselect_hyperslab(space2_id, H5S_SELECT_SET, &offsets[0], NULL, &mydims[0], NULL);
+      //H5Dextend(value2_id,&curdims[0]);
+      //memspace = H5Screate_simple(rank, &mydims[0], NULL);
+      //ret = H5Dwrite(value2_id, h5_observable_type, memspace, space2_id, H5P_DEFAULT, first_vv+lower_bound);
+      //H5Sclose(memspace);
       curdims[0]++;
       offsets[0]++;
     }
