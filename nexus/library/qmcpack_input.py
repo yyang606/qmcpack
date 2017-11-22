@@ -5084,10 +5084,10 @@ def generate_jastrow3(function='polynomial',esize=3,isize=3,rcut=4.,coeff=None,i
     return jastrow
 #end def generate_jastrow3
 
-def generate_transformation1(atom_list,csize=8,cusp=0,optimize=True,coeff=None):
+def generate_transformation1(atom_list,rcut,csize=8,cusp=0,optimize=True,coeff=None):
   """ generate <transformation type="e-I" function="Bspline" source="ion0">
   Example:
-    generate_transformation1('H')
+    generate_transformation1('H',4.0)
 
   <transformation> should be a child of <backflow>
   <backflow> is simply a collection of <transformation> nodes
@@ -5096,6 +5096,7 @@ def generate_transformation1(atom_list,csize=8,cusp=0,optimize=True,coeff=None):
 
   Args:
     atom_list (list): a list of element symbol e.g. ['H','He','Li','Be','B']
+    rcut (float): cutoff radius for short-range Bspline
   Returns:
     transformation: nexus object, which can be fed to backflow. 
      backflow can be fed to QmcpackInput
@@ -5110,7 +5111,7 @@ def generate_transformation1(atom_list,csize=8,cusp=0,optimize=True,coeff=None):
       coeff = [0]*csize
     # end if
     # specify Bspline functor
-    bsfunc = correlation(elementType=atom,size=csize,cusp=cusp
+    bsfunc = correlation(elementType=atom,rcut=rcut,size=csize,cusp=cusp
       ,coefficients = section(id=cid,type='Array',optimize=optimize,coeff=coeff) )
   # end for atom
   
@@ -5120,10 +5121,10 @@ def generate_transformation1(atom_list,csize=8,cusp=0,optimize=True,coeff=None):
   return tr
 #end def generate_transformation1
 
-def generate_transformation2(pair_list,csize_list=None,cusp_list=None,optimize=True,coeff_list=None):
+def generate_transformation2(pair_list,rcut,csize_list=None,cusp_list=None,optimize=True,coeff_list=None):
   """ generate <transformation type="e-e" function="Bspline">
   Example:
-    generate_transformation2([('u','u'),('u','d')])
+    generate_transformation2([('u','u'),('u','d')],4.0)
   """
 
   # default name
@@ -5158,7 +5159,7 @@ def generate_transformation2(pair_list,csize_list=None,cusp_list=None,optimize=T
     csize = csize_list[ipair]
     coeff = coeff_list[ipair]
     cusp  = cusp_list[ipair]
-    bsfunc = correlation(speciesA=spA,speciesB=spB,size=csize,cusp=cusp
+    bsfunc = correlation(speciesA=spA,speciesB=spB,rcut=rcut,size=csize,cusp=cusp
       ,coefficients = section(id=cid,type='Array',optimize=optimize,coeff=coeff) )
     corrs.append(bsfunc)
   # end for ipair
