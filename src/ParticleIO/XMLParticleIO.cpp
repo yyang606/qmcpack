@@ -218,7 +218,6 @@ bool XMLParticleParser::putSpecial(xmlNodePtr cur)
     }
     else if(cname == attrib_tag)
     {
-      if (randomizeR=="yes") APP_ABORT("random=\"yes\", but particle positions are explicitly given. The given particle positions will be ignored if the program continues. Please either set random=\"no\" or remove exiplicit particle positions.");
       int size_att = 0;
       OhmmsAttributeSet aAttrib;
       aAttrib.add(size_att,"size");
@@ -280,6 +279,7 @@ bool XMLParticleParser::putSpecial(xmlNodePtr cur)
     }
     else if (cname == attrib_tag)
     {
+      if (randomizeR=="yes") APP_ABORT("random=\"yes\", but particle positions are explicitly given. The given particle positions will be ignored if the program continues. Please either set random=\"no\" or remove exiplicit particle positions.");
       getPtclAttrib(cur,nat,nloc);
     }
     else if (cname == "group")
@@ -299,6 +299,7 @@ bool XMLParticleParser::putSpecial(xmlNodePtr cur)
           std::string tcname((const char*)tcur->name);
           if(nat_group[ng] && tcname == attrib_tag)
           {
+            if (randomizeR=="yes") APP_ABORT("random=\"yes\", but particle positions are explicitly given. The given particle positions will be ignored if the program continues. Please either set random=\"no\" or remove exiplicit particle positions.");
             getPtclAttrib(tcur,nat_group[ng],nloc);
           }
           tcur = tcur->next;
