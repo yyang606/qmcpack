@@ -218,7 +218,7 @@ bool XMLParticleParser::putSpecial(xmlNodePtr cur)
     }
     else if(cname == attrib_tag)
     {
-      if (randomizeR) APP_ABORT("random=\"yes\", but particle positions are explicitly given. The given particle positions will be ignored if the program continues. Please either set random=\"no\" or remove exiplicit particle positions.");
+      if (randomizeR=="yes") APP_ABORT("random=\"yes\", but particle positions are explicitly given. The given particle positions will be ignored if the program continues. Please either set random=\"no\" or remove exiplicit particle positions.");
       int size_att = 0;
       OhmmsAttributeSet aAttrib;
       aAttrib.add(size_att,"size");
