@@ -721,6 +721,7 @@ bool WaveFunctionTester::checkGradientAtConfiguration(MCWalkerConfiguration::Wal
   FiniteDifference::ValueVector logpsi_vals;
   FiniteDifference::PosChangeVector::iterator it;
 
+  fout << "wavefunction values: " << std::endl;
   for (it = positions.begin(); it != positions.end(); it++)
   {
     PosType r0 = W.R[it->index];
@@ -734,6 +735,7 @@ bool WaveFunctionTester::checkGradientAtConfiguration(MCWalkerConfiguration::Wal
     ValueType logpsi = logpsi0;
 #endif
     logpsi_vals.push_back(logpsi);
+    fout << logpsi << std::endl;
 
     W.R[it->index] = r0;
     W.update();
@@ -743,6 +745,13 @@ bool WaveFunctionTester::checkGradientAtConfiguration(MCWalkerConfiguration::Wal
   fd.computeFiniteDiff(delta, positions, logpsi_vals, G1, L1);
 
   fout << "delta = " << delta << std::endl;
+
+  fout << "position changes: " << std::endl;
+  for (it = positions.begin(); it != positions.end(); it++)
+  {
+    fout << it->index << "  " << it->r << std::endl;
+  }
+  fout << " end position changes." << std::endl;
 
   // TODO - better choice of tolerance
   // TODO - adjust delta and tolerance based on precision of wavefunction
