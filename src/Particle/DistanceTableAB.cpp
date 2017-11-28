@@ -40,7 +40,8 @@ DistanceTableData* createDistanceTable(const ParticleSet& s, ParticleSet& t, int
   //int sc=s.Lattice.SuperCellEnum;
   int sc=t.Lattice.SuperCellEnum;
   std::ostringstream o;
-  bool useSoA=(dt_type == DT_SOA || dt_type == DT_SOA_PREFERRED);
+  //bool useSoA=(dt_type == DT_SOA || dt_type == DT_SOA_PREFERRED);
+  bool useSoA = false;
   o << "  Distance table for AB: source = " << s.getName() << " target = " << t.getName() << "\n";
   if(sc == SUPERCELL_BULK)
   {

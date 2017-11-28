@@ -338,7 +338,7 @@ bool ParticleSet::get(std::ostream& os) const
   for (int i=0; i<SubPtcl.size(); i++)
     os << SubPtcl[i] << " ";
   os <<"\n\n    " << LocalNum << "\n\n";
-  const int maxParticlesToPrint = 10;
+  const int maxParticlesToPrint = 128;
   int numToPrint = std::min(LocalNum, maxParticlesToPrint);
 
   for (int i=0; i<numToPrint; i++)
