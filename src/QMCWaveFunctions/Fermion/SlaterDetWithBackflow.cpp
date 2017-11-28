@@ -74,6 +74,8 @@ SlaterDetWithBackflow::evaluateLog(ParticleSet& P,
                                    ParticleSet::ParticleLaplacian_t& L)
 {
   BFTrans->evaluate(P);
+  //BFTrans->QP.get(app_log());
+  //APP_ABORT("printed quasi particles");
   LogValue=0.0;
   PhaseValue=0.0;
   for(int i=0; i<Dets.size(); ++i)

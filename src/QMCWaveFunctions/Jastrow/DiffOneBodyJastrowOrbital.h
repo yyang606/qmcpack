@@ -57,7 +57,7 @@ public:
     :CenterRef(centers),NumVars(0)
   {
     NumPtcls=els.getTotalNum();
-    myTableIndex=els.addTable(CenterRef,DT_SOA_PREFERRED);
+    myTableIndex=els.addTable(CenterRef,DT_AOS);
   }
 
   ~DiffOneBodyJastrowOrbital()
@@ -159,7 +159,7 @@ public:
         (*lapLogPsi[p])=0.0;
       std::vector<TinyVector<RealType,3> > derivs(NumVars);
 
-      if(d_table->DTType == DT_SOA)
+      if(d_table->DTType == DT_AOS)
       {
         constexpr RealType cone(1);
         constexpr RealType lapfac(OHMMS_DIM-cone);
