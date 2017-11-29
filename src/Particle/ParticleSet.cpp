@@ -35,6 +35,7 @@
 namespace qmcplusplus
 {
 
+typedef DistanceTableData::ripair ripair;
 //using namespace particle_info;
 
 #ifdef QMC_CUDA
@@ -249,6 +250,101 @@ void ParticleSet::resetGroups()
     app_log() << "Particles are grouped. Safe to use groups " << std::endl;
   else
     app_log() << "ID is not grouped. Need to use IndirectID for species-dependent operations " << std::endl;
+}
+
+ParticleSet::ParticlePos_t ParticleSet::ud_bipartite(ParticleSet& src)
+{
+  // initialize up and down electrons on A, B sub-lattices of a bipartite lattice
+  //  target particle set (this) must contain the same number of up and down electrons
+  //  source particle set (src) must contain a bipartite lattice having the same number of
+  //   lattice sites as the number of up+down electrons
+  
+  // check input assumptions
+  SpeciesSet& spec(getSpeciesSet());
+  // find species index for up and down electrons
+  int u_sidx=-1,d_sidx=-1; 
+  for (int ispec=0;ispec<spec.size();ispec++)
+  {
+    if (spec.speciesName[ispec]=="u") u_sidx = ispec;
+    if (spec.speciesName[ispec]=="d") d_sidx = ispec;
+  }
+  if (u_sidx == -1) APP_ABORT("failed to find up electrons");
+  if (d_sidx == -1) APP_ABORT("failed to find down electrons");
+  // check number of particles
+  const int natom = src.getTotalNum();
+  int nup = this->last(u_sidx) - this->first(u_sidx);
+  int ndn = this->last(d_sidx) - this->first(d_sidx);
+  app_log() << "found " << nup << " up electrons at species index " << u_sidx << std::endl;
+  app_log() << "found " << ndn << " down electrons at species index " << d_sidx << std::endl;
+  if (natom!=nup+ndn) APP_ABORT("number of electrons != number of lattice sites");
+
+  // get distance table among lattice sites (source particles)
+  if (src.DistTables.size()!=1) APP_ABORT("source has more than 1 distance tables.");
+  src.update(true); // update distance table but not S(k), i.e. skipSK=true
+  DistanceTableData* dtable = src.DistTables[0];
+
+  // for each particle in source, find its nearest neighbor (n.n.)
+  //  make "jatoml" i.e. a list of atom indices linking n.n. atoms
+  // "atom_on_asite" is constructed along the way to mark the A sublattice
+  std::vector<ripair> nnlist(natom); // a list of (dist,idx) for n.n. atoms
+  std::vector<bool> atom_categorized(natom,0), atom_on_asite(natom,0);
+  bool cur_asite = true; // WLOG, categorize the first site as A
+  atom_on_asite[0] = cur_asite;
+  atom_categorized[0] = true;
+  dtable->nearest_neighbors(0,natom-1,nnlist); // get nearest neighbor list
+  /* debug nnlist
+  for (int inn=0;inn<nnlist.size();inn++)
+  { app_log() << "(" << nnlist[inn].second << "," << nnlist[inn].first << ")";
+  } app_log() << std::endl;
+  */
+  cur_asite = not cur_asite; // next site will be categorized differently
+
+  std::vector<int> jatoml(natom,0); // a list of atoms
+  for (int iatom=1;iatom<natom;iatom++)
+  { // 1. find the next atom in n.n. list to be categorized
+    int jatom = iatom + 1;
+    for (int inn=0;inn<nnlist.size();inn++)
+    {
+      double rpair  = nnlist[inn].first;
+      int ineighbor = nnlist[inn].second;
+      if (not atom_categorized[ineighbor])
+      {
+        jatom = ineighbor;
+        app_log() << ineighbor << " " << rpair << std::endl;
+        break;
+      }
+    }
+    jatoml[iatom] = jatom;
+    // 2. categorize n.n. atom
+    atom_on_asite[jatom] = cur_asite;
+    atom_categorized[jatom] = true;
+    // 3. update cur_asite and n.n. list
+    cur_asite = not cur_asite;
+    dtable->nearest_neighbors(jatom,natom-1,nnlist);
+  }
+
+  // the vector<bool> "atom_on_asite" can be overrode at this point
+  //  atom_on_asite[iatom] is true if iatom is on A sub-lattice
+
+  app_log() << "begin bipartite lattice partition: " << std::endl;
+  for (int iatom=0;iatom<natom;iatom++)
+  {
+    // make sure all atoms are categorized
+    if (not atom_categorized[iatom]) APP_ABORT("ud_bipartite failed.");
+    app_log() << atom_on_asite[iatom] << " "; // print partition
+  } app_log() << std::endl << "end bipartite lattice partition" << std::endl;
+  app_log() << "begin jatom list: " << std::endl;
+  for (int iatom=0;iatom<natom;iatom++)
+  {
+    app_log() << jatoml[iatom] << " ";
+  } app_log() << std::endl << "end jatom list." << std::endl;
+  // one can re-create the "atom_on_asite" vector from jatom list
+  //  simply march through atoms in jatom list in order and mark each atom with alternating site labels
+
+  ParticlePos_t pos = R; // make a copy of current configuration
+  // initialize up electrons near A sublattice
+  // initialize down electrons near B sublattice
+  return pos;
 }
 
 void

@@ -80,6 +80,8 @@ struct SymmetricDTD
 
   inline virtual void nearest_neighbors(int n,int neighbors,std::vector<ripair>& ri,bool transposed=false)
   {
+    if (transposed) APP_ABORT("I do not know what the tranposed flag does.");
+    /*
     int m = N[VisitorIndex];
     int shift = n*m;
     for(int i=0; i<n; ++i)
@@ -95,6 +97,20 @@ struct SymmetricDTD
       ri[i].first  = r_m[shift+i];
       ri[i].second = i;
     }
+    */
+
+    // 1. fill "ri" with the distance between particle "n" and all other particles
+    const int natom = N[SourceIndex]; // Visitor(target) and Source are the same in symmetric table
+    for(int i=0;i<natom; ++i)
+    {
+      if (i!=n) // distance between i and n
+        ri[i].first = r(pair_loc(n,i)); //r( loc(n,i) );
+      else // distance to self, set to inf
+        ri[i].first = std::numeric_limits<RealType>::max();
+      ri[i].second  = i;
+    }
+
+    // 2. sort "ri"
     partial_sort(ri.begin(),ri.begin()+neighbors,ri.end());
   }
 

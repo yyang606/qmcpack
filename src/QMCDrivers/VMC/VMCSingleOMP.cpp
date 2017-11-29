@@ -15,9 +15,7 @@
 // File created by: Jeongnim Kim, jeongnim.kim@gmail.com, University of Illinois at Urbana-Champaign
 //////////////////////////////////////////////////////////////////////////////////////
     
-    
-
-
+#include "QMCApp/ParticleSetPool.h"
 #include "QMCDrivers/VMC/VMCSingleOMP.h"
 #include "QMCDrivers/VMC/VMCUpdatePbyP.h"
 #include "QMCDrivers/VMC/VMCUpdateAll.h"
@@ -130,6 +128,8 @@ bool VMCSingleOMP::run()
 
 void VMCSingleOMP::resetRun()
 {
+  // TODO: move spset initialization to put()
+  ParticleSet& spset = *( ppref->getParticleSet("ion0") );
   ////only VMC can overwrite this
   if(nTargetPopulation>0)
     branchEngine->iParam[SimpleFixedNodeBranch::B_TARGETWALKERS]=static_cast<int>(std::ceil(nTargetPopulation));
@@ -247,6 +247,11 @@ void VMCSingleOMP::resetRun()
     //int ip=omp_get_thread_num();
     Movers[ip]->put(qmcNode);
     Movers[ip]->resetRun(branchClones[ip],estimatorClones[ip],traceClones[ip]);
+    for (WalkerIter_t it=W.begin()+wPerNode[ip];it!=W.begin()+wPerNode[ip+1];it++)
+    {
+      // initialize particle positions
+      W.ud_bipartite(spset);
+    }
     if (QMCDriverMode[QMC_UPDATE_MODE])
       Movers[ip]->initWalkersForPbyP(W.begin()+wPerNode[ip],W.begin()+wPerNode[ip+1]);
     else

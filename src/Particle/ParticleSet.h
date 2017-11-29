@@ -507,6 +507,9 @@ public:
     return myTwist;
   }
 
+  // generate an electron configuration close to proton lattice
+  ParticlePos_t ud_bipartite(ParticleSet &src);
+
   /** Initialize particles around another ParticleSet
    * Used to initialize an electron ParticleSet by an ion ParticleSet
    */
