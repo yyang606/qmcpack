@@ -310,7 +310,7 @@ ParticleSet::ParticlePos_t ParticleSet::ud_bipartite(ParticleSet& src)
       if (not atom_categorized[ineighbor])
       {
         jatom = ineighbor;
-        app_log() << ineighbor << " " << rpair << std::endl;
+        //app_log() << ineighbor << " " << rpair << std::endl;
         break;
       }
     }
