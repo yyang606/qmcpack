@@ -49,6 +49,7 @@ QMCDriver* VMCFactory::create(MCWalkerConfiguration& w, TrialWaveFunction& psi,
     if(VMCMode == 0 || VMCMode == 1) //(0,0,0) (0,0,1)
     {
       qmc = new VMCSingleOMP(w,psi,h,hpool,ppool);
+      qmc->set_ptcl_pool(ptclpool);
     }
   //else if(VMCMode == 2) //(0,1,0)
   //{

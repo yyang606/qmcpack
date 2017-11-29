@@ -74,6 +74,7 @@ public:
   enum {QMC_UPDATE_MODE, QMC_MULTIPLE, QMC_OPTIMIZE, QMC_WARMUP};
 
   typedef MCWalkerConfiguration::Walker_t Walker_t;
+  typedef MCWalkerConfiguration::iterator WalkerIter_t;
   typedef Walker_t::Buffer_t              Buffer_t;
   typedef SimpleFixedNodeBranch           BranchEngineType;
 
@@ -219,6 +220,8 @@ public:
     return (*Rng[i]);
   }
 
+  inline void set_ptcl_pool(ParticleSetPool& pp){ppref = &pp;}
+
 protected:
 
   ///branch engine
@@ -331,6 +334,9 @@ protected:
   ///walker ensemble
   MCWalkerConfiguration& W;
 
+  ///particle sets
+  ParticleSetPool* ppref;
+
   ///trial function
   TrialWaveFunction& Psi;
 
@@ -369,7 +375,7 @@ protected:
   //PooledData<RealType> HamPool;
 
   ///Copy Constructor (disabled).
-  QMCDriver(const QMCDriver& a): W(a.W), Psi(a.Psi), H(a.H), psiPool(a.psiPool), Estimators(0) {}
+  QMCDriver(const QMCDriver& a): W(a.W), Psi(a.Psi), H(a.H), psiPool(a.psiPool), ppref(a.ppref), Estimators(0) {}
 
   bool putQMCInfo(xmlNodePtr cur);
 
