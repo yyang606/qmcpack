@@ -248,9 +248,8 @@ void VMCSingleOMP::resetRun()
     Movers[ip]->put(qmcNode);
     Movers[ip]->resetRun(branchClones[ip],estimatorClones[ip],traceClones[ip]);
     for (WalkerIter_t it=W.begin()+wPerNode[ip];it!=W.begin()+wPerNode[ip+1];it++)
-    {
-      // initialize particle positions
-      W.ud_bipartite(spset);
+    { // initialize up, down electrons on A,B sublattices, respectively
+      (*it)->R = W.ud_bipartite(spset);
     }
     if (QMCDriverMode[QMC_UPDATE_MODE])
       Movers[ip]->initWalkersForPbyP(W.begin()+wPerNode[ip],W.begin()+wPerNode[ip+1]);

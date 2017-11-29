@@ -274,9 +274,12 @@ ParticleSet::ParticlePos_t ParticleSet::ud_bipartite(ParticleSet& src)
   const int natom = src.getTotalNum();
   int nup = this->last(u_sidx) - this->first(u_sidx);
   int ndn = this->last(d_sidx) - this->first(d_sidx);
-  app_log() << "found " << nup << " up electrons at species index " << u_sidx << std::endl;
-  app_log() << "found " << ndn << " down electrons at species index " << d_sidx << std::endl;
+  //app_log() << "found " << nup << " up electrons at species index " << u_sidx << std::endl;
+  //app_log() << "found " << ndn << " down electrons at species index " << d_sidx << std::endl;
+  // !!!! hard-code number of electrons = 1 for proton lattice
   if (natom!=nup+ndn) APP_ABORT("number of electrons != number of lattice sites");
+  //  this assumption may be lifted if we re-code the u,d assignment to lattice sites
+  //   near "initialize up electrons near A sublattice"
 
   // get distance table among lattice sites (source particles)
   if (src.DistTables.size()!=1) APP_ABORT("source has more than 1 distance tables.");
@@ -285,7 +288,8 @@ ParticleSet::ParticlePos_t ParticleSet::ud_bipartite(ParticleSet& src)
 
   // for each particle in source, find its nearest neighbor (n.n.)
   //  make "jatoml" i.e. a list of atom indices linking n.n. atoms
-  // "atom_on_asite" is constructed along the way to mark the A sublattice
+  // "atom_on_asite" is constructed along the way to mark the A sub-lattice
+  //  atom_on_asite[iatom] is true if iatom is on the A sub-lattice
   std::vector<ripair> nnlist(natom); // a list of (dist,idx) for n.n. atoms
   std::vector<bool> atom_categorized(natom,0), atom_on_asite(natom,0);
   bool cur_asite = true; // WLOG, categorize the first site as A
@@ -324,26 +328,53 @@ ParticleSet::ParticlePos_t ParticleSet::ud_bipartite(ParticleSet& src)
   }
 
   // the vector<bool> "atom_on_asite" can be overrode at this point
-  //  atom_on_asite[iatom] is true if iatom is on A sub-lattice
 
-  app_log() << "begin bipartite lattice partition: " << std::endl;
-  for (int iatom=0;iatom<natom;iatom++)
-  {
-    // make sure all atoms are categorized
-    if (not atom_categorized[iatom]) APP_ABORT("ud_bipartite failed.");
-    app_log() << atom_on_asite[iatom] << " "; // print partition
-  } app_log() << std::endl << "end bipartite lattice partition" << std::endl;
-  app_log() << "begin jatom list: " << std::endl;
-  for (int iatom=0;iatom<natom;iatom++)
-  {
-    app_log() << jatoml[iatom] << " ";
-  } app_log() << std::endl << "end jatom list." << std::endl;
+  // begin report:
+  //app_log() << "begin bipartite lattice partition: " << std::endl;
+  //for (int iatom=0;iatom<natom;iatom++)
+  //{
+  //  // make sure all atoms are categorized
+  //  if (not atom_categorized[iatom]) APP_ABORT("ud_bipartite failed.");
+  //  app_log() << atom_on_asite[iatom] << " "; // print partition
+  //} app_log() << std::endl << "end bipartite lattice partition" << std::endl;
+  //app_log() << "begin jatom list: " << std::endl;
+  //for (int iatom=0;iatom<natom;iatom++)
+  //{
+  //  app_log() << jatoml[iatom] << " ";
+  //} app_log() << std::endl << "end jatom list." << std::endl;
+  // end report.
+  
   // one can re-create the "atom_on_asite" vector from jatom list
   //  simply march through atoms in jatom list in order and mark each atom with alternating site labels
 
   ParticlePos_t pos = R; // make a copy of current configuration
-  // initialize up electrons near A sublattice
-  // initialize down electrons near B sublattice
+  // !!!! TODO: get rs from lattice
+  double rs = 1.23; 
+  // !!!! TODO: get rs_frac from input
+  double rs_frac = 0.2; // how far to put the electron from lattice site (unit: rs)
+  double rand_mag = rs*rs_frac; // magnitude of random shift from lattice site
+
+  std::vector<PosType> rand_vec(natom);
+  makeGaussRandom(rand_vec);
+  
+  int iu = this->first(u_sidx); // index of first up electron
+  int id = this->first(d_sidx); // index of first down electron
+  for (int iatom=0; iatom<natom; iatom++)
+  { // loop through lattice sites
+    if (atom_on_asite[iatom])
+    { // initialize up electrons near A sublattice
+      pos[iu] = src.R[iatom] + rand_mag*rand_vec[iatom];
+      iu++;
+    }
+    else 
+    {// initialize down electrons near B sublattice
+      pos[id] = src.R[iatom] + rand_mag*rand_vec[iatom];
+      id++;
+    }
+  }
+  if (iu>this->last(u_sidx)) APP_ABORT("up electron index overflowed");
+  if (id>this->last(d_sidx)) APP_ABORT("down electron index overflowed");
+
   return pos;
 }
 
