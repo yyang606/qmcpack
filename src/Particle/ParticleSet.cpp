@@ -274,8 +274,6 @@ ParticleSet::ParticlePos_t ParticleSet::ud_bipartite(ParticleSet& src)
   const int natom = src.getTotalNum();
   int nup = this->last(u_sidx) - this->first(u_sidx);
   int ndn = this->last(d_sidx) - this->first(d_sidx);
-  //app_log() << "found " << nup << " up electrons at species index " << u_sidx << std::endl;
-  //app_log() << "found " << ndn << " down electrons at species index " << d_sidx << std::endl;
   // !!!! hard-code number of electrons = 1 for proton lattice
   if (natom!=nup+ndn) APP_ABORT("number of electrons != number of lattice sites");
   //  this assumption may be lifted if we re-code the u,d assignment to lattice sites
@@ -296,11 +294,6 @@ ParticleSet::ParticlePos_t ParticleSet::ud_bipartite(ParticleSet& src)
   atom_on_asite[0] = cur_asite;
   atom_categorized[0] = true;
   dtable->nearest_neighbors(0,natom-1,nnlist); // get nearest neighbor list
-  /* debug nnlist
-  for (int inn=0;inn<nnlist.size();inn++)
-  { app_log() << "(" << nnlist[inn].second << "," << nnlist[inn].first << ")";
-  } app_log() << std::endl;
-  */
   cur_asite = not cur_asite; // next site will be categorized differently
 
   std::vector<int> jatoml(natom,0); // a list of atoms
@@ -328,22 +321,6 @@ ParticleSet::ParticlePos_t ParticleSet::ud_bipartite(ParticleSet& src)
   }
 
   // the vector<bool> "atom_on_asite" can be overrode at this point
-
-  // begin report:
-  //app_log() << "begin bipartite lattice partition: " << std::endl;
-  //for (int iatom=0;iatom<natom;iatom++)
-  //{
-  //  // make sure all atoms are categorized
-  //  if (not atom_categorized[iatom]) APP_ABORT("ud_bipartite failed.");
-  //  app_log() << atom_on_asite[iatom] << " "; // print partition
-  //} app_log() << std::endl << "end bipartite lattice partition" << std::endl;
-  //app_log() << "begin jatom list: " << std::endl;
-  //for (int iatom=0;iatom<natom;iatom++)
-  //{
-  //  app_log() << jatoml[iatom] << " ";
-  //} app_log() << std::endl << "end jatom list." << std::endl;
-  // end report.
-  
   // one can re-create the "atom_on_asite" vector from jatom list
   //  simply march through atoms in jatom list in order and mark each atom with alternating site labels
 
