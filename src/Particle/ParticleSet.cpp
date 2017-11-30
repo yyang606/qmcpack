@@ -348,27 +348,43 @@ ParticleSet::ParticlePos_t ParticleSet::ud_bipartite(ParticleSet& src)
   //  simply march through atoms in jatom list in order and mark each atom with alternating site labels
 
   ParticlePos_t pos = R; // make a copy of current configuration
-  // !!!! TODO: get rs from lattice
-  double rs = 1.23; 
-  // !!!! TODO: get rs_frac from input
-  double rs_frac = 0.2; // how far to put the electron from lattice site (unit: rs)
-  double rand_mag = rs*rs_frac; // magnitude of random shift from lattice site
+  double frac = 0.5; // how far to put the electron from lattice site (unit: bond length)
+  double frac0= 0.1; // add a non-zero constant to frac so that electrons won't be put 
+  // right on top of the ions
 
-  std::vector<PosType> rand_vec(natom);
-  makeGaussRandom(rand_vec);
+  ParticlePos_t rand_vec(natom);
+  makeUniformRandom(rand_vec);
   
   int iu = this->first(u_sidx); // index of first up electron
   int id = this->first(d_sidx); // index of first down electron
   for (int iatom=0; iatom<natom; iatom++)
   { // loop through lattice sites
+
+    //  get the n.n.
+    dtable->nearest_neighbors(iatom,1,nnlist); 
+    int jatom = nnlist[0].second;
+    //  direction pointing from iatom to jatom
+    int pair_idx = dtable->pair_loc(iatom,jatom);
+    SingleParticlePos_t neighbor_dir = dtable->dr(pair_idx);
+    if (jatom<iatom)
+    { // flip neighbor direction
+      for (int idim=0;idim<neighbor_dir.size();idim++)
+      {
+        neighbor_dir[idim] *= -1;
+      }
+    }
+
+    // magnitude of move from iatom to jatom in units of bond length
+    double move_mag = frac0+frac*rand_vec[iatom][0];
+
     if (atom_on_asite[iatom])
     { // initialize up electrons near A sublattice
-      pos[iu] = src.R[iatom] + rand_mag*rand_vec[iatom];
+      pos[iu] = src.R[iatom] + neighbor_dir*move_mag;
       iu++;
     }
     else 
-    {// initialize down electrons near B sublattice
-      pos[id] = src.R[iatom] + rand_mag*rand_vec[iatom];
+    { // initialize down electrons near B sublattice
+      pos[id] = src.R[iatom] + neighbor_dir*move_mag;
       id++;
     }
   }
