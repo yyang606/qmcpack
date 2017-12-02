@@ -86,6 +86,7 @@ void QMCUpdateBase::setDefaults()
       ts_boost_factor[iat] = 1.0; // no boost to timestep by default
     }
   }
+  nfp = 4;
 }
 
 bool QMCUpdateBase::put(xmlNodePtr cur)
@@ -96,8 +97,9 @@ bool QMCUpdateBase::put(xmlNodePtr cur)
   if (branchEngine)
     branchEngine->put(cur);
 
-  // parse timestep boost
+  // parse timestep boost and number of Fokker-Planck
   // <ts_boost group="p" factor="5"/>
+  // <fokker_planck nfp="5"/>
   SpeciesSet tspecies(W.getSpeciesSet());
   xmlNodePtr pnode = cur->children;
   while (pnode != NULL)
@@ -127,6 +129,22 @@ bool QMCUpdateBase::put(xmlNodePtr cur)
       // announce the timestep boost
       #pragma omp master
       app_log() << "  QMCDriver will boost (i.e. multiply) the timestep for particles " << std::endl << "   in group '" << group << "' by a factor of " << std::setw(8) << std::setprecision(6) << factor << std::endl;
+    } else if (tag=="fokker_planck")
+    {
+      int nfp_in(-1);
+      OhmmsAttributeSet attrib;
+      attrib.add(nfp_in,"nfp");
+      attrib.put(pnode);
+      if (nfp_in > 0)
+      { // accept user input
+        nfp = nfp_in;
+        // acknowledge user input
+        #pragma omp master
+        app_log() << " number of Fokker-Planck steps used for warmup = " << nfp << std::endl;
+      } else
+      { // reject unknown input
+        APP_ABORT("unacceptable input for nfp " + std::to_string(nfp_in));
+      }
     }
     pnode = pnode->next;
   }
@@ -251,23 +269,38 @@ void QMCUpdateBase::stopBlock(bool collectall)
 void QMCUpdateBase::initWalkers(WalkerIter_t it, WalkerIter_t it_end)
 {
   UpdatePbyP=false;
-  //ignore different mass
-  //RealType tauovermass = Tau*MassInv[0];
   for (; it != it_end; ++it)
-  {
-    W.R = (*it)->R;
-    W.update();
+  { // initialize each walker being worked on by this QMCUpdate
+    Walker_t& thisWalker(**it);
+    W.loadWalker(thisWalker,false); // fill local W.R,G,L from global walker
+    // loadWalker(Walker_t&,bool) also updates distance tables and S(k)
+    //  the "false" input is for "pbyp", which is not used. It is important
+    //  only to ensure the correct "loadWalker" function is called.
+    for (int ifp=0;ifp<nfp;ifp++)
+    { // Perform a few steps of Fokker-Planck dynamics without rejection.
+      // This is important if the initial configuration is very close to a node.
+      // There the configuration would be stuck if drift vectors are used for 
+      // acceptance, because the reverse-move proposal probability is virtually zero.
+      makeGaussRandomWithEngine(deltaR,RandomGen);
+      W.update(true); // update distance tables but not S(k), "true" is for skipSK
+      //Psi.evaluateLog(W); // update W.G,W.L; distance tables must be up-to-date
+      // calculate drift vector; W.G must be up-to-date
+      RealType nodecorr = setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift);
+      W.makeMoveWithDrift(thisWalker,drift,deltaR,SqrtTauOverMass);
+    }
+    // final updates to W.DistTables,SK,G,L
+    W.update(false);
     RealType logpsi(Psi.evaluateLog(W));
-    (*it)->G=W.G;
-    (*it)->L=W.L;
-    RealType nodecorr=setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift);
-    RealType ene = H.evaluate(W);
+    W.saveWalker(thisWalker); // send initialized R,G,L back to global walker
+
+    RealType nodecorr = setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift);
+    RealType eloc = H.evaluate(W); // calculate local energy; W.G,L,SK,DistTables must be up-to-date
     // cannot call auxHevalate() here because walkers are not initialized
     // for example, DensityEstimator needs the weights of the walkers
     //H.auxHevaluate(W);
-    (*it)->resetProperty(logpsi,Psi.getPhase(),ene,0.0,0.0, nodecorr);
-    (*it)->Weight=1;
-    H.saveProperty((*it)->getPropertyBase());
+    thisWalker.resetProperty(logpsi,Psi.getPhase(),eloc,0.0,0.0, nodecorr);
+    thisWalker.Weight=1;
+    H.saveProperty(thisWalker.getPropertyBase());
   }
 }
 
