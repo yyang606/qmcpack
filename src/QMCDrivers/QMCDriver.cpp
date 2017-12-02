@@ -56,6 +56,7 @@ QMCDriver::QMCDriver(MCWalkerConfiguration& w, TrialWaveFunction& psi, QMCHamilt
     ,ppref(0)
 {
   ResetRandom=false;
+  init_ud_bipartite=false;
   AppendRun=false;
   DumpConfig=false;
   ConstPopulation=true; //default is a fixed population method
@@ -595,6 +596,10 @@ bool QMCDriver::putQMCInfo(xmlNodePtr cur)
       else if(cname == "random")
       {
         ResetRandom = true;
+      }
+      else if(cname == "ud_bipartite")
+      {
+        init_ud_bipartite = true;
       }
       tcur=tcur->next;
     }

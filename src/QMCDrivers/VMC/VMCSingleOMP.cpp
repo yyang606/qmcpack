@@ -214,10 +214,13 @@ void VMCSingleOMP::resetRun()
     Movers[ip]->put(qmcNode);
     Movers[ip]->resetRun(branchClones[ip],estimatorClones[ip],traceClones[ip]);
 
-    // TODO: add input flag to turn this custom initialization on
-    for (WalkerIter_t it=W.begin()+wPerNode[ip];it!=W.begin()+wPerNode[ip+1];it++)
-    { // initialize up, down electrons on A,B sublattices, respectively
-      (*it)->R = W.ud_bipartite(spset);
+    if (init_ud_bipartite)
+    {
+      if (ip==0) app_log() << "initializing up and down electrons on different sub-lattices of a bipartite lattice" << std::endl;
+      for (WalkerIter_t it=W.begin()+wPerNode[ip];it!=W.begin()+wPerNode[ip+1];it++)
+      { // initialize up, down electrons on A,B sublattices, respectively
+        (*it)->R = W.ud_bipartite(spset);
+      }
     }
 
     if (QMCDriverMode[QMC_UPDATE_MODE])

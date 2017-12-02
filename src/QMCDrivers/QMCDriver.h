@@ -236,6 +236,8 @@ protected:
   bool ConstPopulation;
   ///true, if it is a real QMC engine
   bool IsQMCDriver;
+  ///true, if initialize up and down electrons near a proton lattice
+  bool init_ud_bipartite;
   /** the number of times this QMCDriver is executed
    *
    * MyCounter is initialized to zero by the constructor and is incremented
