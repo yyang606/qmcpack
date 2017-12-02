@@ -60,7 +60,7 @@ template<class Tt, class TG, class T, unsigned D>
 inline void getScaledDrift(Tt tau, const TinyVector<TG,D>& qf, TinyVector<T,D>& drift)
 {
   T vsq=dot(qf,qf);
-  vsq= (vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
+  vsq= (vsq>tau)? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
   drift=vsq*qf;
 }
 
@@ -157,24 +157,47 @@ inline T setScaledDriftPbyPandNodeCorr(T tau,
  * @param qf quantum forces
  * @param drift scaled quantum forces
  * @param return correction term
+ *
+ * Fill the drift vector one particle at a time (pbyp).
+ * The norm of the drift vector is limited in two ways:
+ *  1. Umrigar: suppress drift divergence to mimic wf divergence
+ *  2. Ceperley: limit max drift rate to diffusion rate
+ * The choice of drift vector does not affect VMC/DMC correctness
+ *  so long as the proposal probabilities are correctly calculated.
+ * This choice of drift vector minimizes DMC time-step error.
+ *
+ * T is likely RealType for mass and drift
+ * T1 may be ComplexType for wavefunction
+ * D is likely int for the number of spatial dimensions
  */
 template<class T, class T1, unsigned D>
 inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
                                        const ParticleAttrib<TinyVector<T1,D> >& qf,
                                        ParticleAttrib<TinyVector<T,D> >& drift)
 {
-  T norm=0.0, norm_scaled=0.0, vsq;
+  // The naive drift is drift = qf*tau, where "quantum force" qf = grad_psi_over_psi.
+  //  Namely, the log derivative of the guiding wavefunction.
+  // The naive drift diverges at a node, causing persistent configurations.
+  T vsq, tau, sc, sc_max, sc1; // temp. variables to be assigned
+  T norm2=0.0, norm2_scaled=0.0; // variables to be accumulated
   for(int iat=0; iat<massinv.size(); ++iat)
   {
-    T tau=tau_au*massinv[iat];
+    tau = tau_au*massinv[iat]; // !!!! assume timestep is scaled by mass
+    sc_max = std::sqrt(tau/vsq);
+
+    // drift multiplier of Umrigar, JCP 99, 2865 (1993); eq. (33) * tau
     convert(dot(qf[iat],qf[iat]),vsq);
-    //T vsq=dot(qf[iat],qf[iat]);
-    T sc=(vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
-    norm_scaled+=vsq*sc*sc;
-    norm+=vsq*tau*tau;
-    drift[iat]=qf[iat]*T1(sc);
+    sc = (vsq < std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
+    // norm of final drift = sc*|qf| = sc*sqrt(vsq)
+    //  limit the norm of the final drift to below diffusion constant sqrt(tau)
+    sc1 = (sc > sc_max) ? sc_max : sc;
+
+    norm2_scaled += vsq*sc1*sc1; // accumulate scaled drift norm^2
+    norm2 += vsq*tau*tau; // accumulate naive drift norm^2
+    drift[iat]=qf[iat]*T1(sc1);
   }
-  return std::sqrt(norm_scaled/norm);
+  T node_corr = std::sqrt(norm2_scaled/norm2);
+  return node_corr;
 }
 
 template<class T, unsigned D>

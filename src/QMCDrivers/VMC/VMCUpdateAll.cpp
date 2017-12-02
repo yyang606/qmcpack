@@ -107,18 +107,20 @@ void VMCUpdateAllWithDrift::advanceWalker(Walker_t& thisWalker, bool recompute)
 
   for (int iter=0; iter<nSubSteps; ++iter)
   { // make a few Monte-Carlo steps to decorrelate samples without calculating observables
-    assignDrift(Tau,MassInvP,W.G,drift); // fill variable drift, require W.G to be up-to-date
+    // fill importance-sampling drift vector "drift"; W.G must be up-to-date
+    setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift);
     makeGaussRandomWithEngine(deltaR,RandomGen); // fill variable deltaR
+
     if (W.makeMoveWithDrift(thisWalker,drift,deltaR,SqrtTauOverMass))
-    { // W.R = thisWalker.R + drift + deltaR; W.DistTables,SK are updated; W.G,L are now stale
+    { // W.R = thisWalker.R + drift + tau*deltaR; W.DistTables,SK are updated; W.G,L are now stale
       
       RealType logpsi=Psi.evaluateLog(W);  // update W.G,L; update Psi.PhaseValue,LogValue
       RealType logGf = -0.5*Dot(deltaR,deltaR);
-      assignDrift(Tau,MassInvP,W.G,drift); // update drift at proposed configuration
+      setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift); // update drift at proposed configuration
       deltaR = thisWalker.R - W.R - drift; // hijack deltaR to hold reverse move
       RealType logGb=logBackwardGF(deltaR);
 
-      RealType g= std::exp(logGb-logGf+2.0*(logpsi-logpsi_old));
+      RealType g = std::exp(logGb-logGf+2.0*(logpsi-logpsi_old));
       // accept or reject
       if (RandomGen() > g)
       {
@@ -145,7 +147,7 @@ void VMCUpdateAllWithDrift::advanceWalker(Walker_t& thisWalker, bool recompute)
   }
 
   RealType eloc = H.evaluate(W); // calculate local energy; W.SK must be up-to-date if Coulomb interaction is used with periodic boundary. W.SK is used to calculate the long-range part of the Coulomb potential.
-  thisWalker.R = W.R;
+  //W.saveWalker(thisWalker);
   thisWalker.resetProperty(logpsi_old,Psi.getPhase(),eloc);
   H.auxHevaluate(W,thisWalker);
   H.saveProperty(thisWalker.getPropertyBase());
