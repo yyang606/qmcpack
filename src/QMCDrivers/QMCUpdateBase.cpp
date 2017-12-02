@@ -271,7 +271,7 @@ void QMCUpdateBase::initWalkers(WalkerIter_t it, WalkerIter_t it_end)
   UpdatePbyP=false;
   for (; it != it_end; ++it)
   { // initialize each walker being worked on by this QMCUpdate
-    Walker_t& thisWalker(**it);
+    Walker_t& thisWalker(**it); // de-reference the walker iterator for readbability
     W.loadWalker(thisWalker,false); // fill local W.R,G,L from global walker
     // loadWalker(Walker_t&,bool) also updates distance tables and S(k)
     //  the "false" input is for "pbyp", which is not used. It is important
@@ -283,7 +283,7 @@ void QMCUpdateBase::initWalkers(WalkerIter_t it, WalkerIter_t it_end)
       // acceptance, because the reverse-move proposal probability is virtually zero.
       makeGaussRandomWithEngine(deltaR,RandomGen);
       W.update(true); // update distance tables but not S(k), "true" is for skipSK
-      //Psi.evaluateLog(W); // update W.G,W.L; distance tables must be up-to-date
+      Psi.evaluateLog(W); // update W.G,W.L; distance tables must be up-to-date
       // calculate drift vector; W.G must be up-to-date
       RealType nodecorr = setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift);
       W.makeMoveWithDrift(thisWalker,drift,deltaR,SqrtTauOverMass);
