@@ -86,7 +86,7 @@ void QMCUpdateBase::setDefaults()
       ts_boost_factor[iat] = 1.0; // no boost to timestep by default
     }
   }
-  nfp = 4;
+  nfp = 0;
 }
 
 bool QMCUpdateBase::put(xmlNodePtr cur)
@@ -276,6 +276,7 @@ void QMCUpdateBase::initWalkers(WalkerIter_t it, WalkerIter_t it_end)
     // loadWalker(Walker_t&,bool) also updates distance tables and S(k)
     //  the "false" input is for "pbyp", which is not used. It is important
     //  only to ensure the correct "loadWalker" function is called.
+    RealType logpsi(0.0);
     for (int ifp=0;ifp<nfp;ifp++)
     { // Perform a few steps of Fokker-Planck dynamics without rejection.
       // This is important if the initial configuration is very close to a node.
@@ -283,14 +284,14 @@ void QMCUpdateBase::initWalkers(WalkerIter_t it, WalkerIter_t it_end)
       // acceptance, because the reverse-move proposal probability is virtually zero.
       makeGaussRandomWithEngine(deltaR,RandomGen);
       W.update(true); // update distance tables but not S(k), "true" is for skipSK
-      Psi.evaluateLog(W); // update W.G,W.L; distance tables must be up-to-date
+      logpsi = Psi.evaluateLog(W); // update W.G,W.L; distance tables must be up-to-date
       // calculate drift vector; W.G must be up-to-date
       RealType nodecorr = setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift);
       W.makeMoveWithDrift(thisWalker,drift,deltaR,SqrtTauOverMass);
     }
     // final updates to W.DistTables,SK,G,L
-    W.update(false);
-    RealType logpsi(Psi.evaluateLog(W));
+    W.update(false); // update distance tables and S(k)
+    logpsi = Psi.evaluateLog(W); // update W.G,W.L
     W.saveWalker(thisWalker); // send initialized R,G,L back to global walker
 
     RealType nodecorr = setScaledDriftPbyPandNodeCorr(Tau,MassInvP,W.G,drift);
