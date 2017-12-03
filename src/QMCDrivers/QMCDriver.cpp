@@ -18,6 +18,7 @@
     
 
 
+#include "QMCApp/ParticleSetPool.h"
 #include "QMCDrivers/QMCDriver.h"
 #include "Utilities/OhmmsInfo.h"
 #include "Particle/MCWalkerConfiguration.h"
@@ -56,7 +57,8 @@ QMCDriver::QMCDriver(MCWalkerConfiguration& w, TrialWaveFunction& psi, QMCHamilt
     ,ppref(0)
 {
   ResetRandom=false;
-  init_ud_bipartite=false;
+  init_ud_bipartite = false;
+  spset_name = "ion0";
   AppendRun=false;
   DumpConfig=false;
   ConstPopulation=true; //default is a fixed population method
@@ -600,6 +602,12 @@ bool QMCDriver::putQMCInfo(xmlNodePtr cur)
       else if(cname == "ud_bipartite")
       {
         init_ud_bipartite = true;
+        OhmmsAttributeSet rAttrib;
+        rAttrib.add(spset_name,"source");
+        rAttrib.put(tcur);
+        app_log() << "look for source particle set " << spset_name << std::endl;
+        bool found = ppref->getParticleSet(spset_name);
+        if (!found) APP_ABORT("source particle set for ud_bipartite initialization '" + spset_name + "' not found.");
       }
       tcur=tcur->next;
     }

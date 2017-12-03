@@ -220,8 +220,6 @@ public:
     return (*Rng[i]);
   }
 
-  inline void set_ptcl_pool(ParticleSetPool& pp){ppref = &pp;}
-
 protected:
 
   ///branch engine
@@ -327,6 +325,7 @@ protected:
   std::string h5FileRoot;
   ///root of all the output files
   std::string RootName;
+  std::string spset_name; // source particle set (spset) name, default "ion0"
 
   ///store any parameter that has to be read from a file
   ParameterSet m_param;

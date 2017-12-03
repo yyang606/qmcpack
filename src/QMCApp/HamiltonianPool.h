@@ -96,6 +96,12 @@ public:
   {
     ptclPool=pset;
   }
+  /** return the pointer assigned to ParticleSetPool
+   */
+  inline ParticleSetPool* getParticleSetPool()
+  {
+    return ptclPool;
+  }
 
   /** assign a pointer to a WaveFunctionPool
    */

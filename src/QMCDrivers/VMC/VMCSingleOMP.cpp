@@ -16,6 +16,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
     
 #include "QMCApp/ParticleSetPool.h"
+#include "QMCApp/HamiltonianPool.h"
 #include "QMCDrivers/VMC/VMCSingleOMP.h"
 #include "QMCDrivers/VMC/VMCUpdatePbyP.h"
 #include "QMCDrivers/VMC/VMCUpdateAll.h"
@@ -51,6 +52,7 @@ VMCSingleOMP::VMCSingleOMP(MCWalkerConfiguration& w, TrialWaveFunction& psi, QMC
 
   prevSteps=nSteps;
   prevStepsBetweenSamples=nStepsBetweenSamples;
+  ppref = hpool.getParticleSetPool();
 }
 
 bool VMCSingleOMP::run()
@@ -128,8 +130,6 @@ bool VMCSingleOMP::run()
 
 void VMCSingleOMP::resetRun()
 {
-  // TODO: move spset initialization to put()
-  ParticleSet& spset = *( ppref->getParticleSet("ion0") );
   ////only VMC can overwrite this
   if(nTargetPopulation>0)
     branchEngine->iParam[SimpleFixedNodeBranch::B_TARGETWALKERS]=static_cast<int>(std::ceil(nTargetPopulation));
@@ -219,6 +219,7 @@ void VMCSingleOMP::resetRun()
       if (ip==0) app_log() << "initializing up and down electrons on different sub-lattices of a bipartite lattice" << std::endl;
       for (WalkerIter_t it=W.begin()+wPerNode[ip];it!=W.begin()+wPerNode[ip+1];it++)
       { // initialize up, down electrons on A,B sublattices, respectively
+        ParticleSet& spset = *( ppref->getParticleSet(spset_name) );
         (*it)->R = W.ud_bipartite(spset);
       }
     }
