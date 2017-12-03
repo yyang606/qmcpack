@@ -240,7 +240,7 @@ public:
         (*lapLogPsi[p])=0.0;
       std::vector<TinyVector<RealType,3> > derivs(NumVars);
       const DistanceTableData* d_table=P.DistTables[0];
-      if(d_table->DTType == DT_AOS)
+      if(d_table->DTType == DT_SOA)
       {
         constexpr RealType cone(1);
         constexpr RealType lapfac(OHMMS_DIM-cone);
