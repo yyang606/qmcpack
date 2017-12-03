@@ -147,7 +147,7 @@ void VMCUpdateAllWithDrift::advanceWalker(Walker_t& thisWalker, bool recompute)
   }
 
   RealType eloc = H.evaluate(W); // calculate local energy; W.SK must be up-to-date if Coulomb interaction is used with periodic boundary. W.SK is used to calculate the long-range part of the Coulomb potential.
-  //W.saveWalker(thisWalker);
+  W.saveWalker(thisWalker);
   thisWalker.resetProperty(logpsi_old,Psi.getPhase(),eloc);
   H.auxHevaluate(W,thisWalker);
   H.saveProperty(thisWalker.getPropertyBase());
