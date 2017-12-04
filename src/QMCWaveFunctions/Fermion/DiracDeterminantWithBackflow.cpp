@@ -215,7 +215,7 @@ DiracDeterminantWithBackflow::ValueType DiracDeterminantWithBackflow::ratio(Part
     }
     int jat = *it-FirstIndex;
     PosType dr = BFTrans->newQP[*it] - BFTrans->QP.R[*it];
-    BFTrans->QP.makeMoveAndCheck(*it,dr);
+    if (!BFTrans->QP.makeMoveAndCheck(*it,dr)) APP_ABORT("failed to move QP");
     Phi->evaluate(BFTrans->QP, *it, psiV);
     for(int orb=0; orb<psiV.size(); orb++)
       psiM_temp(orb,jat) = psiV[orb];
@@ -302,7 +302,7 @@ DiracDeterminantWithBackflow::ratioGrad(ParticleSet& P, int iat, GradType& grad_
     }
     int jat = *it-FirstIndex;
     PosType dr = BFTrans->newQP[*it] - BFTrans->QP.R[*it];
-    BFTrans->QP.makeMoveAndCheck(*it,dr);
+    if (!BFTrans->QP.makeMoveAndCheck(*it,dr)) APP_ABORT("ratioGrad failed to move QP");
     Phi->evaluate(BFTrans->QP, *it, psiV, dpsiV, d2psiV);
     for(int orb=0; orb<psiV.size(); orb++)
       psiM_temp(orb,jat) = psiV[orb];
@@ -361,7 +361,7 @@ DiracDeterminantWithBackflow::ValueType DiracDeterminantWithBackflow::ratio(Part
     }
     int jat = *it-FirstIndex;
     PosType dr = BFTrans->newQP[*it] - BFTrans->QP.R[*it];
-    BFTrans->QP.makeMoveAndCheck(*it,dr);
+    if (!BFTrans->QP.makeMoveAndCheck(*it,dr)) APP_ABORT("ratio failed to move QP");
     Phi->evaluate(BFTrans->QP, *it, psiV, dpsiV, grad_gradV);
     for(int orb=0; orb<psiV.size(); orb++)
       psiM_temp(orb,jat) = psiV[orb];
