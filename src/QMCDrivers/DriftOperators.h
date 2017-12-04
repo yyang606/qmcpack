@@ -60,7 +60,7 @@ template<class Tt, class TG, class T, unsigned D>
 inline void getScaledDrift(Tt tau, const TinyVector<TG,D>& qf, TinyVector<T,D>& drift)
 {
   T vsq=dot(qf,qf);
-  vsq= (vsq>tau)? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
+  vsq= (vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
   drift=vsq*qf;
 }
 
