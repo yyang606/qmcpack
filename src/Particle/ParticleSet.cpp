@@ -680,42 +680,29 @@ bool
 ParticleSet::makeMoveAndCheck(Index_t iat, const SingleParticlePos_t& displ)
 {
   myTimers[0]->start();
+
+  // save the current position
   activePtcl=iat;
-  //SingleParticlePos_t red_displ(Lattice.toUnit(displ));
-  if (UseBoundBox)
+  activePos=R[iat]; 
+
+  // move particle to new position
+  SingleParticlePos_t newpos(activePos+displ);
+  R[iat]=newpos;
+
+  // update distance tables
+  for (int i=0; i< DistTables.size(); ++i)
   {
-    if (Lattice.outOfBound(Lattice.toUnit(displ)))
-    {
-      myTimers[0]->stop();
-      return false;
-    }
-    activePos=R[iat]; //save the current position
-    SingleParticlePos_t newpos(activePos+displ);
-    newRedPos=Lattice.toUnit(newpos);
-    if (Lattice.isValid(newRedPos))
-    {
-      for (int i=0; i< DistTables.size(); ++i)
-        DistTables[i]->move(*this,newpos,iat);
-      R[iat]=newpos;
-      if (SK && SK->DoUpdate)
-        SK->makeMove(iat,newpos);
-      myTimers[0]->stop();
-      return true;
-    }
-    //out of bound
-    myTimers[0]->stop();
-    return false;
+    DistTables[i]->move(*this,newpos,iat);
   }
-  else
+
+  // update S(k) if necessary
+  if (UseBoundBox && SK && SK->DoUpdate)
   {
-    activePos=R[iat]; //save the current position
-    SingleParticlePos_t newpos(activePos+displ);
-    for (int i=0; i< DistTables.size(); ++i)
-      DistTables[i]->move(*this,newpos,iat);
-    R[iat]=newpos;
-    myTimers[0]->stop();
-    return true;
+    SK->makeMove(iat,newpos);
   }
+
+  myTimers[0]->stop();
+  return true;
 }
 
 bool ParticleSet::makeMove(const Walker_t& awalker
