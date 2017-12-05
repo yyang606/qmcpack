@@ -279,7 +279,7 @@ bool XMLParticleParser::putSpecial(xmlNodePtr cur)
     }
     else if (cname == attrib_tag)
     {
-      if (randomizeR=="yes") APP_ABORT("random=\"yes\", but particle positions are explicitly given. The given particle positions will be ignored if the program continues. Please either set random=\"no\" or remove exiplicit particle positions.");
+      if (randomizeR!="no") APP_ABORT("random!=\"no\", but particle positions are explicitly given. The given particle positions will be ignored if the program continues. Please either set random=\"no\" or remove exiplicit particle positions.");
       getPtclAttrib(cur,nat,nloc);
     }
     else if (cname == "group")
@@ -299,7 +299,7 @@ bool XMLParticleParser::putSpecial(xmlNodePtr cur)
           std::string tcname((const char*)tcur->name);
           if(nat_group[ng] && tcname == attrib_tag)
           {
-            if (randomizeR=="yes") APP_ABORT("random=\"yes\", but particle positions are explicitly given. The given particle positions will be ignored if the program continues. Please either set random=\"no\" or remove exiplicit particle positions.");
+            if (randomizeR!="no") APP_ABORT("random!=\"no\", but particle positions are explicitly given. The given particle positions will be ignored if the program continues. Please either set random=\"no\" or remove exiplicit particle positions.");
             getPtclAttrib(tcur,nat_group[ng],nloc);
           }
           tcur = tcur->next;
@@ -324,9 +324,9 @@ bool XMLParticleParser::putSpecial(xmlNodePtr cur)
       ref_.R.setUnit(PosUnit::LatticeUnit);
       ref_.convert2Cart(ref_.R);
     }
-    else  // put them [0,1) in the cell 
-      ref_.applyBC(ref_.R);
-  } 
+    // put initialized particles to frac. coord. [0,1) in the cell 
+    ref_.applyBC(ref_.R);
+  }
 
   //this sets Mass, Z
   ref_.resetGroups();

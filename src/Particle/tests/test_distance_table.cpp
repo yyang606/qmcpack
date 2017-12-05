@@ -42,7 +42,7 @@ TEST_CASE("distance_open_z", "[distance_table][xml]")
 
 const char *particles =
 "<tmp> \
-<particleset name=\"e\" random=\"yes\"> \
+<particleset name=\"e\" random=\"no\"> \
    <group name=\"u\" size=\"1\" mass=\"1.0\">\
       <parameter name=\"charge\"              >    -1                    </parameter>\
       <parameter name=\"mass\"                >    1.0                   </parameter>\
@@ -139,7 +139,7 @@ TEST_CASE("distance_open_xy", "[distance_table][xml]")
 
 const char *particles =
 "<tmp> \
-<particleset name=\"e\" random=\"yes\"> \
+<particleset name=\"e\" random=\"no\"> \
    <group name=\"u\" size=\"2\" mass=\"1.0\">\
       <parameter name=\"charge\"              >    -1                    </parameter>\
       <parameter name=\"mass\"                >    1.0                   </parameter>\
@@ -261,7 +261,7 @@ TEST_CASE("distance_open_species_deviation", "[distance_table][xml]")
 
 const char *particles =
 "<tmp> \
-<particleset name=\"e\" random=\"yes\"> \
+<particleset name=\"e\" random=\"no\"> \
    <group name=\"u\" size=\"2\" mass=\"1.0\">\
       <parameter name=\"charge\"              >    -1                    </parameter>\
       <parameter name=\"mass\"                >    1.0                   </parameter>\
