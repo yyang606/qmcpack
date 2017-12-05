@@ -822,23 +822,15 @@ bool ParticleSet::makeMoveWithDrift(const Walker_t& awalker
 {
   Ready4Measure=false;
   activePtcl=-1;
-  if (UseBoundBox)
+  for (int iat=0; iat<deltaR.size(); ++iat)
   {
-    for (int iat=0; iat<deltaR.size(); ++iat)
+    SingleParticlePos_t newpos(awalker.R[iat]+dt[iat]*deltaR[iat]+drift[iat]);
+    R[iat] = newpos;
+
+    if (UseBoundBox)
     {
-      SingleParticlePos_t displ(dt[iat]*deltaR[iat]+drift[iat]);
-      if (Lattice.outOfBound(Lattice.toUnit(displ)))
-        return false;
-      SingleParticlePos_t newpos(awalker.R[iat]+displ);
-      if (!Lattice.isValid(Lattice.toUnit(newpos)))
-        return false;
-      R[iat]=newpos;
+      applyBC(R,R,iat,iat+1);
     }
-  }
-  else
-  {
-    for (int iat=0; iat<deltaR.size(); ++iat)
-      R[iat]=awalker.R[iat]+dt[iat]*deltaR[iat]+drift[iat];
   }
 
 #if defined(ENABLE_SOA)
