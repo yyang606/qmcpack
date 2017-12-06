@@ -183,10 +183,10 @@ inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
   for(int iat=0; iat<massinv.size(); ++iat)
   {
     tau = tau_au*massinv[iat]; // !!!! assume timestep is scaled by mass
-    sc_max = std::sqrt(tau/vsq);
 
     // drift multiplier of Umrigar, JCP 99, 2865 (1993); eq. (33) * tau
     convert(dot(qf[iat],qf[iat]),vsq);
+    sc_max = std::sqrt(tau/vsq); // limit maximum drift magnitude below diffusion
     sc = (vsq < std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
     // norm of final drift = sc*|qf| = sc*sqrt(vsq)
     //  limit the norm of the final drift to below diffusion constant sqrt(tau)
