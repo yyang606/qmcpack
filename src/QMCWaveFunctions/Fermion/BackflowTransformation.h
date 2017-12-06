@@ -512,7 +512,6 @@ public:
           //
     */
     QP.update(0);  // update distance tables
-    QP.applyBC(QP.R,QP.R,0,QP.R.size());
   }
 
   /** calculate quasi-particle coordinates and store in Pnew

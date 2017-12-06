@@ -1864,13 +1864,9 @@ EinsplineSetExtended<StorageType>::evaluate_notranspose(const ParticleSet& P, in
     {
       bool trs(true);
       for(unsigned a0(0); a0<OHMMS_DIM; a0++)
-      { // for each lattice vector, see if r \dot k is a multiple of \pi
-        double olp = 0.0;
-        for (unsigned a1(0); a1<OHMMS_DIM; a1++)
-        {
-          olp += PrimLattice.R[a0*OHMMS_DIM+a1]*kPoints[j][a1]/M_PI;
-        }
-        olp = std::abs(olp-std::round(olp));
+      {
+        double olp= std::abs((PrimLattice.R[a0]*kPoints[j][a0])/M_PI +1e-6);
+        olp -= (int)olp;
         if (olp>1e-4)
           trs=false;
       }
