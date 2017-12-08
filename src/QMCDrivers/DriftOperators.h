@@ -31,23 +31,9 @@ inline T getDriftScale(T tau, const ParticleAttrib<TinyVector<TG,D> >& ga)
 }
 
 template<class T, class TG, unsigned D>
-inline T getDriftScale(T tau, const ParticleAttrib<TinyVector<std::complex<TG>,D> >& ga)
-{
-  T vsq=Dot(ga,ga);
-  return (vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
-}
-
-template<class T, class TG, unsigned D>
 inline T getDriftScale(T tau, const TinyVector<TG,D>& qf)
 {
   T vsq=dot(qf,qf);
-  return (vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
-}
-
-template<class T, class TG, unsigned D>
-inline T getDriftScale(T tau, const TinyVector<std::complex<TG>,D>& qf)
-{
-  T vsq=OTCDot<TG,TG,D>::apply(qf,qf);
   return (vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
 }
 
@@ -67,62 +53,12 @@ inline void getScaledDrift(Tt tau, const TinyVector<TG,D>& qf, TinyVector<T,D>& 
 template<class Tt, class TG, class T, unsigned D>
 inline void getScaledDrift(Tt tau, const TinyVector<std::complex<TG>,D>& qf, TinyVector<T,D>& drift)
 {
-  T vsq=OTCDot<TG,TG,D>::apply(qf,qf);
-  vsq=(vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
-  for(int i=0; i<D; ++i)
-    convert(TG(vsq)*qf[i],drift[i]);
-}
-
-
-/** evaluate \f$\gamma\f$ for \f$ \bar V= \gamma V\f$
- *
- * Using eq. 34 of JCP 99, 2865 (1993)
- * \f$ \bar v(i)=\gamma_i \frac{-1+\sqrt{1+2*a*v^2*\tau}}{av^2\tau} v(i)\f$
- */
-template<class T, unsigned D>
-inline T getNodeCorrectionP(T tau, const ParticleAttrib<TinyVector<T,D> >& ga, T a=1)
-{
-  T norm=0.0, norm_scaled=0.0;
-  for(int i=0; i<ga.size(); ++i)
-  {
-    T vsq=dot(ga[i],ga[i]);
-    T x=a*vsq*tau;
-    T scale= (vsq<std::numeric_limits<T>::epsilon())? 1.0:((-1.0+std::sqrt(1.0+2.0*x))/x);
-    norm_scaled+=vsq*scale*scale;
-    norm+=vsq;
-  }
-  return std::sqrt(norm_scaled/norm);
-}
-
-/** evaluate \f$\gamma\f$ for \f$ \bar V= \gamma V\f$
- *
- * Similar to getNodeCorrectionP but scale all the gradients with the same factor
- */
-template<class T, unsigned D>
-inline T getNodeCorrectionW(T tau, const ParticleAttrib<TinyVector<T,D> >& ga)
-{
-  T vsq=Dot(ga,ga);
-  T x=tau*vsq;
-  return (vsq<std::numeric_limits<T>::epsilon())? 1.0:((-1.0+std::sqrt(1.0+2.0*x))/x);
-}
-
-
-/** evaluate drift using the scaling function by JCP93
- * @param tau timestep
- * @param qf quantum force
- * @param drift drift
- */
-template<class T, unsigned D>
-inline void setScaledDriftPbyP(T tau,
-                               const ParticleAttrib<TinyVector<T,D> >& qf,
-                               ParticleAttrib<TinyVector<T,D> >& drift)
-{
-  for(int iat=0; iat<qf.size(); ++iat)
-  {
-    T vsq=dot(qf[iat],qf[iat]);
-    T sc=(vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
-    drift[iat]=sc*qf[iat];
-  }
+  convert(qf,drift);
+  T vsq = OTCDot<TG,TG,D>::apply(drift,drift);
+  T sc  = (-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq;
+  // restore to naive drift if denominator is too small
+  if (vsq < std::numeric_limits<T>::epsilon()) sc = tau; 
+  drift *= sc;
 }
 
 /** scale drift
@@ -177,11 +113,14 @@ inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
     tau = tau_au*massinv[iat]; // !!!! assume timestep is scaled by mass
 
     // drift multiplier of Umrigar, JCP 99, 2865 (1993); eq. (33) * tau
-    for (int idim=0;idim<OHMMS_DIM;idim++)
-    { // keep real part of grad_psi_over_psi
-      convert(qf[iat][idim],drift[iat][idim]);
-    }
+    // keep real part of grad_psi_over_psi
+    convert(qf[iat],drift[iat]);
     vsq = dot(drift[iat],drift[iat]);
+
+    // use naive drift if vsq may cause numerical instability in the denominator
+    vsq = (vsq < std::numeric_limits<T>::epsilon()) ? tau : vsq; // YY: does this ever happen?
+
+    // drift multiplier of Umrigar, JCP 99, 2865 (1993); eq. (34) * tau
     sc = ((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
     drift[iat] *= sc;
 
@@ -211,25 +150,27 @@ inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
  *
  * fdtype should be either float or double
  * rctype should be either real or complex
- * dimtype should be int
+ * ndim should be the number of dimensions
  */
-template<class fdtype, class rctype, unsigned dimtype>
+template<class fdtype, class rctype, unsigned ndim>
 void fill_umrigar_drift(
  const std::vector<fdtype>& tau_vec, // time step
  const std::vector<fdtype>& a_vec,   // Umrigar "a"
- const ParticleAttrib<TinyVector<rctype,dimtype> >& grad_vec, // dlogpsi/dr
- ParticleAttrib<TinyVector<fdtype,dimtype> >& drift_vec)
+ const ParticleAttrib<TinyVector<rctype,ndim> >& grad_vec, // dlogpsi/dr
+ ParticleAttrib<TinyVector<fdtype,ndim> >& drift_vec)
 {
   postype vsq, diff, sc;  // temp. variables to be assigned
   for(int iat=0; iat<diff_vec.size(); ++iat)
   {
-    for (int idim=0;idim<OHMMS_DIM;idim++)
-    { // save real part of grad_psi_over_psi in drift
-      convert(grad_vec[iat][idim],drift_vec[iat][idim]); 
-    }
+    // save real part of grad_psi_over_psi in drift
+    convert(grad_vec[iat],drift_vec[iat]); 
 
-    // calculate real gradient magnitude
+    // calculate real gradient magnitude^2
     vsq = dot(drift_vec[iat],drift_vec[iat]); 
+    if (vsq<0) APP_ABORT("negative square"); // this should never happen
+
+    // use naive drift if vsq may cause numerical instability in the denominator
+    vsq = (vsq < std::numeric_limits<T>::epsilon()) ? tau : vsq; // YY: does this ever happen?
 
     // drift multiplier of Umrigar, JCP 99, 2865 (1993); eq. (34) * tau
     sc = (-1.0+std::sqrt(1.0+2.0*a_vec[iat]*vsq*tau_vec[iat]))/(a_vec[iat]*vsq);
@@ -238,27 +179,6 @@ void fill_umrigar_drift(
     drift_vec[iat] *= sc;
   }
 }
-
-template<class T, unsigned D>
-inline T setLargestScaledDriftPbyP(T tau,
-                                   const ParticleAttrib<TinyVector<T,D> >& qf,
-                                   ParticleAttrib<TinyVector<T,D> >& drift)
-{
-  T maxSC=tau;
-  for(int iat=0; iat<qf.size(); ++iat)
-  {
-    T vsq=dot(qf[iat],qf[iat]);
-    T sc=(vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
-    maxSC=(sc<maxSC? sc:maxSC);
-  }
-  for(int iat=0; iat<qf.size(); ++iat)
-  {
-    drift[iat]=maxSC*qf[iat];
-  }
-  return maxSC;
-}
-
-
 
 /** da = scaled(tau)*ga
  * @param tau time step
@@ -300,21 +220,6 @@ inline void setScaledDrift(T tau,
 {
   T s = getDriftScale(tau,qf);
   PAOps<T,D,TG>::scale(s,qf,drift);
-}
-
-/** da = scaled(tau)*ga
- * @param tau time step
- * @param qf complex quantum forces
- * @param drift drift
- */
-template<class T, unsigned D>
-inline void setScaledDrift(T tau,
-                           const ParticleAttrib<TinyVector<std::complex<T>,D> >& qf,
-                           ParticleAttrib<TinyVector<std::complex<T>,D> >& drift)
-{
-  T s = getDriftScale(tau,qf);
-  ///INCOMPLETE implementation
-  //PAOps<T,D>::scale(s,qf,drift);
 }
 
 template<class T, class TG, unsigned D>
