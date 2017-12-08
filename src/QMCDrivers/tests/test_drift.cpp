@@ -43,7 +43,7 @@ using std::string;
 namespace qmcplusplus
 {
 
-TEST_CASE("drift pbyp and node correction", "[drivers][drift]")
+TEST_CASE("drift pbyp and node correction real", "[drivers][drift]")
 {
   Communicate *c;
   OHMMS::Controller->initialize(0, NULL);
@@ -59,15 +59,16 @@ TEST_CASE("drift pbyp and node correction", "[drivers][drift]")
   elec.create(agroup);
 
   double tau = 0.5;
-  double mass= 1.0;
+  double mass= 0.85;
   double drift_max = std::sqrt(tau/mass);
   std::vector<double> massinv(1,1./mass);
   ParticleSet::ParticlePos_t drift(1);
 
-  double xtot = 10.; // check a span of 10 (1/bohr) around 0.0
+  // check from -xtot/2 to xtot/2 in step size of dx i.e. np.arange(-xtot/2,xtot/2,dx) 
+  double xtot  = 10.;
+  int    nx    = 100;
   double gradx = -xtot/2.;
-  int nx = 100;
-  double dx   = xtot/nx;
+  double dx    = xtot/nx;
 
   //app_log() << " begin printing" << std::endl;
   for (int ix=0;ix<nx;ix++)
@@ -76,21 +77,55 @@ TEST_CASE("drift pbyp and node correction", "[drivers][drift]")
     setScaledDriftPbyPandNodeCorr(tau,massinv,elec.G,drift);
     double dval = drift[0][0]; 
 
-    // check Ceperley cap
-    if (gradx>3.) REQUIRE( dval == Approx(drift_max) );
-    if (gradx<-3.) REQUIRE( dval == Approx(-drift_max) );
-
-    // check Umrigar rescale
-    if (std::abs(gradx)<2.)  
-    {
-      double scale_factor = (-1.+std::sqrt(1.+2.*gradx*gradx*tau))/(gradx*gradx*tau);
-      REQUIRE( dval == Approx(scale_factor*gradx*tau) );
-    }
+    double scale_factor = (-1.+std::sqrt(1.+2.*gradx*gradx*tau/mass))/(gradx*gradx*tau/mass);
+    REQUIRE( dval == Approx(scale_factor*gradx*tau/mass) );
 
     //app_log() << gradx << " " << dval << std::endl;
     gradx += dx;
   }
   //app_log() << " end printing." << std::endl;
+}
+
+TEST_CASE("drift pbyp and node correction complex", "[drivers][drift]")
+{ // basically copy and pasted from real test, except "myi"
+  Communicate *c;
+  OHMMS::Controller->initialize(0, NULL);
+  c = OHMMS::Controller;
+  OhmmsInfo("testlogfile");
+
+  MCWalkerConfiguration elec;
+
+  elec.setName("elec");
+  elec.setBoundBox(false);
+  std::vector<int> agroup(1);
+  agroup[0] = 1;
+  elec.create(agroup);
+
+  double tau = 0.5;
+  double mass= 0.85;
+  double drift_max = std::sqrt(tau/mass);
+  std::vector<double> massinv(1,1./mass);
+  ParticleSet::ParticlePos_t drift(1);
+
+  // check from -xtot/2 to xtot/2 in step size of dx i.e. np.arange(-xtot/2,xtot/2,dx) 
+  double xtot  = 10.;
+  int    nx    = 100;
+  double gradx = -xtot/2.;
+  double dx    = xtot/nx;
+
+  // imaginary component of wf gradient should NOT affect drift
+  complex<double> myi(0,1.9);
+  for (int ix=0;ix<nx;ix++)
+  {
+    elec.G[0][0] = gradx+myi;
+    setScaledDriftPbyPandNodeCorr(tau,massinv,elec.G,drift);
+    double dval = drift[0][0]; 
+
+    double scale_factor = (-1.+std::sqrt(1.+2.*gradx*gradx*tau/mass))/(gradx*gradx*tau/mass);
+    REQUIRE( dval == Approx(scale_factor*gradx*tau/mass) );
+
+    gradx += dx;
+  }
 }
 }
 

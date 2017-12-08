@@ -159,12 +159,7 @@ inline T setScaledDriftPbyPandNodeCorr(T tau,
  * @param return correction term
  *
  * Fill the drift vector one particle at a time (pbyp).
- * The norm of the drift vector is limited in two ways:
- *  1. Umrigar: suppress drift divergence to mimic wf divergence
- *  2. Ceperley: limit max drift rate to diffusion rate
- * The choice of drift vector does not affect VMC/DMC correctness
- *  so long as the proposal probabilities are correctly calculated.
- * This choice of drift vector minimizes DMC time-step error.
+ * The norm of the drift vector is limited by Umrigar's re-scaled drift.
  *
  * T is likely RealType for mass and drift
  * T1 may be ComplexType for wavefunction
@@ -175,9 +170,6 @@ inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
                                        const ParticleAttrib<TinyVector<T1,D> >& qf,
                                        ParticleAttrib<TinyVector<T,D> >& drift)
 {
-  // The naive drift is drift = qf*tau, where "quantum force" qf = grad_psi_over_psi.
-  //  Namely, the log derivative of the guiding wavefunction.
-  // The naive drift diverges at a node, causing persistent configurations.
   T vsq, tau, sc, sc_max, sc1; // temp. variables to be assigned
   T norm2=0.0, norm2_scaled=0.0; // variables to be accumulated
   for(int iat=0; iat<massinv.size(); ++iat)
@@ -185,19 +177,66 @@ inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
     tau = tau_au*massinv[iat]; // !!!! assume timestep is scaled by mass
 
     // drift multiplier of Umrigar, JCP 99, 2865 (1993); eq. (33) * tau
-    convert(dot(qf[iat],qf[iat]),vsq);
-    sc_max = std::sqrt(tau/vsq); // limit maximum drift magnitude below diffusion
-    sc = (vsq < std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
-    // norm of final drift = sc*|qf| = sc*sqrt(vsq)
-    //  limit the norm of the final drift to below diffusion constant sqrt(tau)
-    sc1 = (sc > sc_max) ? sc_max : sc;
+    for (int idim=0;idim<OHMMS_DIM;idim++)
+    { // keep real part of grad_psi_over_psi
+      convert(qf[iat][idim],drift[iat][idim]);
+    }
+    vsq = dot(drift[iat],drift[iat]);
+    sc = ((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
+    drift[iat] *= sc;
 
-    norm2_scaled += vsq*sc1*sc1; // accumulate scaled drift norm^2
-    norm2 += vsq*tau*tau; // accumulate naive drift norm^2
-    drift[iat]=qf[iat]*T1(sc1);
+    norm2_scaled += vsq*sc*sc; // accumulate scaled drift norm^2
+    norm2 += vsq*tau*tau;      // accumulate naive drift norm^2
   }
   T node_corr = std::sqrt(norm2_scaled/norm2);
   return node_corr;
+}
+
+/** get scaled drift vector, allow a different timestep for each particle
+ * @param a_vec a list of Umrigar "a" parameter, one for each particle
+ * @param grad_vec a list of wavefunction gradients, one for each particle
+ * @param drift_vec scaled importance-sampling drift vectors, one for each particle
+ *
+ * The naive drift is drift = tau*grad, where grad is grad_psi_over_psi, 
+ *  namely the log derivative of the guiding wavefunction; tau is timestep.
+ * The naive drift diverges at a node, causing persistent configurations.
+ * Fill the drift vector one particle at a time.
+ * The norm of the drift vector should be limited in two ways:
+ *  1. Umrigar: suppress drift divergence to mimic wf divergence
+ *  2. Ceperley: limit max drift rate to diffusion rate -> set Umrigar "a" parameter
+ * The choice of drift vector does not affect VMC correctness
+ *  so long as the proposal probabilities are correctly calculated.
+ * The choice of drift vector changes the DMC time-step error v.s. time step, but
+ *  does not affect the tau->0 DMC result.
+ *
+ * fdtype should be either float or double
+ * rctype should be either real or complex
+ * dimtype should be int
+ */
+template<class fdtype, class rctype, unsigned dimtype>
+void fill_umrigar_drift(
+ const std::vector<fdtype>& tau_vec, // time step
+ const std::vector<fdtype>& a_vec,   // Umrigar "a"
+ const ParticleAttrib<TinyVector<rctype,dimtype> >& grad_vec, // dlogpsi/dr
+ ParticleAttrib<TinyVector<fdtype,dimtype> >& drift_vec)
+{
+  postype vsq, diff, sc;  // temp. variables to be assigned
+  for(int iat=0; iat<diff_vec.size(); ++iat)
+  {
+    for (int idim=0;idim<OHMMS_DIM;idim++)
+    { // save real part of grad_psi_over_psi in drift
+      convert(grad_vec[iat][idim],drift_vec[iat][idim]); 
+    }
+
+    // calculate real gradient magnitude
+    vsq = dot(drift_vec[iat],drift_vec[iat]); 
+
+    // drift multiplier of Umrigar, JCP 99, 2865 (1993); eq. (34) * tau
+    sc = (-1.0+std::sqrt(1.0+2.0*a_vec[iat]*vsq*tau_vec[iat]))/(a_vec[iat]*vsq);
+
+    // scale drift
+    drift_vec[iat] *= sc;
+  }
 }
 
 template<class T, unsigned D>
