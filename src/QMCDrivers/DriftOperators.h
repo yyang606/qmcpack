@@ -106,7 +106,7 @@ inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
                                        const ParticleAttrib<TinyVector<T1,D> >& qf,
                                        ParticleAttrib<TinyVector<T,D> >& drift)
 {
-  T vsq, tau, sc, sc_max, sc1; // temp. variables to be assigned
+  T vsq, tau, sc; // temp. variables to be assigned
   T norm2=0.0, norm2_scaled=0.0; // variables to be accumulated
   for(int iat=0; iat<massinv.size(); ++iat)
   {
@@ -159,8 +159,8 @@ void fill_umrigar_drift(
  const ParticleAttrib<TinyVector<rctype,ndim> >& grad_vec, // dlogpsi/dr
  ParticleAttrib<TinyVector<fdtype,ndim> >& drift_vec)
 {
-  postype vsq, diff, sc;  // temp. variables to be assigned
-  for(int iat=0; iat<diff_vec.size(); ++iat)
+  fdtype vsq, sc;  // temp. variables to be assigned
+  for(int iat=0; iat<tau_vec.size(); ++iat)
   {
     // save real part of grad_psi_over_psi in drift
     convert(grad_vec[iat],drift_vec[iat]); 
@@ -170,7 +170,8 @@ void fill_umrigar_drift(
     if (vsq<0) APP_ABORT("negative square"); // this should never happen
 
     // use naive drift if vsq may cause numerical instability in the denominator
-    vsq = (vsq < std::numeric_limits<T>::epsilon()) ? tau : vsq; // YY: does this ever happen?
+    // YY: does this ever happen?
+    vsq = (vsq < std::numeric_limits<fdtype>::epsilon()) ? tau_vec[iat] : vsq; 
 
     // drift multiplier of Umrigar, JCP 99, 2865 (1993); eq. (34) * tau
     sc = (-1.0+std::sqrt(1.0+2.0*a_vec[iat]*vsq*tau_vec[iat]))/(a_vec[iat]*vsq);
