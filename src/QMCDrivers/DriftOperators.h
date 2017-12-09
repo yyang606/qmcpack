@@ -75,17 +75,20 @@ inline T setScaledDriftPbyPandNodeCorr(T tau,
  * @param tau_au timestep au
  * @param massinv 1/m per particle
  * @param qf quantum forces
- * @param drift scaled quantum forces
+ * @param drift scaled importance-sampling drift vector
  * @param return correction term
  *
  * Fill the drift vector one particle at a time (pbyp).
  *
- * The naive drift is tau/mass*grad_psi_over_psi,
- *  namely the log derivative of the guiding wavefunction; tau is timestep; mass is particle mass
- * The naive drift diverges at a node, causing persistent configurations.
+ * The naive drift is tau/mass*|grad_psi_over_psi|.
+ *  grad_psi_over_psi is the log derivative of the guiding wavefunction; 
+ *  tau is timestep; mass is particle mass
+ * The naive drift diverges at a node and is large near a nucleus.
+ * Both cases may cause persistent configurations, because reverse proposal probability is virtually zero.
+ *
  * The norm of the drift vector should be limited in two ways:
- *  1. Umrigar: suppress drift divergence to mimic wf divergence
- *  2. Ceperley: limit max drift rate to diffusion rate -> set Umrigar "a" parameter
+ *  1. Umrigar: suppress drift divergence with a scaling factor
+ *  2. Ceperley: limit max drift rate to diffusion rate
  * The choice of drift vector does not affect VMC correctness
  *  so long as the proposal probabilities are correctly calculated.
  * The choice of drift vector changes the DMC Green's function. BE CAREFUL!
@@ -110,6 +113,8 @@ inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
     // calculate drift scalar "sc" of Umrigar, JCP 99, 2865 (1993); eq. (34) * tau
     // use naive drift if vsq may cause numerical instability in the denominator
     T sc  = (vsq < std::numeric_limits<T>::epsilon()) ? tau_over_mass : (-1.0+std::sqrt(1.0+2.0*tau_over_mass*vsq))/vsq;
+    T sc_max = std::sqrt(tau_over_mass/vsq); // RMS diffusion per spatial dimension
+    sc = (sc>sc_max) ? sc_max : sc; // cap drift below diffusion
     drift[iat] *= sc;
 
     norm_scaled+=vsq*sc*sc;
