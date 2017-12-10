@@ -102,6 +102,7 @@ inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
                                        const ParticleAttrib<TinyVector<T1,D> >& qf,
                                        ParticleAttrib<TinyVector<T,D> >& drift)
 {
+  T acyrus = 2.0;
   T norm=0.0, norm_scaled=0.0; // variables to be accumulated
   for(int iat=0; iat<massinv.size(); ++iat)
   {
@@ -112,9 +113,7 @@ inline T setScaledDriftPbyPandNodeCorr(T tau_au, const std::vector<T>& massinv,
     T vsq = dot(drift[iat],drift[iat]);
     // calculate drift scalar "sc" of Umrigar, JCP 99, 2865 (1993); eq. (34) * tau
     // use naive drift if vsq may cause numerical instability in the denominator
-    T sc  = (vsq < std::numeric_limits<T>::epsilon()) ? tau_over_mass : (-1.0+std::sqrt(1.0+2.0*tau_over_mass*vsq))/vsq;
-    T sc_max = std::sqrt(tau_over_mass/vsq); // RMS diffusion per spatial dimension
-    sc = (sc>sc_max) ? sc_max : sc; // cap drift below diffusion
+    T sc  = (vsq < std::numeric_limits<T>::epsilon()) ? tau_over_mass : (-1.0+std::sqrt(1.0+2.0*tau_over_mass*acyrus*vsq))/(vsq*acyrus);
     drift[iat] *= sc;
 
     norm_scaled+=vsq*sc*sc;
