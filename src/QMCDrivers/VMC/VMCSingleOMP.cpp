@@ -176,16 +176,7 @@ void VMCSingleOMP::resetRun()
       }
       else
       {
-        if (UseDrift == "yes")
-        {
-          os <<"  walker moves with drift, using VMCUpdateAllWithDriftFast"<< std::endl;
-          Movers[ip]=new VMCUpdateAllWithDrift(*wClones[ip],*psiClones[ip],*hClones[ip],*Rng[ip]);
-        }
-        else
-        {
-          os <<"  walker moves with |psi|^2, using VMCUpdateAll"<< std::endl;
-          Movers[ip]=new VMCUpdateAll(*wClones[ip],*psiClones[ip],*hClones[ip],*Rng[ip]);
-        }
+        Movers[ip]=new VMCUpdateAll(*wClones[ip],*psiClones[ip],*hClones[ip],*Rng[ip]);
       }
       Movers[ip]->nSubSteps=nSubSteps;
       if(ip==0)
@@ -202,6 +193,13 @@ void VMCSingleOMP::resetRun()
     }
   }
 #endif
+  if (UseDrift == "yes")
+  {
+    for (int i=0;i<Movers.size();i++) Movers[i]->UseDrift = true;
+  } else 
+  {
+    for (int i=0;i<Movers.size();i++) Movers[i]->UseDrift = false;
+  }
   app_log() << "  Total Sample Size   =" << nTargetSamples << std::endl;
   app_log() << "  Walker distribution on root = ";
   copy(wPerNode.begin(),wPerNode.end(),std::ostream_iterator<int>(app_log()," "));

@@ -73,6 +73,7 @@ public:
   RealType Tau;
   // number of drift-diffusion warmup steps a.k.a.
   int nfp; // number of Fokker-Planck steps
+  bool UseDrift;
 
 
   /// Constructor.

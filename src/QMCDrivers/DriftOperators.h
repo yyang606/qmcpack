@@ -62,7 +62,6 @@ inline T setScaledDriftPbyPandNodeCorr(T tau,
   {
     convert(qf[iat],drift[iat]);
     T vsq=dot(drift[iat],drift[iat]);
-    //T vsq=dot(qf[iat],qf[iat]);
     T sc=(vsq<std::numeric_limits<T>::epsilon())? tau:((-1.0+std::sqrt(1.0+2.0*tau*vsq))/vsq);
     norm_scaled+=vsq*sc*sc;
     norm+=vsq*tau2;

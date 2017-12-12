@@ -61,6 +61,7 @@ void QMCUpdateBase::setDefaults()
 {
   UpdatePbyP=true;
   UseTMove=false;
+  UseDrift=true;
   NumPtcl=0;
   nSubSteps=1;
   MaxAge=10;
@@ -135,7 +136,7 @@ bool QMCUpdateBase::put(xmlNodePtr cur)
       OhmmsAttributeSet attrib;
       attrib.add(nfp_in,"nfp");
       attrib.put(pnode);
-      if (nfp_in > 0)
+      if (nfp_in >= 0)
       { // accept user input
         nfp = nfp_in;
         // acknowledge user input
