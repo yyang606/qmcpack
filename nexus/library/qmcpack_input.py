@@ -2373,7 +2373,8 @@ class optimize_qmc(QIxml):
                   'minke','samples','warmupsteps','minweight','warmupblocks',
                   'maxdispl','tau','tolerance','stepsize','epsilon',
                   'en_ref','usebuffer','substeps','stepsbetweensamples',
-                  'samplesperthread','max_steps','nonlocalpp','warmuptimestep']
+                  'samplesperthread','max_steps','nonlocalpp','warmuptimestep',
+                  'maxcpusecs']
     elements = ['optimize','optimizer','estimator']
     costs    = ['energy','variance','difference','weight','unreweightedvariance','reweightedvariance']
     write_types = obj(renew=yesno,completed=yesno)
@@ -2415,7 +2416,7 @@ class vmc(QIxml):
     tag = 'qmc'
     attributes = ['method','multiple','warp','move','gpu','checkpoint','trace','target','completed','id']
     elements   = ['estimator','record']
-    parameters = ['walkers','blocks','steps','substeps','timestep','usedrift','warmupsteps','warmuptimestep','samples','nonlocalpp','stepsbetweensamples','samplesperthread','tau','walkersperthread','reconfiguration','dmcwalkersperthread','current','ratio','firststep','minimumtargetwalkers']
+    parameters = ['walkers','blocks','steps','substeps','timestep','usedrift','warmupsteps','warmuptimestep','samples','nonlocalpp','stepsbetweensamples','samplesperthread','tau','walkersperthread','reconfiguration','dmcwalkersperthread','current','ratio','firststep','minimumtargetwalkers','maxcpusecs']
     write_types = obj(gpu=yesno,usedrift=yesno,nonlocalpp=yesno,reconfiguration=yesno,ratio=yesno,completed=yesno)
 #end class vmc
 
@@ -2424,7 +2425,7 @@ class dmc(QIxml):
     tag = 'qmc'
     attributes = ['method','move','gpu','multiple','warp','checkpoint','trace','target','completed','id','continue']
     elements   = ['estimator']
-    parameters = ['walkers','blocks','steps','timestep','nonlocalmove','nonlocalmoves','warmupsteps','pop_control','reconfiguration','targetwalkers','minimumtargetwalkers','sigmabound','energybound','feedback','recordwalkers','fastgrad','popcontrol','branchinterval','usedrift','storeconfigs','en_ref','tau','alpha','gamma','stepsbetweensamples','max_branch','killnode','swap_walkers','swap_trigger']
+    parameters = ['walkers','blocks','steps','timestep','nonlocalmove','nonlocalmoves','warmupsteps','pop_control','reconfiguration','targetwalkers','minimumtargetwalkers','sigmabound','energybound','feedback','recordwalkers','fastgrad','popcontrol','branchinterval','usedrift','storeconfigs','en_ref','tau','alpha','gamma','stepsbetweensamples','max_branch','killnode','swap_walkers','swap_trigger','maxcpusecs']
     write_types = obj(gpu=yesno,nonlocalmoves=yesno,reconfiguration=yesno,fastgrad=yesno,completed=yesno,killnode=yesno,swap_walkers=yesno)
 #end class dmc
 
@@ -2577,6 +2578,7 @@ Names.set_expanded_names(
     pairtype         = 'pairType',
     printeloc        = 'printEloc',
     warmuptimestep   = 'warmuptimestep',
+    maxcpusecs       = 'maxcpusecs'
    )
 for c in classes:
     c.init_class()
