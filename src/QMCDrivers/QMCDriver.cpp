@@ -444,11 +444,13 @@ void QMCDriver::recordBlock(int block)
     }
     if(ADIOS::useHDF5()) 
     {
-      wOut->dump(W, block);
+      //wOut->dump(W, block);
     }
     branchEngine->write(RootName,true); //save energy_history
     RandomNumberControl::write(RootName,myComm);
-  } else if (Period4ConfigDump!=0) {
+  }
+  if (Period4ConfigDump!=0)
+  {
     if (block%Period4ConfigDump == 0)
     { // append current walkers to config.h5
       wOut->record(W,block);
@@ -465,7 +467,7 @@ bool QMCDriver::finalize(int block, bool dumpwalkers)
 
   if(ADIOS::useHDF5())
   {
-    if(DumpConfig && dumpwalkers) wOut->dump(W, block);
+    //if(DumpConfig && dumpwalkers) wOut->dump(W, block);
     delete wOut;
     wOut=0;
     //Estimators->finalize();
@@ -620,6 +622,9 @@ bool QMCDriver::putQMCInfo(xmlNodePtr cur)
     Period4CheckPoint=nBlocks;
   //reset CurrentStep to zero if qmc/@continue='no'
   if(!AppendRun) CurrentStep=0;
+
+  app_log() << "DumpConfig = " << DumpConfig << std::endl;
+  app_log() << "Period4ConfigDump = " << Period4ConfigDump << std::endl;
 
   //if walkers are initialized via <mcwalkerset/>, use the existing one
   if(qmc_common.qmc_counter || qmc_common.is_restart)
