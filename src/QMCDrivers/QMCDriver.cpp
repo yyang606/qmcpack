@@ -444,7 +444,7 @@ void QMCDriver::recordBlock(int block)
     }
     if(ADIOS::useHDF5()) 
     {
-      //wOut->dump(W, block);
+      wOut->record(W, block, false); // identify_block=false, overwrite hdf::walkers
     }
     branchEngine->write(RootName,true); //save energy_history
     RandomNumberControl::write(RootName,myComm);
@@ -453,7 +453,7 @@ void QMCDriver::recordBlock(int block)
   {
     if (block%Period4ConfigDump == 0)
     { // append current walkers to config.h5
-      wOut->record(W,block);
+      wOut->record(W,block,true); // identify_block=true
     }
   }
 }
@@ -467,7 +467,7 @@ bool QMCDriver::finalize(int block, bool dumpwalkers)
 
   if(ADIOS::useHDF5())
   {
-    //if(DumpConfig && dumpwalkers) wOut->dump(W, block);
+    if(DumpConfig && dumpwalkers) wOut->record(W, block, false); // identify_block=false, overwrite hdf::walkers
     delete wOut;
     wOut=0;
     //Estimators->finalize();

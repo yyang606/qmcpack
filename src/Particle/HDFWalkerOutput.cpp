@@ -178,7 +178,7 @@ bool HDFWalkerOutput::dump(MCWalkerConfiguration& W, int nblock)
   dump_file.push(hdf::main_state);
   dump_file.write(nblock,"block");
 
-  write_configuration(W,dump_file, nblock);
+  write_configuration(W,dump_file, nblock,false);
   dump_file.close();
 
   currentConfigNumber++;
@@ -197,7 +197,7 @@ bool HDFWalkerOutput::dump(MCWalkerConfiguration& W, int nblock)
  *  - walker_partition (int array)
  *  - walkers (nw,np,3) <- append to this dataset
  */
-bool HDFWalkerOutput::record(MCWalkerConfiguration& W, int nblock)
+bool HDFWalkerOutput::record(MCWalkerConfiguration& W, int nblock, bool identify_block)
 {
   HDFVersion cur_version;
 
@@ -217,13 +217,13 @@ bool HDFWalkerOutput::record(MCWalkerConfiguration& W, int nblock)
   // YY: implement later
 
   // pass each_block flag to write_configuration, which will create a new dataset for each block
-  write_configuration(W,dump_file,nblock,true);
+  write_configuration(W,dump_file,nblock,identify_block);
   dump_file.close();
   prevFile=FileName;
   return true;
 }
 
-void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive& hout, int nblock, bool each_block)
+void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive& hout, int nblock, bool identify_block)
 {
   const int wb=OHMMS_DIM*number_of_particles;
   if(nblock > block)
@@ -241,7 +241,7 @@ void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive&
   TinyVector<int,3> gcounts(number_of_walkers,number_of_particles,OHMMS_DIM);
 
   std::string dataset_name = hdf::walkers;
-  if (each_block)
+  if (identify_block)
   { // change h5 slab name if each block is being recorded 
 		std::stringstream block_str;
 		block_str << nblock;
@@ -253,7 +253,7 @@ void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive&
     TinyVector<int,3> counts(W.getActiveWalkers(),            number_of_particles,OHMMS_DIM);
     TinyVector<int,3> offsets(W.WalkerOffsets[myComm->rank()],0,0);
     hyperslab_proxy<BufferType,3> slab(*RemoteData[0],gcounts,counts,offsets);
-    hout.write(slab,hdf::walkers);
+    hout.write(slab,dataset_name);
   }
   else
   { //gaterv to the master and master writes it, could use isend/irecv

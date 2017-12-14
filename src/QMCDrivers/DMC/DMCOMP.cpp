@@ -340,7 +340,7 @@ bool DMCOMP::run()
 #if !defined(REMOVE_TRACEMANAGER)
   Traces->stopRun();
 #endif
-  return finalize(nBlocks);
+  return finalize(nBlocks,false); // dumpwalkers=false, let recordBlock handle walker output
 }
 
 
