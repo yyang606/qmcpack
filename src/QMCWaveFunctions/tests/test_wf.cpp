@@ -78,8 +78,11 @@ TEST_CASE("Pade Jastrow", "[wavefunction]")
     int upIdx = tspecies.addSpecies("u");
     int downIdx = tspecies.addSpecies("d");
     int chargeIdx = tspecies.addAttribute("charge");
+    int massIdx = tspecies.addAttribute("mass");
     tspecies(chargeIdx, upIdx) = -1;
     tspecies(chargeIdx, downIdx) = -1;
+    tspecies(massIdx, upIdx) = 1;
+    tspecies(massIdx, downIdx) = 1;
 
     elec_.addTable(ions_,DT_AOS);
     elec_.update();
