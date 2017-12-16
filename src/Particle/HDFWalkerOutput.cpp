@@ -178,7 +178,7 @@ bool HDFWalkerOutput::dump(MCWalkerConfiguration& W, int nblock)
   dump_file.push(hdf::main_state);
   dump_file.write(nblock,"block");
 
-  write_configuration(W,dump_file, nblock,false);
+  write_configuration(W,dump_file, nblock, false);
   dump_file.close();
 
   currentConfigNumber++;
@@ -186,45 +186,40 @@ bool HDFWalkerOutput::dump(MCWalkerConfiguration& W, int nblock)
   return true;
 }
 
-/** Write the set of walker configurations to the HDF5 file.
- * @param W set of walker configurations
- *
- * record is similar to dump, but tries to preserves the HDF5 file
- * - version
- * - state_0
- *  - block (int)
- *  - number_of_walkes (int)
- *  - walker_partition (int array)
- *  - walkers (nw,np,3) <- append to this dataset
- */
 bool HDFWalkerOutput::record(MCWalkerConfiguration& W, int nblock, bool identify_block)
 {
-  HDFVersion cur_version;
-
-  // FileName = prefix + .g000.s000 + config.h5
   std::string FileName=myComm->getName()+hdf::config_ext;
 
-  // try to open the config.h5 file instead of immediately overwrite it
+  //try to use collective
   hdf_archive dump_file(myComm,true);
-  bool success=dump_file.open(FileName);
+  bool success = dump_file.open(FileName);
   if (!success)
   { // if config.h5 cannot be opened, then let dump() take over to blast config.h5
+    #pragma omp master
     app_log() << "failed to open " << FileName << " creating a new one." << std::endl;
     return dump(W,nblock);
   }
 
-  // verify the HDF5 file format
-  // YY: implement later
-
-  // pass each_block flag to write_configuration, which will create a new dataset for each block
-  write_configuration(W,dump_file,nblock,identify_block);
+  write_configuration(W,dump_file, nblock, identify_block);
   dump_file.close();
+
+  currentConfigNumber++;
   prevFile=FileName;
   return true;
 }
 
 void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive& hout, int nblock, bool identify_block)
 {
+  std::string dataset_name = hdf::walkers;
+  std::string nwalker_name = hdf::num_walkers;
+  if (identify_block)
+  { // change h5 slab name if each block is being recorded 
+    std::stringstream block_str;
+    block_str << nblock;
+    dataset_name += block_str.str();
+    nwalker_name += block_str.str();
+  }
+
   const int wb=OHMMS_DIM*number_of_particles;
   if(nblock > block)
   {
@@ -233,30 +228,43 @@ void HDFWalkerOutput::write_configuration(MCWalkerConfiguration& W, hdf_archive&
     block = nblock;
   }
 
-  hout.write(W.WalkerOffsets,"walker_partition");
-
   number_of_walkers=W.WalkerOffsets[myComm->size()];
-  hout.write(number_of_walkers,hdf::num_walkers);
+  hout.write(number_of_walkers,nwalker_name);
 
   TinyVector<int,3> gcounts(number_of_walkers,number_of_particles,OHMMS_DIM);
 
-  std::string dataset_name = hdf::walkers;
-  if (identify_block)
-  { // change h5 slab name if each block is being recorded 
-		std::stringstream block_str;
-		block_str << nblock;
-    dataset_name += block_str.str();
-  }
-
   if(hout.is_parallel())
-  { 
-    TinyVector<int,3> counts(W.getActiveWalkers(),            number_of_particles,OHMMS_DIM);
-    TinyVector<int,3> offsets(W.WalkerOffsets[myComm->rank()],0,0);
-    hyperslab_proxy<BufferType,3> slab(*RemoteData[0],gcounts,counts,offsets);
-    hout.write(slab,dataset_name);
+  {
+    { // write walker offset.
+      // Though it is a small array, it needs to be written collectively in large scale runs.
+      TinyVector<int,1> gcounts(myComm->size()+1);
+      TinyVector<int,1> counts;
+      TinyVector<int,1> offsets(myComm->rank());
+      std::vector<int> myWalkerOffset;
+      if(myComm->size()-1==myComm->rank())
+      {
+        counts[0]=2;
+        myWalkerOffset.push_back(W.WalkerOffsets[myComm->rank()]);
+        myWalkerOffset.push_back(W.WalkerOffsets[myComm->size()]);
+      }
+      else
+      {
+        counts[0]=1;
+        myWalkerOffset.push_back(W.WalkerOffsets[myComm->rank()]);
+      }
+      hyperslab_proxy<std::vector<int>,1> slab(myWalkerOffset,gcounts,counts,offsets);
+      hout.write(slab,"walker_partition");
+    }
+    { // write walker configuration
+      TinyVector<int,3> counts(W.getActiveWalkers(),number_of_particles,OHMMS_DIM);
+      TinyVector<int,3> offsets(W.WalkerOffsets[myComm->rank()],0,0);
+      hyperslab_proxy<BufferType,3> slab(*RemoteData[0],gcounts,counts,offsets);
+      hout.write(slab,dataset_name);
+    }
   }
   else
   { //gaterv to the master and master writes it, could use isend/irecv
+    hout.write(W.WalkerOffsets,"walker_partition");
     if(myComm->size()>1)
     {
       std::vector<int> displ(myComm->size()), counts(myComm->size());
