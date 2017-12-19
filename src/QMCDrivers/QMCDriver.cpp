@@ -436,7 +436,7 @@ void QMCDriver::adiosCheckpointFinal(int block, bool dumpwalkers)
 
 void QMCDriver::recordBlock(int block)
 {
-  if(DumpConfig && block % Period4CheckPoint == 0)
+  if(DumpConfig && block % Period4CheckPoint == 0 && block != 0)
   {
     if(ADIOS::useADIOS())
     {
