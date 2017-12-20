@@ -449,13 +449,12 @@ void QMCDriver::recordBlock(int block)
     branchEngine->write(RootName,true); //save energy_history
     RandomNumberControl::write(RootName,myComm);
   }
-  if (Period4ConfigDump!=0)
-  {
-    if (block%Period4ConfigDump == 0)
-    { // append current walkers to config.h5
-      wOut->record(W,block,true); // identify_block=true
-    }
-  }
+
+  if (Period4ConfigDump!=0 && block%Period4ConfigDump == 0)
+  { // append current walkers to config.h5
+    wOut->record(W,block,true); // identify_block=true
+  } // yes, this will trigger at block==0. This is intentionally done to create the config.h5 file
+  //  when config.h5 cannot be opened, wOut->record becomes wOut->dump
 }
 
 bool QMCDriver::finalize(int block, bool dumpwalkers)

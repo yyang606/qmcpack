@@ -175,6 +175,8 @@ bool HDFWalkerOutput::dump(MCWalkerConfiguration& W, int nblock)
   return true;
 }
 
+// TODO: record and checkpoint should be two functions
+//  call record in QMCDriver::recordRecord, call checkpoint in QMCDriver::finalize
 bool HDFWalkerOutput::record(MCWalkerConfiguration& W, int nblock, bool identify_block)
 {
   std::string FileName=myComm->getName()+hdf::config_ext;
@@ -182,11 +184,17 @@ bool HDFWalkerOutput::record(MCWalkerConfiguration& W, int nblock, bool identify
   //try to use collective
   hdf_archive dump_file(myComm,true);
   bool success = dump_file.open(FileName);
+
+  // YY: error handling, should this be moved to the driver?
   if (!success)
   { // if config.h5 cannot be opened, then let dump() take over to blast config.h5
-    #pragma omp master
-    app_log() << "failed to open " << FileName << " creating a new one." << std::endl;
-    return dump(W,nblock);
+    if (nblock==0 || !identify_block)
+    { // config.h5 does not exist at block 0, or at checkpoint create it
+      return dump(W,nblock);
+    } else 
+    { // unexpected failure to open config.h5
+      APP_ABORT("failed to open " + FileName);
+    }
   }
 
   write_configuration(W,dump_file, nblock, identify_block);
