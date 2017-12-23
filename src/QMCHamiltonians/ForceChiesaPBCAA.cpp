@@ -303,7 +303,28 @@ ForceChiesaPBCAA::evaluate(ParticleSet& P)
 //  app_log()<<"LR+SR eI FORCE\n";
 //  app_log()<<forces<< std::endl;
   if(addionion==true) forces=forces+forces_IonIon;  
-  return 0.0;
+
+  // store forces in stat.h5 and output total force in scalar.dat
+  RealType ftot = 0.0;
+  RealType wgt = tWalker->Weight;
+  if (hdf5_out)
+  {
+    int h5_loc = h5_index;
+    for (int iat=0;iat<Nnuc;iat++)
+    {
+      for (int idim=0;idim<OHMMS_DIM;idim++)
+      {
+        RealType myf = forces[iat][idim];
+        ftot += myf;
+        P.Collectables[h5_loc] += wgt*myf;
+        h5_loc++;
+      }
+    }
+    const int h5_max = h5_index + Nnuc*OHMMS_DIM;
+    if (h5_loc>h5_max) APP_ABORT("ForceChiesaPBCAA is overwriting memory.");
+  }
+
+  return ftot;
 }
 
 ForceChiesaPBCAA::Return_t ForceChiesaPBCAA::g_filter(RealType r)
@@ -363,6 +384,12 @@ void ForceChiesaPBCAA::addObservables(PropertySetType& plist, BufferType& collec
   myIndex=plist.add(myName.c_str());
 //  if (ComputeForces)
     addObservablesF(plist);
+  if (hdf5_out)
+  {
+    h5_index = collectables.size();
+    std::vector<RealType> tmp(Nnuc*OHMMS_DIM);
+    collectables.add(tmp.begin(),tmp.end());
+  }
 }
 
 QMCHamiltonianBase* ForceChiesaPBCAA::makeClone(ParticleSet& qp, TrialWaveFunction& psi)
@@ -381,6 +408,8 @@ QMCHamiltonianBase* ForceChiesaPBCAA::makeClone(ParticleSet& qp, TrialWaveFuncti
   tmp->addionion=addionion;
   tmp->initBreakup(qp);
   tmp->addionion = addionion;
+  tmp->h5_index  = h5_index;
+  tmp->hdf5_out  = hdf5_out;
 
   return tmp;
 }

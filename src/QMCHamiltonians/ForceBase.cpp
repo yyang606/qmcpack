@@ -29,7 +29,7 @@ namespace qmcplusplus
 {
 
 ForceBase::ForceBase(ParticleSet& ions, ParticleSet& elns)
-  : FirstForceIndex(-1),tries(0), Ions(ions), addionion(true)
+  : FirstForceIndex(-1),tries(0), Ions(ions), addionion(true), hdf5_out(true)
 {
   ReportEngine PRE("ForceBase","ForceBase");
   myTableIndex=elns.addTable(ions,DT_SOA_PREFERRED);
@@ -212,6 +212,11 @@ bool BareForce::put(xmlNodePtr cur)
   attr.add(ionionforce, "addionion");
   attr.put(cur);
   addionion = (ionionforce=="yes" || ionionforce == "true");
+  if (hdf5_out)
+  {
+    UpdateMode.set(COLLECTABLE,1);
+    app_log() <<" force output to hdf5"<< std::endl;
+  }
   return true;
 }
 

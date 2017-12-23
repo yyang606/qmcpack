@@ -34,6 +34,8 @@ struct ForceBase
   int tries;
   bool FirstTime;
   bool addionion;
+  bool hdf5_out;
+  int  h5_index;
 
   ParticleSet& Ions;
   ParticleSet::ParticlePos_t forces;
