@@ -322,9 +322,10 @@ ForceChiesaPBCAA::evaluate(ParticleSet& P)
     }
     const int h5_max = h5_index + Nnuc*OHMMS_DIM;
     if (h5_loc>h5_max) APP_ABORT("ForceChiesaPBCAA is overwriting memory.");
+    Value = ftot;
   }
 
-  return ftot;
+  return Value;
 }
 
 ForceChiesaPBCAA::Return_t ForceChiesaPBCAA::g_filter(RealType r)
