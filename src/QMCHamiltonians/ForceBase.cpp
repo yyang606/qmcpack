@@ -50,18 +50,15 @@ void ForceBase::addObservablesF(QMCTraits::PropertySetType& plist)
 {
   if(FirstForceIndex<0)
     FirstForceIndex=plist.size();
-  if (!hdf5_out)
-  { 
-    for(int iat=0; iat<Nnuc; iat++)
+  for(int iat=0; iat<Nnuc; iat++)
+  {
+    for(int x=0; x<OHMMS_DIM; x++)
     {
-      for(int x=0; x<OHMMS_DIM; x++)
-      {
-        std::ostringstream obsName;
-        obsName << prefix << "_" << iat << "_" << x;
-        plist.add(obsName.str());
-      }
+      std::ostringstream obsName;
+      obsName << prefix << "_" << iat << "_" << x;
+      plist.add(obsName.str());
     }
-  } // disable scalar.dat output if hdf5_out
+  }
 }
 
 void ForceBase::addObservablesStress(QMCTraits::PropertySetType& plist)
@@ -114,18 +111,15 @@ void ForceBase::setObservablesF(QMCTraits::PropertySetType& plist)
       }
     }
   }
-  if (!hdf5_out)
+  int index = FirstForceIndex;
+  for(int iat=0; iat<Nnuc; iat++)
   {
-    int index = FirstForceIndex;
-    for(int iat=0; iat<Nnuc; iat++)
+    for(int x=0; x<OHMMS_DIM; x++)
     {
-      for(int x=0; x<OHMMS_DIM; x++)
-      {
-        plist[index] = forces[iat][x];
-        index++;
-      }
+      plist[index] = forces[iat][x];
+      index++;
     }
-  } // disable scalar.dat output if hdf5_out
+  }
 }
 
 void ForceBase::setObservablesStress(QMCTraits::PropertySetType& plist)
