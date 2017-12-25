@@ -349,11 +349,24 @@ ForceChiesaPBCAA::Return_t ForceChiesaPBCAA::g_filter(RealType r)
 bool ForceChiesaPBCAA::put(xmlNodePtr cur)
 {
   std::string ionionforce("yes");
+  std::string hdf5_in("yes");
   OhmmsAttributeSet attr;
   attr.add(prefix, "name");
   attr.add(ionionforce, "addionion");
+  attr.add(hdf5_in, "hdf5");
   attr.put(cur);
   addionion = (ionionforce=="yes") || (ionionforce == "true");
+  if (hdf5_in=="yes")
+  {
+    hdf5_out = true;
+  } else if (hdf5_in=="no")
+  {
+    hdf5_out = false;
+  } else
+  {
+    APP_ABORT("unknown hdf5 "<<hdf5_in<<" input");
+  }
+  app_log() << "hdf5 = " << hdf5_out << std::endl;
   app_log() << "ionionforce = "<<ionionforce<< std::endl;
   app_log() << "addionion="<<addionion<< std::endl;
   app_log() << "FirstTime= "<<FirstTime<< std::endl;
