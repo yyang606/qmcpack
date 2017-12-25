@@ -50,13 +50,18 @@ void ForceBase::addObservablesF(QMCTraits::PropertySetType& plist)
 {
   if(FirstForceIndex<0)
     FirstForceIndex=plist.size();
-  for(int iat=0; iat<Nnuc; iat++)
+  if (hdf5_out)
   {
-    for(int x=0; x<OHMMS_DIM; x++)
+  } else
+  {
+    for(int iat=0; iat<Nnuc; iat++)
     {
-      std::ostringstream obsName;
-      obsName << prefix << "_" << iat << "_" << x;
-      plist.add(obsName.str());
+      for(int x=0; x<OHMMS_DIM; x++)
+      {
+        std::ostringstream obsName;
+        obsName << prefix << "_" << iat << "_" << x;
+        plist.add(obsName.str());
+      }
     }
   }
 }
@@ -112,12 +117,17 @@ void ForceBase::setObservablesF(QMCTraits::PropertySetType& plist)
     }
   }
   int index = FirstForceIndex;
-  for(int iat=0; iat<Nnuc; iat++)
+  if (hdf5_out)
   {
-    for(int x=0; x<OHMMS_DIM; x++)
+  } else
+  {
+    for(int iat=0; iat<Nnuc; iat++)
     {
-      plist[index] = forces[iat][x];
-      index++;
+      for(int x=0; x<OHMMS_DIM; x++)
+      {
+        plist[index] = forces[iat][x];
+        index++;
+      }
     }
   }
 }
