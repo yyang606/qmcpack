@@ -29,7 +29,7 @@ namespace qmcplusplus
 {
 
 ForceBase::ForceBase(ParticleSet& ions, ParticleSet& elns)
-  : FirstForceIndex(-1),tries(0), Ions(ions), addionion(true), hdf5_out(true)
+  : FirstForceIndex(-1),tries(0), Ions(ions), addionion(true)
 {
   ReportEngine PRE("ForceBase","ForceBase");
   myTableIndex=elns.addTable(ions,DT_SOA_PREFERRED);
@@ -50,18 +50,13 @@ void ForceBase::addObservablesF(QMCTraits::PropertySetType& plist)
 {
   if(FirstForceIndex<0)
     FirstForceIndex=plist.size();
-  if (hdf5_out)
+  for(int iat=0; iat<Nnuc; iat++)
   {
-  } else
-  {
-    for(int iat=0; iat<Nnuc; iat++)
+    for(int x=0; x<OHMMS_DIM; x++)
     {
-      for(int x=0; x<OHMMS_DIM; x++)
-      {
-        std::ostringstream obsName;
-        obsName << prefix << "_" << iat << "_" << x;
-        plist.add(obsName.str());
-      }
+      std::ostringstream obsName;
+      obsName << prefix << "_" << iat << "_" << x;
+      plist.add(obsName.str());
     }
   }
 }
@@ -83,16 +78,13 @@ void ForceBase::addObservablesStress(QMCTraits::PropertySetType& plist)
 void ForceBase::registerObservablesF(std::vector<observable_helper*>& h5list
                                      , hid_t gid) const
 {
-  if (hdf5_out)
-  {
-    std::vector<int> ndim(2);
-    ndim[0]=Nnuc;
-    ndim[1]=OHMMS_DIM;
-    observable_helper* h5o=new observable_helper(prefix);
-    h5o->set_dimensions(ndim,FirstForceIndex);
-    h5o->open(gid);
-    h5list.push_back(h5o);
-  }
+  std::vector<int> ndim(2);
+  ndim[0]=Nnuc;
+  ndim[1]=OHMMS_DIM;
+  observable_helper* h5o=new observable_helper(prefix);
+  h5o->set_dimensions(ndim,FirstForceIndex);
+  h5o->open(gid);
+  h5list.push_back(h5o);
 }
 
 void ForceBase::setObservablesF(QMCTraits::PropertySetType& plist)
@@ -120,17 +112,12 @@ void ForceBase::setObservablesF(QMCTraits::PropertySetType& plist)
     }
   }
   int index = FirstForceIndex;
-  if (hdf5_out)
+  for(int iat=0; iat<Nnuc; iat++)
   {
-  } else
-  {
-    for(int iat=0; iat<Nnuc; iat++)
+    for(int x=0; x<OHMMS_DIM; x++)
     {
-      for(int x=0; x<OHMMS_DIM; x++)
-      {
-        plist[index] = forces[iat][x];
-        index++;
-      }
+      plist[index] = forces[iat][x];
+      index++;
     }
   }
 }

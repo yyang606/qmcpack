@@ -117,6 +117,11 @@ struct ForceChiesaPBCAA: public QMCHamiltonianBase, public ForceBase
       setObservablesF(plist);
   }
 
+  void setParticlePropertyList(PropertySetType& plist, int offset)
+  {
+    QMCHamiltonianBase::setParticlePropertyList(plist, offset);
+      setParticleSetF(plist, offset);
+  }
 
 
   void resetTargetParticleSet(ParticleSet& P);
