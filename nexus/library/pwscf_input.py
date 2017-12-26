@@ -2152,7 +2152,8 @@ def generate_relax_input(prefix       = 'pwscf',
                          disk_io      = 'low',
                          wf_collect   = False,
                          verbosity    = 'high',
-                         tstress      = False
+                         tstress      = False,
+                         nbnd         = None
                          ):
     if pseudos is None:
         pseudos = []
@@ -2258,6 +2259,9 @@ def generate_relax_input(prefix       = 'pwscf',
     if kshift==None:
         kshift = (1,1,1)
     #end if
+    if nbnd is not None:
+        pw.system.nbnd = nbnd
+    # end if
 
 
     if system is not None:
