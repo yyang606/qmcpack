@@ -2405,9 +2405,13 @@ class BlueWatersXK(Supercomputer):
         c+='#PBS -o '+job.outfile+'\n'
         c+='#PBS -e '+job.errfile+'\n'
         if job.user_env:
-            c+='#PBS -V\n'
+            self.error('INFO: The qsub \'-V\' option is deprecated.\nPlease include your environment variables directly in your job script.')
         #end if
         c+='''
+# QMCPACK environment
+. /opt/modules/default/init/bash
+module load cray-hdf5-parallel libxml2
+
 echo $PBS_O_WORKDIR
 cd $PBS_O_WORKDIR
 '''
@@ -2432,9 +2436,13 @@ class BlueWatersXE(Supercomputer):
         c+='#PBS -o '+job.outfile+'\n'
         c+='#PBS -e '+job.errfile+'\n'
         if job.user_env:
-            c+='#PBS -V\n'
+            self.error('INFO: The qsub \'-V\' option is deprecated.\nPlease include your environment variables directly in your job script.')
         #end if
         c+='''
+# QMCPACK environment
+. /opt/modules/default/init/bash
+module load cray-hdf5-parallel libxml2
+
 echo $PBS_O_WORKDIR
 cd $PBS_O_WORKDIR
 '''
@@ -2856,8 +2864,8 @@ Golub(         512,   2,     8,   32,   50, 'mpirun',     'qsub',   'qstat',    
 OIC5(           28,   2,    16,  128, 1000, 'mpirun',     'qsub',   'qstat',    'qdel')
 Edison(        664,   2,    12,   64,  100,   'srun',   'sbatch',  'squeue', 'scancel')
 Cori(         9688,   1,    68,   96,  100,   'srun',   'sbatch',  'squeue', 'scancel')
-BlueWatersXK( 3072,   1,    16,   32,  100,  'aprun',     'qsub',   'qstat',    'qdel')
-BlueWatersXE(22640,   2,    16,   64,  100,  'aprun',     'qsub',   'qstat',    'qdel')
+BlueWatersXK( 4200,   1,    16,   32,  100,  'aprun',     'qsub',   'qstat',    'qdel')
+BlueWatersXE(22500,   2,    16,   64,  100,  'aprun',     'qsub',   'qstat',    'qdel')
 Titan(       18688,   1,    16,   32,  100,  'aprun',     'qsub',   'qstat',    'qdel')
 EOS(           744,   2,     8,   64, 1000,  'aprun',     'qsub',   'qstat',    'qdel')
 Vesta(        2048,   1,    16,   16,   10, 'runjob',     'qsub',  'qstata',    'qdel')
