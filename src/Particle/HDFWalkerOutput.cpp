@@ -188,13 +188,7 @@ bool HDFWalkerOutput::record(MCWalkerConfiguration& W, int nblock, bool identify
   // YY: error handling, should this be moved to the driver?
   if (!success)
   { // if config.h5 cannot be opened, then let dump() take over to blast config.h5
-    if (nblock==0 || !identify_block)
-    { // config.h5 does not exist at block 0, or at checkpoint create it
-      return dump(W,nblock);
-    } else 
-    { // unexpected failure to open config.h5
-      APP_ABORT("failed to open " + FileName);
-    }
+    return dump(W,nblock);
   }
 
   write_configuration(W,dump_file, nblock, identify_block);
