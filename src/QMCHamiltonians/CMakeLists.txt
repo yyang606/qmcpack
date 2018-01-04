@@ -42,6 +42,7 @@ SET(HAMSRCS
   SpinDensity.cpp
   SpeciesKineticEnergy.cpp
   LatticeDeviationEstimator.cpp
+  ElecIonForcePBC.cpp
   )
 #  FSAtomPseudoPot.cpp
 

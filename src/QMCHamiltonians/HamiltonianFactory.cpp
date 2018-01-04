@@ -28,6 +28,7 @@
 #include "QMCHamiltonians/ConservedEnergy.h"
 #include "QMCHamiltonians/SpeciesKineticEnergy.h"
 #include "QMCHamiltonians/LatticeDeviationEstimator.h"
+#include "QMCHamiltonians/ElecIonForcePBC.h"
 #include "QMCHamiltonians/NumericalRadialPotential.h"
 #include "QMCHamiltonians/MomentumEstimator.h"
 #include "QMCHamiltonians/Pressure.h"
@@ -364,6 +365,31 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
 
         LatticeDeviationEstimator* apot = new LatticeDeviationEstimator(*target_particle_set
           ,*source_particle_set,target_group,source_group);
+        apot->put(cur);
+        targetH->addOperator(apot,potName,false);
+      }
+      else if(potType =="eiforce")
+      {
+        // find target particle set
+        PtclPoolType::iterator pit(ptclPool.find(targetInp));
+        if(pit == ptclPool.end())
+        {
+          APP_ABORT("Unknown target \"" + targetInp);
+        }
+        ParticleSet* target_particle_set = (*pit).second;
+
+        // find source particle set
+        PtclPoolType::iterator spit(ptclPool.find(sourceInp));
+        if(spit == ptclPool.end())
+        {
+          APP_ABORT("Unknown source \"" + sourceInp);
+        }
+        ParticleSet* source_particle_set = (*spit).second;
+
+        ElecIonForcePBC* apot = new ElecIonForcePBC(
+           *target_particle_set
+          ,*source_particle_set
+        );
         apot->put(cur);
         targetH->addOperator(apot,potName,false);
       }
