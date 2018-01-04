@@ -82,6 +82,8 @@ bool ElecIonForcePBC::put(xmlNodePtr cur)
     APP_ABORT("ElecIonForcePBC::put() - Please choose \"yes\" or \"no\" for hdf5");
   } // end if hdf5_in
 
+  if (hdf5_out) UpdateMode.set(COLLECTABLE,1);
+
   // parse xml <parameter>
   ParameterSet force_params;
   force_params.add(Rcut,"rcut","real");
@@ -105,17 +107,35 @@ bool ElecIonForcePBC::put(xmlNodePtr cur)
 bool ElecIonForcePBC::get(std::ostream& os) const
 {
   os << "ElecIonForcePBC Parameters:" << std::endl;
-  os << "  Rcut    = " << Rcut << std::endl;
-  os << "  N_basis = " << N_basis << std::endl;
-  os << "  m_exp   = " << m_exp << std::endl;
+  os << "  Rcut    = " << Rcut        << std::endl;
+  os << "  N_basis = " << N_basis     << std::endl;
+  os << "  m_exp   = " << m_exp       << std::endl;
+  os << "  hdf5    = " << hdf5_out    << std::endl;
 }
 
 ElecIonForcePBC::Return_t ElecIonForcePBC::evaluate(ParticleSet& P)
 {
+  RealType ftot = 0.0;
   forces = 0.0;
   evaluateLR(P,forces); // add short-range contributions to forces
   evaluateSR(P,forces); // add long-range contributions to forces
-  Value = 0.0;
+
+  // get total force, fill P.Collectables if needed
+  for (int iat=0;iat<nion;iat++)
+  {
+    for (int idim=0;idim<OHMMS_DIM;idim++)
+    {
+      RealType myf = forces[iat][idim];
+      ftot += myf;
+      if (hdf5_out)
+      {
+        RealType wgt = tWalker->Weight;
+        P.Collectables[h5_index+iat*OHMMS_DIM+idim] += wgt*myf;
+      }
+    }
+  }
+
+  Value = ftot;
   return Value;
 }
 
@@ -135,25 +155,51 @@ void ElecIonForcePBC::addObservables(PropertySetType& plist, BufferType& collect
       }
     }
   } else
-  { // use stat.h5 only
+  { // use stat.h5
+    h5_index = collectables.size();
+    std::vector<RealType> tmp;
+    tmp.resize(nion*OHMMS_DIM);
+    collectables.add(tmp.begin(),tmp.end());
+    // store total forces in scalar.dat
+    std::stringstream obsName;
+    obsName << myName;
+    plist.add(obsName.str());
   }
 }
 
 void ElecIonForcePBC::setObservables(PropertySetType& plist)
 {
-  int offset = myIndex;
-  for (int iat=0;iat<nion;iat++)
-  {
-    for (int idim=0;idim<OHMMS_DIM;idim++)
+  if (!hdf5_out)
+  { // store particle-resolved force in stat.h5
+    int offset = myIndex;
+    for (int iat=0;iat<nion;iat++)
     {
-      plist[offset] = forces[iat][idim];
-      offset++;
+      for (int idim=0;idim<OHMMS_DIM;idim++)
+      {
+        plist[offset] = forces[iat][idim];
+        offset++;
+      }
     }
+  } else
+  { // store total force in scalar.dat
+    plist[myIndex] = Value;
   }
 }
 
 void ElecIonForcePBC::registerCollectables(std::vector<observable_helper*>& h5desc, hid_t gid) const
 {
+  if (hdf5_out)
+  {
+    std::vector<int> ndim(1,nion*OHMMS_DIM);
+
+    // open hdf5 entry and resize
+    observable_helper* h5o=new observable_helper(myName);
+    h5o->set_dimensions(ndim,h5_index);
+    h5o->open(gid);
+  
+    // add to h5 file
+    h5desc.push_back(h5o);
+  }
 }
 
 void ElecIonForcePBC::resetTargetParticleSet(ParticleSet& P)
