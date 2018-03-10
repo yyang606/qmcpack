@@ -39,6 +39,8 @@
 #include "QMCHamiltonians/SkEstimator.h"
 #include "QMCHamiltonians/model/HarmonicExternalPotential.h"
 #include "QMCHamiltonians/StaticStructureFactor.h"
+#include "QMCHamiltonians/ElecIonForcePBC.h"
+#include "QMCHamiltonians/ChargedSk.h"
 #include "QMCHamiltonians/SpinDensity.h"
 #include "QMCHamiltonians/OrbitalImages.h"
 #if !defined(REMOVE_TRACEMANAGER)
@@ -373,6 +375,38 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
       else if(potType == "gofr")
       {
         PairCorrEstimator* apot=new PairCorrEstimator(*targetPtcl,sourceInp);
+        apot->put(cur);
+        targetH->addOperator(apot,potName,false);
+      }
+      else if(potType =="eiforce")
+      {
+        // find target particle set
+        PtclPoolType::iterator pit(ptclPool.find(targetInp));
+        if(pit == ptclPool.end())
+        {
+          APP_ABORT("Unknown target \"" + targetInp);
+        }
+        ParticleSet* target_particle_set = (*pit).second;
+
+        // find source particle set
+        PtclPoolType::iterator spit(ptclPool.find(sourceInp));
+        if(spit == ptclPool.end())
+        {
+          APP_ABORT("Unknown source \"" + sourceInp);
+        }
+        ParticleSet* source_particle_set = (*spit).second;
+
+        ElecIonForcePBC* apot = new ElecIonForcePBC(
+           *target_particle_set
+          ,*source_particle_set
+        );
+        apot->put(cur);
+        targetH->addOperator(apot,potName,false);
+      }
+      else if(potType == "csk")
+      {
+        app_log()<<"  Adding ChargedSk"<< std::endl;
+        ChargedSk* apot=new ChargedSk(*targetPtcl);
         apot->put(cur);
         targetH->addOperator(apot,potName,false);
       }
