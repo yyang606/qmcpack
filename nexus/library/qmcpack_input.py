@@ -2138,6 +2138,14 @@ class structurefactor(QIxml):
     identifier  = 'name'
 #end class structurefactor
 
+class eiforce(QIxml):                                                           
+    tag = 'estimator'                                                           
+    attributes = ['type','name','hdf5']                                         
+    parameters = ['rcut','nbasis','weightexp']                                  
+    identifier = 'name'                                                         
+    #write_types= obj(hdf5=yesno)                                                
+#end class force      
+
 class force(QIxml):
     tag = 'estimator'
     attributes = ['type','name','mode','source','species','target','addionion']
@@ -2187,6 +2195,12 @@ class sk(QIxml):
     write_types = obj(hdf5=yesno)
 #end class sk
 
+class csk(QIxml):
+    tag = 'estimator'
+    attributes = ['name','type']
+    identifier = 'name'
+#end class sk
+
 class skall(QIxml):
     tag = 'estimator'
     attributes = ['name','type','hdf5','source','target','writeionion']
@@ -2234,6 +2248,8 @@ estimator = QIxmlFactory(
                  gofr                = gofr,
                  flux                = flux,
                  momentum            = momentum,
+                 csk                 = csk,
+                 eiforce             = eiforce
                  ),
     typekey  = 'type',
     typekey2 = 'name'
@@ -2465,7 +2481,7 @@ classes = [   #standard classes
     header,local,force,forwardwalking,observable,record,rmc,pressure,dmccorrection,
     nofk,mpc_est,flux,distancetable,cpp,element,spline,setparams,
     backflow,transformation,cubicgrid,molecular_orbital_builder,cmc,sk,skall,gofr,
-    host,date,user,rpa_jastrow,momentum
+    host,date,user,rpa_jastrow,momentum,csk,eiforce
     ]
 types = dict( #simple types and factories
     #host           = param,
