@@ -930,6 +930,36 @@ kSpaceJastrow::put(xmlNodePtr cur)
   return true;
 }
 
+void kSpaceJastrow::print_one_body(std::ostream& os)
+{
+  for (int i=0;i<OneBodyCoefs.size();i++)
+  {
+    PosType     gvec  = OneBodyGvecs[i];
+    ComplexType coeff = OneBodyCoefs[i];
+    os << std::setw(18) << gvec[0] 
+       << std::setw(18) << gvec[1]
+       << std::setw(18) << gvec[2]
+       << std::setw(18) << coeff.real()
+       << std::setw(18) << coeff.imag()
+       << std::endl;
+  }
+}
+
+void kSpaceJastrow::print_two_body(std::ostream& os)
+{
+  for (int i=0;i<TwoBodyCoefs.size();i++)
+  {
+    PosType     gvec  = TwoBodyGvecs[i];
+    ComplexType coeff = TwoBodyCoefs[i];
+    os << std::setw(18) << gvec[0] 
+       << std::setw(18) << gvec[1]
+       << std::setw(18) << gvec[2]
+       << std::setw(18) << coeff.real()
+       << std::setw(18) << coeff.imag()
+       << std::endl;
+  }
+}
+
 OrbitalBasePtr kSpaceJastrow::makeClone(ParticleSet& tqp) const
 {
   kSpaceJastrow *kj =new kSpaceJastrow(Ions,tqp);

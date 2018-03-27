@@ -207,6 +207,8 @@ public:
 
   ///process input file
   bool put(xmlNodePtr cur);
+  void print_one_body(std::ostream& os);
+  void print_two_body(std::ostream& os);
 
   // Implements strict weak ordering with respect to the
   // structure factors.  Used to sort the G-vectors according to

@@ -38,6 +38,8 @@ struct kSpaceJastrowBuilder: public OrbitalBuilderBase
   }
 
   bool put(xmlNodePtr cur);
+
+  void output_jastrow_to_file(kSpaceJastrow* jastrow);
 };
 
 }
