@@ -2140,6 +2140,14 @@ class structurefactor(QIxml):
     identifier  = 'name'
 #end class structurefactor
 
+class eiforce(QIxml):
+    tag = 'estimator'
+    attributes = ['type','name','hdf5']
+    parameters = ['rcut','nbasis','weightexp']
+    identifier = 'name'
+    write_types= obj(hdf5=yesno)
+#end class force
+
 class force(QIxml):
     tag = 'estimator'
     attributes = ['type','name','mode','source','species','target','addionion']
@@ -5085,6 +5093,50 @@ def generate_jastrow3(function='polynomial',esize=3,isize=3,rcut=4.,coeff=None,i
         )
     return jastrow
 #end def generate_jastrow3
+
+def generate_kspace_jastrow(kc1,kc2,nk1,nk2
+  ,symm1='crystal',symm2='crystal',coeff1=None,coeff2=None):
+  """ generate <jastrow type="kSpace">
+  Args:
+    kc1 (float): kcut for one-body Jastrow
+    kc2 (float): kcut for two-body Jastrow
+    nk1 (int): number of coefficients for one-body Jastrow
+    nk2 (int): number of coefficients for two-body Jastrow
+  Returns:
+    kspace_jastrow (QIxml): qmcpack_input element
+  """
+  
+  if coeff1 is None: coeff1 = [0]*nk1
+  if coeff2 is None: coeff2 = [0]*nk2
+  if len(coeff1) != nk1: raise RuntimeError('coeff1 mismatch')
+  if len(coeff2) != nk2: raise RuntimeError('coeff2 mismatch')
+  
+  corr1 = correlation({                                                       
+    'type':'One-Body',                                                        
+    'symmetry':symm1,                                                     
+    'kc':kc1,                                                                 
+    'coefficients':section({                                                  
+      'id':'cG1','type':'Array',                                              
+      'coeff':coeff1                                                           
+     })                                                                       
+  })                                                                          
+  corr2 = correlation({                                                       
+    'type':'Two-Body',                                                        
+    'symmetry':symm2,
+    'kc':kc2,                                                                 
+    'coefficients':section({                                                  
+      'id':'cG2','type':'Array',                                              
+      'coeff':coeff2                                                           
+     })                                                                       
+  })    
+  jk = kspace_jastrow({
+    'type':'kSpace',
+    'name':'Jk',
+    'source':'ion0',
+    'correlations':collection([corr1,corr2])
+  })
+  return jk
+# end def generate_kspace_jastrow
 
 def generate_transformation1(atom_list,rcut=None,csize=8,cusp=0,optimize=True,coeff=None):
   """ generate <transformation type="e-I" function="Bspline" source="ion0">
