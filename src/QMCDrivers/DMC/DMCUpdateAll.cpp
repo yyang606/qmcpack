@@ -106,6 +106,8 @@ void DMCUpdateAllWithRejection::advanceWalker(Walker_t& thisWalker, bool recompu
         W.saveWalker(thisWalker);
         rr_accepted = rr_proposed;
         thisWalker.resetProperty(logpsi,Psi.getPhase(),enew,rr_accepted,rr_proposed,nodecorr);
+        H.saveProperty(thisWalker.getPropertyBase());
+        H.aux_transfer_only(W);
       }
     }
     if(UseTMove)
@@ -134,8 +136,7 @@ void DMCUpdateAllWithRejection::advanceWalker(Walker_t& thisWalker, bool recompu
       Psi.evaluateLog(W);
       ++nReject;
     }
-    H.auxHevaluate(W,thisWalker);
-    H.saveProperty(thisWalker.getPropertyBase());
+    H.aux_evaluate_only(W);
 
     setMultiplicity(thisWalker);
 }

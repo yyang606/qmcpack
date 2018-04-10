@@ -202,6 +202,8 @@ public:
   }
   void auxHevaluate(ParticleSet& P);
   void auxHevaluate(ParticleSet& P, Walker_t& ThisWalker);
+  void aux_evaluate_only(ParticleSet& P);
+  void aux_transfer_only(ParticleSet& P);
   void rejectedMove(ParticleSet& P, Walker_t& ThisWalker);
   ///** set Tau for each Hamiltonian
   // */

@@ -538,6 +538,23 @@ void QMCHamiltonian::auxHevaluate(ParticleSet& P, Walker_t& ThisWalker)
   }
 }
 
+void QMCHamiltonian::aux_evaluate_only(ParticleSet& P)
+{ // accumulate P.Collectables to be written to stat.h5
+  for(int i=0; i<auxH.size(); ++i)
+  {
+    RealType sink = auxH[i]->evaluate(P);
+  }
+}
+
+void QMCHamiltonian::aux_transfer_only(ParticleSet& P)
+{ // overwrite P.PropertyList using auxH::values 
+  for(int i=0; i<auxH.size(); ++i)
+  {
+    auxH[i]->setObservables(Observables);
+    auxH[i]->setParticlePropertyList(P.PropertyList,myIndex);
+  }
+}
+
 void QMCHamiltonian::rejectedMove(ParticleSet& P, Walker_t& ThisWalker )
 {
   // weight should be 0 from DMC
