@@ -16,6 +16,7 @@
 
 #include "QMCWaveFunctions/Jastrow/kSpaceJastrowBuilder.h"
 #include "OhmmsData/AttributeSet.h"
+#include <qmc_common.h>
 
 namespace qmcplusplus
 {
@@ -136,8 +137,34 @@ kSpaceJastrowBuilder::put(xmlNodePtr cur)
                       oneBodySymm, kc1, id1_opt, spin1_opt=="yes",
                       twoBodySymm, kc2, id2_opt, spin2_opt=="yes");
   jastrow->setCoefficients (oneBodyCoefs, twoBodyCoefs);
+  if (qmc_common.io_node) output_jastrow_to_file(jastrow);
   //jastrow->addOptimizables(targetPsi.VarList);
   targetPsi.addOrbital(jastrow,"kSpace");
   return true;
 }
+
+void
+kSpaceJastrowBuilder::output_jastrow_to_file(kSpaceJastrow* jastrow)
+{
+  char fname[32];
+  int taskid = targetPsi.is_manager() ? targetPsi.getGroupID():-1;
+  std::ofstream fout;
+
+  // output one-body jastrow
+  if (qmc_common.mpi_groups>1) sprintf(fname,"Jk1.g%03d.dat",taskid);
+  else sprintf(fname,"Jk1.dat");
+  fout.open(fname);
+  fout << "#  kx  ky  kz  coeff_real  coeff_imag" << std::endl;
+  jastrow->print_one_body(fout);
+  fout.close();
+
+  // output two-body jastrow
+  if (qmc_common.mpi_groups>1) sprintf(fname,"Jk2.g%03d.dat",taskid);
+  else sprintf(fname,"Jk2.dat");
+  fout.open(fname);
+  fout << "#  kx  ky  kz  coeff_real  coeff_imag" << std::endl;
+  jastrow->print_two_body(fout);
+  fout.close();
+}
+
 }
