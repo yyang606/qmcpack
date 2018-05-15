@@ -170,6 +170,8 @@ void DMCUpdatePbyPWithRejectionFast::advanceWalker(Walker_t& thisWalker, bool re
     thisWalker.Properties(R2ACCEPTED)=0.0;
     //weight is set to 0 for traces
     // consistent w/ no evaluate/auxHevaluate
+    W.loadWalker(thisWalker,true);
+    H.aux_evaluate_only(W);
     RealType wtmp = thisWalker.Weight;
     thisWalker.Weight = 0.0;
     H.rejectedMove(W,thisWalker);

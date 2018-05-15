@@ -98,6 +98,8 @@ void DMCUpdateAllWithRejection::advanceWalker(Walker_t& thisWalker, bool recompu
         thisWalker.Properties(R2ACCEPTED)=0.0;
         thisWalker.Properties(R2PROPOSED)=rr_proposed;
         H.rejectedMove(W,thisWalker);
+        W.loadWalker(thisWalker,false);
+        H.aux_evaluate_only(W);
       }
       else
       {
@@ -106,8 +108,8 @@ void DMCUpdateAllWithRejection::advanceWalker(Walker_t& thisWalker, bool recompu
         W.saveWalker(thisWalker);
         rr_accepted = rr_proposed;
         thisWalker.resetProperty(logpsi,Psi.getPhase(),enew,rr_accepted,rr_proposed,nodecorr);
+        H.auxHevaluate(W,thisWalker);
         H.saveProperty(thisWalker.getPropertyBase());
-        H.aux_transfer_only(W);
       }
     }
     if(UseTMove)
@@ -136,7 +138,7 @@ void DMCUpdateAllWithRejection::advanceWalker(Walker_t& thisWalker, bool recompu
       Psi.evaluateLog(W);
       ++nReject;
     }
-    H.aux_evaluate_only(W);
+    //H.aux_evaluate_only(W);
 
     setMultiplicity(thisWalker);
 }
