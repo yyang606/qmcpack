@@ -809,11 +809,11 @@ void kSpaceJastrow::print_one_body(std::ostream& os)
     PosType     gvec  = OneBodyGvecs[i];
     ComplexType coeff = OneBodyCoefs[i];
     os <<std::fixed << std::setprecision( 6 )
-       << std::setw( 11 ) << gvec[0]
-       << std::setw( 11 ) << gvec[1]
-       << std::setw( 11 ) << gvec[2]
-       << std::setw( 11 ) << coeff.real()
-       << std::setw( 11 ) << coeff.imag()
+       << std::setw( 12 ) << gvec[0]
+       << std::setw( 12 ) << gvec[1]
+       << std::setw( 12 ) << gvec[2]
+       << std::setw( 24 ) << coeff.real()
+       << std::setw( 24 ) << coeff.imag()
        << std::endl;
   }
 }
@@ -825,11 +825,11 @@ void kSpaceJastrow::print_two_body(std::ostream& os)
     PosType     gvec  = TwoBodyGvecs[i];
     ComplexType coeff = TwoBodyCoefs[i];
     os <<std::fixed << std::setprecision( 6 )
-       << std::setw( 11 ) << gvec[0]
-       << std::setw( 11 ) << gvec[1]
-       << std::setw( 11 ) << gvec[2]
-       << std::setw( 11 ) << coeff.real()
-       << std::setw( 11 ) << coeff.imag()
+       << std::setw( 12 ) << gvec[0]
+       << std::setw( 12 ) << gvec[1]
+       << std::setw( 12 ) << gvec[2]
+       << std::setw( 24 ) << coeff.real()
+       << std::setw( 24 ) << coeff.imag()
        << std::endl;
   }
 }
