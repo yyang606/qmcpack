@@ -49,7 +49,7 @@ SET(MOSRCS
 # create libmocommon 
 ADD_LIBRARY(mocommon ${MOSRCS})
 
-set(QTOOLS convert4qmc extract-eshdf-kvectors dump)
+set(QTOOLS convert4qmc extract-eshdf-kvectors dump opt_break)
 ADD_EXECUTABLE(getSupercell getSupercell.cpp)
 
 FOREACH(p ${QTOOLS})
