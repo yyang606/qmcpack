@@ -19,6 +19,19 @@ RealType fk(RealType k)
 }
 
 
+RealType evaluateFklr(RealType k, vector<RealType> coefs, LPQHIBasis basis)
+{
+  RealType rc = basis.get_rc();
+  RealType volume = basis.get_CellVolume();
+  RealType fkval = fk(k)*cos(k*rc)/volume;
+  for (int n=0; n<basis.NumBasisElem(); n++)
+  {
+    fkval += coefs[n]*basis.c(n, k);
+  }
+  return fkval;
+}
+
+
 RealType sk0(RealType k, RealType kf)
 {
   // handle boundary cases
@@ -49,6 +62,20 @@ RealType uk(RealType k, RealType rs, RealType kf)
 }
 
 
+RealType evaluateUklr(RealType k, RealType rs, RealType kf
+  , vector<RealType> coefs, LPQHIBasis basis)
+{
+  RealType rc = basis.get_rc();
+  RealType volume = basis.get_CellVolume();
+  RealType val = uk(k, rs, kf);
+  for (int n=0; n<basis.NumBasisElem(); n++)
+  {
+    val += coefs[n]*basis.c(n, k);
+  }
+  return val;
+}
+
+
 xmlNodePtr find(const char* expression, xmlXPathContextPtr context)
 { // find the first node matching xpath expression in the given context
   OhmmsXPathObject xpath(expression, context);
@@ -57,19 +84,6 @@ xmlNodePtr find(const char* expression, xmlXPathContextPtr context)
     APP_ABORT("expected 1 " << expression << " found " << xpath.size());
   }
   return xpath[0];
-}
-
-
-RealType evaluateFklr(RealType k, vector<RealType> coefs, LPQHIBasis basis)
-{
-  RealType rc = basis.get_rc();
-  RealType volume = basis.get_CellVolume();
-  RealType fkval = fk(k)*cos(k*rc)/volume;
-  for (int n=0; n<basis.NumBasisElem(); n++)
-  {
-    fkval += coefs[n]*basis.c(n, k);
-  }
-  return fkval;
 }
 
 
@@ -148,9 +162,11 @@ int main(int argc, char **argv)
   {
     RealType kmag = handler.KList[ik][0];
     xk[ik] = fk(kmag)*(-cos(kmag*rc)/volume);  // why *-cos/vol. ?
+    //xk[ik] = uk(kmag, rs, kf);
   }
   
   // solve for expansion coefficients
+  cout.precision(40);
   RealType chisq = handler.DoBreakup(xk.data(), coefs.data());
   app_log() << "  LR breakup chi^2 = " << chisq << endl;
 
@@ -168,6 +184,7 @@ int main(int argc, char **argv)
   {
     RealType kmag = kmin+ik*dk;
     app_log() << kmag << " " << evaluateFklr(kmag, coefs, basis) << endl;
+    //app_log() << kmag << " " << evaluateUklr(kmag, rs, kf, coefs, basis) << endl;
   }
   app_log() << "#VK_STOP#" << endl;
 
