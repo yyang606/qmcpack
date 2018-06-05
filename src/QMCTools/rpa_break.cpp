@@ -23,10 +23,10 @@ RealType evaluateFklr(RealType k, vector<RealType> coefs, LPQHIBasis basis)
 {
   RealType rc = basis.get_rc();
   RealType volume = basis.get_CellVolume();
-  RealType fkval = fk(k)*cos(k*rc)/volume;
+  RealType fkval = fk(k);  //Natoli-Ceperley version //*cos(k*rc)/volume;
   for (int n=0; n<basis.NumBasisElem(); n++)
   {
-    fkval += coefs[n]*basis.c(n, k);
+    fkval -= coefs[n]*basis.c(n, k);
   }
   return fkval;
 }
@@ -161,7 +161,9 @@ int main(int argc, char **argv)
   for (int ik=0; ik<handler.KList.size(); ik++)
   {
     RealType kmag = handler.KList[ik][0];
-    xk[ik] = fk(kmag)*(-cos(kmag*rc)/volume);  // why *-cos/vol. ?
+    xk[ik] = fk(kmag);  // Natoli-Ceperley version //*(-cos(kmag*rc)/volume);
+    // Q/ why *-cos/vol. ?
+    // A/ Kenneth P. Esler 2006 thesis (5.50)
     //xk[ik] = uk(kmag, rs, kf);
   }
   
