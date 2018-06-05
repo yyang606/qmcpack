@@ -99,9 +99,10 @@ int main(int argc, char **argv)
   //
   // to keep this script simple, everything is hard-coded for 3D
   // it should be easy to learn and adapt to 2D
+  if (argc<3) APP_ABORT("usage: " << argv[0] << " axes.xml rs");
  
   // input electron density using Wigner-Seitz radius
-  RealType rs = 1.25;
+  RealType rs = stof(argv[2]);
   // !!!! hard-code unpolarized gas Fermi kvector
   RealType kf = pow(9*M_PI/4, 1./3)/rs;
   app_log() << "rs, kf " << rs << " " << kf << endl;
@@ -116,8 +117,6 @@ int main(int argc, char **argv)
   // approximate k-point degeneracies for kcut < k < kmax
   int nknot = 15;  // number of spline knots used in local function
   int nk = 1024;   // number of points on linear grid for output
-  
-  if (argc<2) APP_ABORT("usage: " << argv[0] << " axes.xml");
 
   // step 1: read <simulationcell> from input
   Libxml2Document fxml;
