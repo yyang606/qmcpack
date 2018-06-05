@@ -22,13 +22,11 @@ RealType eval_vk(RealType k)
 
 
 RealType eval_vklr(RealType k, vector<RealType> coefs, LPQHIBasis basis)
-{ // Esler long-range part of Coulomb potential
-  RealType rc = basis.get_rc();
-  RealType volume = basis.get_CellVolume();
-  RealType val = eval_vk(k)*cos(k*rc)/volume;
+{ // Natoli long-range part of Coulomb potential
+  RealType val = eval_vk(k);
   for (int n=0; n<basis.NumBasisElem(); n++)
   {
-    val += coefs[n]*basis.c(n, k);
+    val -= coefs[n]*basis.c(n, k);
   }
   return val;
 }
@@ -164,7 +162,7 @@ int main(int argc, char **argv)
   for (int ik=0; ik<handler.KList.size(); ik++)
   {
     RealType kmag = handler.KList[ik][0];
-    vkvals[ik] = eval_vk(kmag)*(-cos(kmag*rc)/volume);
+    vkvals[ik] = eval_vk(kmag);
     ukvals[ik] = eval_uk(kmag, rs, kf);
   }
 
@@ -202,7 +200,7 @@ int main(int argc, char **argv)
     RealType vklr, sk, integrand;
     vklr = eval_vklr(kmag, vkcoefs, basis);
     sk = eval_sk(kmag, rs, kf);
-    integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*sk*volume;  // isotropic 3D -> 1D
+    integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*sk;  // isotropic 3D -> 1D
     app_log() << kmag << " " << integrand << endl;
   }
   app_log() << "#VFSC_STOP#" << endl;
@@ -244,7 +242,7 @@ int main(int argc, char **argv)
     uklr = eval_uklr(kmag, rs, kf, ukcoefs, basis);
     tsum += 0.5*rho*pow(kmag, 2)*uklr*(2*uk-uklr)*sk;
   }
-  app_log() << "  vsum = " << vsum << endl;
+  app_log() << "  vsum = " << vsum/volume << endl;
   app_log() << "  tsum = " << tsum/volume << endl;
   
   OHMMS::Controller->finalize();
