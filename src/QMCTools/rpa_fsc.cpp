@@ -23,10 +23,12 @@ RealType vk(RealType k)
 
 RealType evaluateVklr(RealType k, vector<RealType> coefs, LPQHIBasis basis)
 { 
-  RealType val = vk(k);
+  RealType rc = basis.get_rc();
+  RealType volume = basis.get_CellVolume();
+  RealType val = vk(k)*cos(k*rc)/volume;
   for (int n=0; n<basis.NumBasisElem(); n++)
   {
-    val -= coefs[n]*basis.c(n, k);
+    val += coefs[n]*basis.c(n, k);
   }
   return val;
 }
@@ -164,7 +166,7 @@ int main(int argc, char **argv)
   for (int ik=0; ik<handler.KList.size(); ik++)
   {
     RealType kmag = handler.KList[ik][0];
-    vkvals[ik] = vk(kmag);
+    vkvals[ik] = vk(kmag)*(-cos(kmag*rc)/volume);
     ukvals[ik] = uk(kmag, rs, kf);
   }
   
@@ -187,7 +189,7 @@ int main(int argc, char **argv)
   }
   app_log() << "#VK_STOP#" << endl;
 
-  // output integrant for the long-range part of potential and kinetic
+  // output integrand for the long-range part of potential and kinetic
   app_log() << "#VFSC_START#" << endl;
   for (int ik=0; ik<nk; ik++)
   {
@@ -195,7 +197,7 @@ int main(int argc, char **argv)
     RealType vklr, mysk, integrand;
     vklr = evaluateVklr(kmag, vkcoefs, basis);
     mysk = sk(kmag, rs, kf);
-    integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*mysk;  // isotropic 3D -> 1D
+    integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*mysk*volume;  // isotropic 3D -> 1D
     app_log() << kmag << " " << integrand << endl;
   }
   app_log() << "#VFSC_STOP#" << endl;
@@ -231,7 +233,7 @@ int main(int argc, char **argv)
     RealType uklr = evaluateUklr(kmag, rs, kf, ukcoefs, basis);
     tsum += 0.5*rho*pow(kmag, 2)*uklr*(2*uk(kmag, rs, kf)-uklr)*skval;
   }
-  app_log() << "  vsum = " << vsum/volume << endl;
+  app_log() << "  vsum = " << vsum << endl;
   app_log() << "  tsum = " << tsum/volume << endl;
   
   OHMMS::Controller->finalize();
