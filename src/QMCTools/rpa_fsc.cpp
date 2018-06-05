@@ -15,17 +15,17 @@ typedef QMCTraits::RealType RealType;
 
 
 // LR break Coulomb potential
-RealType vk(RealType k)
-{
+RealType eval_vk(RealType k)
+{ // bare Coulomb potential
   return 4*M_PI/pow(k, 2);
 }
 
 
-RealType evaluateVklr(RealType k, vector<RealType> coefs, LPQHIBasis basis)
-{ 
+RealType eval_vklr(RealType k, vector<RealType> coefs, LPQHIBasis basis)
+{ // Esler long-range part of Coulomb potential
   RealType rc = basis.get_rc();
   RealType volume = basis.get_CellVolume();
-  RealType val = vk(k)*cos(k*rc)/volume;
+  RealType val = eval_vk(k)*cos(k*rc)/volume;
   for (int n=0; n<basis.NumBasisElem(); n++)
   {
     val += coefs[n]*basis.c(n, k);
@@ -35,40 +35,40 @@ RealType evaluateVklr(RealType k, vector<RealType> coefs, LPQHIBasis basis)
 
 
 // LR break Jastrow potential: need to set up Gaskell U(k) first
-RealType sk0(RealType k, RealType kf)
-{
+RealType eval_sk0(RealType k, RealType kf)
+{ // wf = ideal Fermi gas determinant
   // handle boundary cases
   if (k<numeric_limits<RealType>::min()) return 0.0;
   if (k>=2*kf) return 1.0;
-  RealType sk0_val = 3./4*(k/kf) - 1./16*pow(k/kf, 3);
-  return sk0_val;
+  RealType sk0 = 3./4*(k/kf) - 1./16*pow(k/kf, 3);
+  return sk0;
 }
 
 
-RealType sk(RealType k, RealType rs, RealType kf)
-{
+RealType eval_sk(RealType k, RealType rs, RealType kf)
+{ // wf = ideal Fermi gas determinant * Gaskell RPA Jastrow
   RealType rho = 3./(4*M_PI*pow(rs, 3));
-  RealType sk0_val = sk0(k, kf);
-  RealType ak = 2*rho*pow(sk0_val, 2)*(8*M_PI/pow(k, 4));
-  RealType sk_val = sk0_val*pow(1.+ak, -0.5);
+  RealType sk0 = eval_sk0(k, kf);
+  RealType ak = 2*rho*pow(sk0, 2)*(8*M_PI/pow(k, 4));
+  RealType sk_val = sk0*pow(1.+ak, -0.5);
   return sk_val;
 }
 
 
-RealType uk(RealType k, RealType rs, RealType kf)
-{
+RealType eval_uk(RealType k, RealType rs, RealType kf)
+{ // Gaskell RPA Jastrow potential
   RealType rho = 3./(4*M_PI*pow(rs, 3));
-  RealType sk0_val = sk0(k, kf);
-  RealType sk_val = sk(k, rs, kf);
-  RealType uk_val = (1./sk_val-1./sk0_val)/(2*rho);
-  return uk_val;
+  RealType sk0 = eval_sk0(k, kf);
+  RealType sk = eval_sk(k, rs, kf);
+  RealType uk = (1./sk-1./sk0)/(2*rho);
+  return uk;
 }
 
 
-RealType evaluateUklr(RealType k, RealType rs, RealType kf
+RealType eval_uklr(RealType k, RealType rs, RealType kf
   , vector<RealType> coefs, LPQHIBasis basis)
-{
-  RealType val = uk(k, rs, kf);
+{ // Natoli long-range part of RPA Jastrow potential
+  RealType val = eval_uk(k, rs, kf);
   for (int n=0; n<basis.NumBasisElem(); n++)
   {
     val -= coefs[n]*basis.c(n, k);
@@ -157,23 +157,24 @@ int main(int argc, char **argv)
   app_log() << "  max_kshell = " << max_kshell << endl;
   // handler.KList contains two columns: |k| and degeneracy
 
-  // put target function on kgrid, perform optimized breakup
-  vector<RealType> vkvals, ukvals, vkcoefs, ukcoefs;
-  vkcoefs.resize(basis.NumBasisElem());
-  ukcoefs.resize(basis.NumBasisElem());
+  // step 6: put target function on kgrid
+  vector<RealType> vkvals, ukvals;
   vkvals.resize(handler.KList.size());
   ukvals.resize(handler.KList.size());
   for (int ik=0; ik<handler.KList.size(); ik++)
   {
     RealType kmag = handler.KList[ik][0];
-    vkvals[ik] = vk(kmag)*(-cos(kmag*rc)/volume);
-    ukvals[ik] = uk(kmag, rs, kf);
+    vkvals[ik] = eval_vk(kmag)*(-cos(kmag*rc)/volume);
+    ukvals[ik] = eval_uk(kmag, rs, kf);
   }
-  
-  // solve for expansion coefficients
-  cout.precision(40);
+
+  // step 7: perform optimized breakup i.e. solve for expansion coefficients
+  vector<RealType> vkcoefs, ukcoefs;
+  vkcoefs.resize(basis.NumBasisElem());
+  ukcoefs.resize(basis.NumBasisElem());
   RealType vkchisq = handler.DoBreakup(vkvals.data(), vkcoefs.data());
   RealType ukchisq = handler.DoBreakup(ukvals.data(), ukcoefs.data());
+  cout.precision(40);
   app_log() << "  Vk LR breakup chi^2 = " << vkchisq << endl;
   app_log() << "  Uk LR breakup chi^2 = " << ukchisq << endl;
 
@@ -185,19 +186,23 @@ int main(int argc, char **argv)
   for (int ik=0; ik<nk; ik++)
   {
     RealType kmag = kmin+ik*dk;
-    app_log() << kmag << " " << evaluateVklr(kmag, vkcoefs, basis) << endl;
+    app_log() << kmag << " " << eval_vklr(kmag, vkcoefs, basis) << endl;
   }
   app_log() << "#VK_STOP#" << endl;
 
+  // step 8: perform Holzmann 2016 finite size correction (FSC)
+  //  use eq. (30) for potential and eq. (35) for kinetic
+
   // output integrand for the long-range part of potential and kinetic
+  //  use fine kgrid for 1D quadrature
   app_log() << "#VFSC_START#" << endl;
   for (int ik=0; ik<nk; ik++)
   {
     RealType kmag = kmin+ik*dk;
-    RealType vklr, mysk, integrand;
-    vklr = evaluateVklr(kmag, vkcoefs, basis);
-    mysk = sk(kmag, rs, kf);
-    integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*mysk*volume;  // isotropic 3D -> 1D
+    RealType vklr, sk, integrand;
+    vklr = eval_vklr(kmag, vkcoefs, basis);
+    sk = eval_sk(kmag, rs, kf);
+    integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*sk*volume;  // isotropic 3D -> 1D
     app_log() << kmag << " " << integrand << endl;
   }
   app_log() << "#VFSC_STOP#" << endl;
@@ -206,32 +211,38 @@ int main(int argc, char **argv)
   for (int ik=0; ik<nk; ik++)
   {
     RealType kmag = kmin+ik*dk;
-    RealType myuk, uklr, mysk, integrand, ukpiece;
-    myuk = uk(kmag, rs, kf);
-    mysk = sk(kmag, rs, kf);
-    uklr = evaluateUklr(kmag, rs, kf, ukcoefs, basis);
-    //integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*rho*pow(kmag, 2)*uklr*(2*myuk-uklr)*mysk;
+    RealType uk, uklr, sk, integrand, ukpiece;
+    uk = eval_uk(kmag, rs, kf);
+    sk = eval_sk(kmag, rs, kf);
+    uklr = eval_uklr(kmag, rs, kf, ukcoefs, basis);
+    //integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*rho*pow(kmag, 2)*uklr*(2*uk-uklr)*sk;
     // group k^2U(k) together to avoid numerical instability
-    ukpiece = (pow(kmag, 2)*uklr) * ((2*pow(kmag, 2)*myuk-pow(kmag, 2)*uklr));
-    integrand = 0.5/(2*M_PI*M_PI)*rho*ukpiece*mysk;
+    ukpiece = (pow(kmag, 2)*uklr) * ((2*pow(kmag, 2)*uk-pow(kmag, 2)*uklr));
+    integrand = 0.5/(2*M_PI*M_PI)*rho*ukpiece*sk;
 
     app_log() << kmag << " " << integrand << endl;
   }
   app_log() << "#TFSC_STOP#" << endl;
 
   // output long-range part of potential and kinetic sums
-  KContainer kvecs;  // define kvectors used in simulation
+  //  use only kvectors included in the simulation
+  KContainer kvecs;
   kvecs.UpdateKLists(box, kc);
 
   RealType vsum = 0.0;
   RealType tsum = 0.0;
   for (int ik=0; ik<kvecs.ksq.size(); ik++)
   {
-    RealType kmag = sqrt(kvecs.ksq[ik]);
-    RealType skval = sk(kmag, rs, kf);
-    vsum += 0.5*evaluateVklr(kmag, vkcoefs, basis)*skval;
-    RealType uklr = evaluateUklr(kmag, rs, kf, ukcoefs, basis);
-    tsum += 0.5*rho*pow(kmag, 2)*uklr*(2*uk(kmag, rs, kf)-uklr)*skval;
+    RealType kmag, vklr, sk, uk, uklr;
+    kmag = sqrt(kvecs.ksq[ik]);
+
+    vklr = eval_vklr(kmag, vkcoefs, basis);
+    sk   = eval_sk(kmag, rs, kf);
+    vsum += 0.5*vklr*sk;
+
+    uk   = eval_uk(kmag, rs, kf);
+    uklr = eval_uklr(kmag, rs, kf, ukcoefs, basis);
+    tsum += 0.5*rho*pow(kmag, 2)*uklr*(2*uk-uklr)*sk;
   }
   app_log() << "  vsum = " << vsum << endl;
   app_log() << "  tsum = " << tsum/volume << endl;
