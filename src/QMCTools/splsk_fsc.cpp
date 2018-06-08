@@ -192,13 +192,6 @@ int main(int argc, char **argv)
   putContent(splsk, splsk_node);
 
   // spline 1D S(k), set derivatives to zero at grid boundaries
-  //BCtype_d bc;
-  //bc.lVal = 0.0;
-  //bc.rVal = 0.0;
-  //bc.lCode = DERIV1;
-  //bc.rCode = DERIV1;
-  //NUgrid* myk = create_general_grid(splk.data(), splk.size());
-  //NUBspline_1d_d* fsplsk = create_NUBspline_1d_d(myk, bc, splsk.data());
   NUBspline_1d_d* fsplsk = spline_clamped(splk, splsk, 0.0, 0.0);
 
   // step 2: construct simulation box
@@ -253,7 +246,10 @@ int main(int argc, char **argv)
   app_log() << "  Uk LR breakup chi^2 = " << ukchisq << endl;
 
   RealType dk = kc/(nk-1);
-  RealType kmin = dk;
+  // !!!! use series expansion for k<kmin
+  RealType kmin = 0.06;
+  RealType quad = 0.5*pow(M_PI/rho, 0.5);
+  RealType cubic = -kf/(6*rho);
 
   // output 1D S(k) spline for debug
   app_log() << "#SPLSK_START#" << endl;
@@ -272,14 +268,6 @@ int main(int argc, char **argv)
   }
   app_log() << "#FINESK_STOP#" << endl;
 
-  //// reset kmin to smallest reciprocal lattice vector for splines
-  //kmin = numeric_limits<RealType>::max();
-  //for (int i=0; i<3; i++)
-  //{
-  //  RealType b = 2*M_PI*sqrt( dot(box.Gv[i], box.Gv[i]) );
-  //  if (b<kmin) kmin=b;
-  //}
-
   // step 8: perform Holzmann 2016 finite size correction (FSC)
   //  use eq. (30) for potential and eq. (35) for kinetic
 
@@ -292,11 +280,16 @@ int main(int argc, char **argv)
   app_log() << "#VFSC_START#" << endl;
   for (int ik=0; ik<nk; ik++)
   {
-    RealType kmag = kmin+ik*dk;
+    RealType kmag = ik*dk;
     RealType vklr, sk, integrand;
-    vklr = eval_vklr(kmag, vkcoefs, basis);
-    eval_NUBspline_1d_d(fsplsk, kmag, &sk);
-    integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*sk;  // isotropic 3D -> 1D
+    if (kmag<kmin)
+    {
+      integrand = (4*M_PI)/pow(2*M_PI, 3)*quad*pow(kmag, 2);
+    } else {
+      vklr = eval_vklr(kmag, vkcoefs, basis);
+      eval_NUBspline_1d_d(fsplsk, kmag, &sk);
+      integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*sk;  // isotropic 3D -> 1D
+    }
     finek[ik] = kmag;
     vfsc[ik] = integrand;
     app_log() << kmag << " " << integrand << endl;
@@ -306,15 +299,18 @@ int main(int argc, char **argv)
   app_log() << "#TFSC_START#" << endl;
   for (int ik=0; ik<nk; ik++)
   {
-    RealType kmag = kmin+ik*dk;
+    RealType kmag = ik*dk;
     RealType uk, uklr, sk, integrand, ukpiece;
-    uk = eval_uk(kmag, rs, kf);
-    eval_NUBspline_1d_d(fsplsk, kmag, &sk);
-    uklr = eval_uklr(kmag, rs, kf, ukcoefs, basis);
-    //integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*rho*pow(kmag, 2)*uklr*(2*uk-uklr)*sk;
-    // group k^2U(k) together to avoid numerical instability
-    ukpiece = (pow(kmag, 2)*uklr) * ((2*pow(kmag, 2)*uk-pow(kmag, 2)*uklr));
-    integrand = 0.5/(2*M_PI*M_PI)*rho*ukpiece*sk;
+    if (kmag<kmin)
+    {
+      integrand = (4*M_PI)/pow(2*M_PI, 3)*(quad*pow(kmag, 2)+cubic*pow(kmag,3));
+    } else {
+      uk = eval_uk(kmag, rs, kf);
+      eval_NUBspline_1d_d(fsplsk, kmag, &sk);
+      uklr = eval_uklr(kmag, rs, kf, ukcoefs, basis);
+      ukpiece = (pow(kmag, 2)*uklr) * ((2*pow(kmag, 2)*uk-pow(kmag, 2)*uklr));
+      integrand = 0.5/(2*M_PI*M_PI)*rho*ukpiece*sk;
+    }
     tfsc[ik] = integrand;
 
     app_log() << kmag << " " << integrand << endl;
