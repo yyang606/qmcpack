@@ -175,7 +175,7 @@ int main(int argc, char **argv)
   // use default kcrc from box //RealType kc_rc = 15.;
   // approximate k-point degeneracies for kcut < k < kmax
   int nknot = 15;  // number of spline knots used in local function
-  int nk = 128;   // number of points on linear grid for output
+  int nk = 2048;   // number of points on linear grid for output
 
   // step 1: read <simulationcell> from input
   Libxml2Document fxml;
@@ -235,7 +235,7 @@ int main(int argc, char **argv)
   app_log() << "  Uk LR breakup chi^2 = " << ukchisq << endl;
 
   RealType dk = kc/nk;
-  RealType kmin = 0.03;
+  RealType kmin = 0.06;  // !!!! use series expansion for k<kmin
 
   // output Coulomb Vklr for debugging
   app_log() << "#VK_START#" << endl;
@@ -249,6 +249,10 @@ int main(int argc, char **argv)
   // step 8: perform Holzmann 2016 finite size correction (FSC)
   //  use eq. (30) for potential and eq. (35) for kinetic
 
+  // !!!! approximate k->0 behavior of integrands using RPA
+  RealType quad = 0.5*pow(M_PI/rho, 0.5);
+  RealType cubic = -kf/(6*rho);
+
   // output integrand for the long-range part of potential and kinetic
   //  use fine kgrid for 1D quadrature
   vector<RealType> finek, vfsc, tfsc;
@@ -258,11 +262,16 @@ int main(int argc, char **argv)
   app_log() << "#VFSC_START#" << endl;
   for (int ik=0; ik<nk; ik++)
   {
-    RealType kmag = kmin+ik*dk;
+    RealType kmag = ik*dk;
     RealType vklr, sk, integrand;
-    vklr = eval_vklr(kmag, vkcoefs, basis);
-    sk = eval_sk(kmag, rs, kf);
-    integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*sk;  // isotropic 3D -> 1D
+    if (kmag<kmin)
+    {
+      integrand = (4*M_PI)/pow(2*M_PI, 3)*quad*pow(kmag, 2);
+    } else {
+      vklr = eval_vklr(kmag, vkcoefs, basis);
+      sk = eval_sk(kmag, rs, kf);
+      integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*sk;
+    }
     app_log() << kmag << " " << integrand << endl;
     finek[ik] = kmag;
     vfsc[ik] = integrand;
@@ -272,15 +281,18 @@ int main(int argc, char **argv)
   app_log() << "#TFSC_START#" << endl;
   for (int ik=0; ik<nk; ik++)
   {
-    RealType kmag = kmin+ik*dk;
+    RealType kmag = ik*dk;
     RealType uk, uklr, sk, integrand, ukpiece;
-    uk = eval_uk(kmag, rs, kf);
-    sk = eval_sk(kmag, rs, kf);
-    uklr = eval_uklr(kmag, rs, kf, ukcoefs, basis);
-    //integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*rho*pow(kmag, 2)*uklr*(2*uk-uklr)*sk;
-    // group k^2U(k) together to avoid numerical instability
-    ukpiece = (pow(kmag, 2)*uklr) * ((2*pow(kmag, 2)*uk-pow(kmag, 2)*uklr));
-    integrand = 0.5/(2*M_PI*M_PI)*rho*ukpiece*sk;
+    if (kmag<kmin)
+    {
+      integrand = (4*M_PI)/pow(2*M_PI, 3)*(quad*pow(kmag, 2)+cubic*pow(kmag,3));
+    } else {
+      uk = eval_uk(kmag, rs, kf);
+      sk = eval_sk(kmag, rs, kf);
+      uklr = eval_uklr(kmag, rs, kf, ukcoefs, basis);
+      ukpiece = (pow(kmag, 2)*uklr) * ((2*pow(kmag, 2)*uk-pow(kmag, 2)*uklr));
+      integrand = 0.5/(2*M_PI*M_PI)*rho*ukpiece*sk;
+    }
 
     app_log() << kmag << " " << integrand << endl;
     tfsc[ik] = integrand;
