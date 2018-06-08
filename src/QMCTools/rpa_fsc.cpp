@@ -6,12 +6,15 @@
 #include "LongRange/LPQHIBasis.h"
 #include "LongRange/LRBreakup.h"
 #include "LongRange/KContainer.h"
-//#include <limits>
+#include "einspline/nugrid.h"
+#include "einspline/nubspline_create.h"
+#include "einspline/nubspline_eval_d.h"
 
 using namespace qmcplusplus;
 using namespace std;
 
 typedef QMCTraits::RealType RealType;
+typedef QMCTraits::IndexType IndexType;
 
 
 // LR break Coulomb potential
@@ -86,6 +89,62 @@ xmlNodePtr find(const char* expression, xmlXPathContextPtr context)
 }
 
 
+// spline routines stolen from R. C. Clay QMCFiniteSize
+
+NUBspline_1d_d* spline_clamped(
+  vector<RealType>& grid,
+  vector<RealType>& vals,
+  RealType lval, RealType rval)
+{
+  NUgrid* grid1d = create_general_grid(grid.data(), grid.size());
+
+  BCtype_d bc;
+  bc.lVal=lval;
+  bc.rVal=rval;
+  bc.lCode=DERIV1;
+  bc.rCode=DERIV1;
+
+  return create_NUBspline_1d_d(grid1d, bc, vals.data());
+}
+
+
+RealType integrate_spline(
+  NUBspline_1d_d* spline,
+  RealType a,
+  RealType b,
+  IndexType n)
+{
+  n=n+3-n%3;
+  IndexType ninterv=n/3;
+
+  RealType del=(b-a)/RealType(n);
+  RealType s=0.0;
+  RealType val=0.0;
+
+  for (IndexType i=0; i<ninterv-1; i++)
+  {
+    RealType x0(0),x1(0),x2(0),x3(0);
+    x0=a+3*i*del;
+    x1=a+3*i*del + 1*del;
+    x2=a+3*i*del + 2*del;
+    x3=a+3*i*del + 3*del;
+
+
+    eval_NUBspline_1d_d(spline,x0,&val);
+    s+=val;
+
+    eval_NUBspline_1d_d(spline,x1,&val);
+    s+=3.0*val;
+
+    eval_NUBspline_1d_d(spline,x2,&val);
+    s+=3.0*val;
+
+    eval_NUBspline_1d_d(spline,x3,&val);
+    s+=val;
+
+  }
+  return s*3.0*del/8.0;
+}
 int main(int argc, char **argv)
 {
   OHMMS::Controller->initialize(argc, argv);
@@ -116,7 +175,7 @@ int main(int argc, char **argv)
   // use default kcrc from box //RealType kc_rc = 15.;
   // approximate k-point degeneracies for kcut < k < kmax
   int nknot = 15;  // number of spline knots used in local function
-  int nk = 1024;   // number of points on linear grid for output
+  int nk = 128;   // number of points on linear grid for output
 
   // step 1: read <simulationcell> from input
   Libxml2Document fxml;
@@ -176,7 +235,7 @@ int main(int argc, char **argv)
   app_log() << "  Uk LR breakup chi^2 = " << ukchisq << endl;
 
   RealType dk = kc/nk;
-  RealType kmin = 1e-1;
+  RealType kmin = 0.03;
 
   // output Coulomb Vklr for debugging
   app_log() << "#VK_START#" << endl;
@@ -192,6 +251,10 @@ int main(int argc, char **argv)
 
   // output integrand for the long-range part of potential and kinetic
   //  use fine kgrid for 1D quadrature
+  vector<RealType> finek, vfsc, tfsc;
+  finek.resize(nk);
+  vfsc.resize(nk);
+  tfsc.resize(nk);
   app_log() << "#VFSC_START#" << endl;
   for (int ik=0; ik<nk; ik++)
   {
@@ -201,6 +264,8 @@ int main(int argc, char **argv)
     sk = eval_sk(kmag, rs, kf);
     integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*sk;  // isotropic 3D -> 1D
     app_log() << kmag << " " << integrand << endl;
+    finek[ik] = kmag;
+    vfsc[ik] = integrand;
   }
   app_log() << "#VFSC_STOP#" << endl;
 
@@ -218,6 +283,7 @@ int main(int argc, char **argv)
     integrand = 0.5/(2*M_PI*M_PI)*rho*ukpiece*sk;
 
     app_log() << kmag << " " << integrand << endl;
+    tfsc[ik] = integrand;
   }
   app_log() << "#TFSC_STOP#" << endl;
 
@@ -241,8 +307,25 @@ int main(int argc, char **argv)
     uklr = eval_uklr(kmag, rs, kf, ukcoefs, basis);
     tsum += 0.5*rho*pow(kmag, 2)*uklr*(2*uk-uklr)*sk;
   }
-  app_log() << "  vsum = " << vsum/volume << endl;
-  app_log() << "  tsum = " << tsum/volume << endl;
+  vsum = vsum/volume;
+  tsum = tsum/volume;
+  app_log() << "  vsum = " << vsum << endl;
+  app_log() << "  tsum = " << tsum << endl;
+
+  // integrate
+  NUBspline_1d_d* vint_spl = spline_clamped(finek, vfsc, 0.0, 0.0);
+  NUBspline_1d_d* tint_spl = spline_clamped(finek, tfsc, 0.0, 0.0);
+  RealType vint = integrate_spline(vint_spl, 0.0, kc, nk);
+  RealType tint = integrate_spline(tint_spl, 0.0, kc, nk);
+  app_log() << "  vint = " << vint << endl;
+  app_log() << "  tint = " << tint << endl;
+
+  RealType dv = vint-vsum;
+  RealType dt = tint-tsum;
+  RealType de = dv+dt;
+  app_log() << "  dv = " << dv << endl;
+  app_log() << "  dt = " << dt << endl;
+  app_log() << "  de = " << de << endl;
   
   OHMMS::Controller->finalize();
   return 0;
