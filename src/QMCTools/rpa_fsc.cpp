@@ -25,13 +25,11 @@ RealType eval_vk(RealType k)
 
 
 RealType eval_vklr(RealType k, vector<RealType> coefs, LPQHIBasis basis)
-{ // Esler long-range part of Coulomb potential
-  RealType rc = basis.get_rc();
-  RealType volume = basis.get_CellVolume();
-  RealType val = eval_vk(k)*cos(k*rc)/volume;
+{ // Natoli long-range part of Coulomb potential
+  RealType val = eval_vk(k);
   for (int n=0; n<basis.NumBasisElem(); n++)
   {
-    val += coefs[n]*basis.c(n, k);
+    val -= coefs[n]*basis.c(n, k);
   }
   return val;
 }
@@ -222,7 +220,7 @@ int main(int argc, char **argv)
   for (int ik=0; ik<handler.KList.size(); ik++)
   {
     RealType kmag = handler.KList[ik][0];
-    vkvals[ik] = eval_vk(kmag)*(-cos(kmag*rc)/volume);
+    vkvals[ik] = eval_vk(kmag);
     ukvals[ik] = eval_uk(kmag, rs, kf);
   }
 
@@ -270,7 +268,7 @@ int main(int argc, char **argv)
     {
       integrand = (4*M_PI)/pow(2*M_PI, 3)*quad*pow(kmag, 2);
     } else {
-      vklr = eval_vklr(kmag, vkcoefs, basis)*volume;
+      vklr = eval_vklr(kmag, vkcoefs, basis);
       sk = eval_sk(kmag, rs, kf);
       integrand = pow(kmag, 2)/(2*M_PI*M_PI)* 0.5*vklr*sk;
     }
@@ -313,7 +311,7 @@ int main(int argc, char **argv)
     RealType kmag, vklr, sk, uk, uklr;
     kmag = sqrt(kvecs.ksq[ik]);
 
-    vklr = eval_vklr(kmag, vkcoefs, basis)*volume;
+    vklr = eval_vklr(kmag, vkcoefs, basis);
     sk   = eval_sk(kmag, rs, kf);
     vsum += 0.5*vklr*sk;
 
