@@ -177,7 +177,7 @@ int main(int argc, char **argv)
   // use default kcrc from box //RealType kc_rc = 15.;
   // approximate k-point degeneracies for kcut < k < kmax
   int nknot = 15;  // number of spline knots used in local function
-  int nk = 64;   // number of points on linear grid for output
+  int nk = 2048;   // number of points on linear grid for output
 
   // step 1: read <simulationcell> from input
   Libxml2Document fxml;
