@@ -92,6 +92,32 @@ UBspline_3d_d* create_spline3d(
   return spline3d;
 }
 
+
+vector<int> get_index3d(
+  const vector<double> gvec,
+  const vector<double> gmin,
+  const vector<double> dg
+)
+{
+  int ix, iy, iz;
+  ix = nearbyint((gvec[0]-gmin[0])/dg[0]);
+  iy = nearbyint((gvec[1]-gmin[1])/dg[1]);
+  iz = nearbyint((gvec[2]-gmin[2])/dg[2]);
+  vector<int> idx3d = {ix, iy, iz};
+  return idx3d;
+}
+
+
+int get_cindex(
+  const vector<int> idx3d,
+  const vector<int> ng
+)
+{
+  int cidx1d = idx3d[0]*ng[1]*ng[2] + idx3d[1]*ng[2] + idx3d[2];
+  return cidx1d;
+}
+
+
 int main(int argc, char **argv)
 {
   OHMMS::Controller->initialize(argc, argv);
@@ -117,7 +143,8 @@ int main(int argc, char **argv)
   //kvecs.UpdateKLists(box, kc);
   
   // step 3: set up kvectors
-  vector<double> gmin, gmax, ng;
+  vector<double> gmin, gmax;
+  vector<int> ng;
   xmlNodePtr node;
   node = find("//gmin", doc);
   putContent(gmin, node);
@@ -142,40 +169,66 @@ int main(int argc, char **argv)
 
   vector<RealType> sk(ng[0]*ng[1]*ng[2], -1);
 
-  // step 4: load data
+  // step 4: load data on simulation kgrid
   vector<vector<RealType>> mat = loadtxt("sofk.dat");
+
+  // step 5: transfer data to regular grid
   int nk = mat.size();
   RealType maxval=mat[0][3];
   for (int ik=0; ik<nk; ik++)
   {
     PosType kvec(mat[ik][0], mat[ik][1], mat[ik][2]);
-    PosType gvec = box.k_unit(kvec);
-    int ix, iy, iz;
-    ix = nearbyint(gvec[0]-gmin[0]);
-    iy = nearbyint(gvec[1]-gmin[1]);
-    iz = nearbyint(gvec[2]-gmin[2]);
-    int cidx1d = ix*ng[1]*ng[2] + iy*ng[1] + iz;
     RealType val = mat[ik][3];
+    PosType gvec = box.k_unit(kvec);
+
+    vector<double> mygvec = {gvec[0], gvec[1], gvec[2]};
+    vector<int> idx3d = get_index3d(mygvec, gmin, dg);
+    int cidx1d = get_cindex(idx3d, ng);
     sk[cidx1d] = val;
-    //app_log() << ix << " " << iy << " " << iz << " " << val << endl;
     if (val>maxval) maxval=val;
   }
-  app_log() << maxval <<endl;
 
+  // !!!! set unavailable spots
   for (int isk=0; isk<sk.size(); isk++)
   {
-    if (sk[isk]==-1) sk[isk] = maxval;
+    if (sk[isk]==-1){
+      sk[isk] = maxval;
+    }
   }
+  // !!!! set k=0 to 0
+  vector<double> gvec = {0, 0, 0};
+  vector<int> idx3d = get_index3d(gvec, gmin, dg);
+  int cidx1d = get_cindex(idx3d, ng);
+  sk[cidx1d] = 0;
+
+
+  // output S(k) on regular grid for debugging
+  ofstream ofs;
+  ofs.open("skgrid.dat", ofstream::out);
+  for (int ix=0; ix<ng[0]; ix++)
+  {
+    for (int iy=0; iy<ng[1]; iy++)
+    {
+      for (int iz=0; iz<ng[2]; iz++)
+      {
+        int cidx1d = ix*ng[1]*ng[2] + iy*ng[2] + iz;
+        RealType val = sk[cidx1d];
+        PosType kvec(gridx[ix], gridy[iy], gridz[iz]);
+        ofs << kvec << " " << val << endl;
+      }
+    }
+  }
+  ofs.close();
 
   // step 5: create 3D spline
   UBspline_3d_d* spline3d = create_spline3d(gridx, gridy, gridz, sk);
 
   // dump 3D S(k) spline
-  ofstream ofs("sk3d.dat", ofstream::out);
+  ofs.open("sk3d.dat", ofstream::out);
   int nx = 16;
   RealType kmin, kmax, dk;
-  kmin = -kc;
-  kmax =  kc;
+  kmin = -kc/2.;
+  kmax =  kc/2.;
   dk = (kmax-kmin)/(nx-1);
 
   for (int ix=0; ix<nx; ix++)
