@@ -4,7 +4,6 @@
 #include "QMCApp/QMCAppBase.h"
 #include "Lattice/Uniform3DGridLayout.h"
 #include "ParticleIO/ParticleLayoutIO.h"
-//#include "LongRange/KContainer.h"
 #include "Numerics/OneDimGridBase.h"
 #include "einspline/bspline_create.h"
 #include "einspline/bspline_eval_d.h"
@@ -14,7 +13,6 @@ using namespace qmcplusplus;
 using namespace std;
 
 typedef QMCTraits::RealType   RealType;
-typedef QMCTraits::IndexType IndexType;
 typedef QMCTraits::PosType     PosType;
 typedef LinearGrid<RealType>  GridType;
 
@@ -61,6 +59,7 @@ vector<vector<RealType>> loadtxt(const string fname)
 }
 
 
+// NaturalSpline3D
 BCtype_d natural_boundary()
 {
   BCtype_d bc;
@@ -76,8 +75,8 @@ UBspline_3d_d* create_spline3d(
   GridType gridx,
   GridType gridy,
   GridType gridz,
-  vector<RealType> sk)
-{ // spline 3D volumetric data sk on regular grid
+  vector<RealType> vals)
+{ // spline 3D scalar field on regular grid
   Ugrid esgridx, esgridy, esgridz;
   esgridx = gridx.einspline_grid();
   esgridy = gridy.einspline_grid();
@@ -88,7 +87,7 @@ UBspline_3d_d* create_spline3d(
   bcz = natural_boundary();
   UBspline_3d_d* spline3d = create_UBspline_3d_d(
     esgridx, esgridy, esgridz
-  , bcx, bcy, bcz, sk.data()
+  , bcx, bcy, bcz, vals.data()
   );
   return spline3d;
 }
@@ -137,27 +136,18 @@ int main(int argc, char **argv)
   string fxml_name = argv[1];
   string fdat_name = argv[2];
  
-  // step 1: read <simulationcell> from input
+  // step 1: construct lattice -> enable box.k_unit, box.k_cart
   Libxml2Document fxml;
   fxml.parse(fxml_name);
   xmlXPathContextPtr doc = fxml.getXPathContext();
   xmlNodePtr sc_node = find("//simulationcell", doc);
 
-  // step 2: construct simulation box
   Uniform3DGridLayout box;
   LatticeParser parser(box);
   parser.put(sc_node);
-  box.SetLRCutoffs();  // box.LR_rc, box.LR_kc
-  RealType volume = box.Volume;
-  app_log() << "  lattice volume = " << volume << endl;
-
-  //// step 3: set up simulation kvectors
-  RealType kc = box.LR_kc;
-  //KContainer kvecs;
-  //kvecs.UpdateKLists(box, kc);
   
-  // step 3: set up kvectors
-  vector<double> gmin, gmax;
+  // step 2: set up g-vectors (integer vectors in reciprocal lattice units)
+  vector<double> gmin, gmax;  // use double b/c rounding error
   vector<int> ng;
   xmlNodePtr node;
   node = find("//gmin", doc);
@@ -183,10 +173,10 @@ int main(int argc, char **argv)
 
   vector<RealType> sk(ng[0]*ng[1]*ng[2], -1);
 
-  // step 4: load data on simulation kgrid
+  // step 3: load data on simulation kgrid
   vector<vector<RealType>> mat = loadtxt(fdat_name);
 
-  // step 5: transfer data to regular grid
+  // step 4: transfer data to regular grid
   int nk = mat.size();
   RealType maxval=mat[0][3];
   for (int ik=0; ik<nk; ik++)
@@ -226,7 +216,6 @@ int main(int argc, char **argv)
   vector<int> idx3d = get_index3d(gvec, gmin, dg);
   int cidx1d = index3d_to_index1d(idx3d, ng);
   sk[cidx1d] = maxval;
-
 
   // output S(k) on regular grid for debugging
   ofstream ofs;
@@ -268,9 +257,12 @@ int main(int argc, char **argv)
           0.5*dk+kmin+iy*dk,
           0.5*dk+kmin+iz*dk
         );
+
+        // wish: val = spline3d(kvec)
         PosType gvec = box.k_unit(kvec);
         RealType val;
         eval_UBspline_3d_d(spline3d, gvec[0], gvec[1], gvec[2], &val);
+
         ofs << kvec << " " << val << endl;
       }
     }
@@ -298,10 +290,12 @@ int main(int argc, char **argv)
     for (int i=0; i<nval; i++)
     {
       PosType kvec = kval*qrule.xyz_m[i];
-      PosType gvec = box.k_unit(kvec);
 
+      // wish: val = spline3d(kvec)
+      PosType gvec = box.k_unit(kvec);
       RealType val;
       eval_UBspline_3d_d(spline3d, gvec[0], gvec[1], gvec[2], &val);
+
       sum += val*qrule.weight_m[i];
     }
     ofav << kval << " " << sum << endl;
