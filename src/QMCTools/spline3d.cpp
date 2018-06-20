@@ -101,9 +101,9 @@ vector<int> get_index3d(
 )
 {
   int ix, iy, iz;
-  ix = nearbyint((gvec[0]-gmin[0])/dg[0]);
-  iy = nearbyint((gvec[1]-gmin[1])/dg[1]);
-  iz = nearbyint((gvec[2]-gmin[2])/dg[2]);
+  ix = nearbyint((gvec[0]-gmin[0]-dg[0]/2.)/dg[0]);
+  iy = nearbyint((gvec[1]-gmin[1]-dg[1]/2.)/dg[1]);
+  iz = nearbyint((gvec[2]-gmin[2]-dg[2]/2.)/dg[2]);
   vector<int> idx3d = {ix, iy, iz};
   return idx3d;
 }
@@ -208,7 +208,7 @@ int main(int argc, char **argv)
   for (int isk=0; isk<sk.size(); isk++)
   {
     if (sk[isk]==-1){
-      sk[isk] = maxval;
+      sk[isk] = 0;
 
       vector<int> idx3d = index1d_to_index3d(isk, ng);
       PosType gvec(
@@ -221,11 +221,11 @@ int main(int argc, char **argv)
     }
   }
   ofk.close();
-  // !!!! set k=0 to 0
+  // !!!! set k=0
   vector<double> gvec = {0, 0, 0};
   vector<int> idx3d = get_index3d(gvec, gmin, dg);
   int cidx1d = index3d_to_index1d(idx3d, ng);
-  sk[cidx1d] = 0;
+  sk[cidx1d] = maxval;
 
 
   // output S(k) on regular grid for debugging
@@ -253,8 +253,8 @@ int main(int argc, char **argv)
   ofs.open("sk3d.dat", ofstream::out);
   int nx = 16;
   RealType kmin, kmax, dk;
-  kmin = -2.0;
-  kmax =  2.0;
+  kmin = -0.8;
+  kmax =  0.8;
   dk = (kmax-kmin)/(nx-1);
 
   for (int ix=0; ix<nx; ix++)
@@ -285,7 +285,7 @@ int main(int argc, char **argv)
   Quadrature3D<RealType> qrule(nrule);
   int nval = qrule.xyz_m.size();
   app_log() << " using " << nval << " points on the unit sphere." << endl;
-  RealType kmax1d = 2.0;
+  RealType kmax1d = 1.4;
   int nk1d = 64;
   RealType dk1d = kmax1d/nk1d;
 
