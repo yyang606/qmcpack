@@ -8,6 +8,7 @@
 #include "Numerics/OneDimGridBase.h"
 #include "einspline/bspline_create.h"
 #include "einspline/bspline_eval_d.h"
+#include "Numerics/Quadrature.h"
 
 using namespace qmcplusplus;
 using namespace std;
@@ -275,6 +276,37 @@ int main(int argc, char **argv)
     }
   }
   ofs.close();
+
+  // step 6: spherically integrate 3D spline at simulation kmags
+  node = find("//nrule", doc);
+  int nrule;
+  putContent(nrule, node);
+  app_log() << "performing spherical integral using quadrature rule " << nrule << endl;
+  Quadrature3D<RealType> qrule(nrule);
+  int nval = qrule.xyz_m.size();
+  app_log() << " using " << nval << " points on the unit sphere." << endl;
+  RealType kmax1d = 2.0;
+  int nk1d = 64;
+  RealType dk1d = kmax1d/nk1d;
+
+  ofstream ofav;
+  ofav.open("avgsk.dat", ofstream::out);
+  for (int ik=0; ik<nk1d; ik++)
+  {
+    RealType kval = ik*dk1d;
+    RealType sum = 0.0;
+    for (int i=0; i<nval; i++)
+    {
+      PosType kvec = kval*qrule.xyz_m[i];
+      PosType gvec = box.k_unit(kvec);
+
+      RealType val;
+      eval_UBspline_3d_d(spline3d, gvec[0], gvec[1], gvec[2], &val);
+      sum += val*qrule.weight_m[i];
+    }
+    ofav << kval << " " << sum << endl;
+  }
+  ofav.close();
   
   OHMMS::Controller->finalize();
   return 0;
