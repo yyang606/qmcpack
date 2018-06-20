@@ -100,21 +100,31 @@ vector<int> get_index3d(
 )
 {
   int ix, iy, iz;
-  ix = nearbyint((gvec[0]-gmin[0])/dg[0]);
-  iy = nearbyint((gvec[1]-gmin[1])/dg[1]);
-  iz = nearbyint((gvec[2]-gmin[2])/dg[2]);
+  ix = nearbyint((gvec[0]-gmin[0]-dg[0]/2.)/dg[0]);
+  iy = nearbyint((gvec[1]-gmin[1]-dg[1]/2.)/dg[1]);
+  iz = nearbyint((gvec[2]-gmin[2]-dg[2]/2.)/dg[2]);
   vector<int> idx3d = {ix, iy, iz};
   return idx3d;
 }
 
 
-int get_cindex(
+int index3d_to_index1d(
   const vector<int> idx3d,
   const vector<int> ng
 )
 {
   int cidx1d = idx3d[0]*ng[1]*ng[2] + idx3d[1]*ng[2] + idx3d[2];
   return cidx1d;
+}
+
+
+vector<int> index1d_to_index3d(const int idx1d, const vector<int> ng)
+{
+  vector<int> idx3d(3);
+  idx3d[2] = idx1d % ng[2];
+  idx3d[1] = (idx1d/ng[2]) % ng[1];
+  idx3d[0] = ((idx1d/ng[2])/ng[1]) % ng[0];
+  return idx3d;
 }
 
 
@@ -183,23 +193,35 @@ int main(int argc, char **argv)
 
     vector<double> mygvec = {gvec[0], gvec[1], gvec[2]};
     vector<int> idx3d = get_index3d(mygvec, gmin, dg);
-    int cidx1d = get_cindex(idx3d, ng);
+    int cidx1d = index3d_to_index1d(idx3d, ng);
     sk[cidx1d] = val;
     if (val>maxval) maxval=val;
   }
 
   // !!!! set unavailable spots
+  ofstream ofk;
+  ofk.open("missing_kvecs.dat");
   for (int isk=0; isk<sk.size(); isk++)
   {
     if (sk[isk]==-1){
-      sk[isk] = maxval;
+      sk[isk] = 0;
+
+      vector<int> idx3d = index1d_to_index3d(isk, ng);
+      PosType gvec(
+        gridx[idx3d[0]],
+        gridy[idx3d[1]],
+        gridz[idx3d[2]]
+      );
+      PosType kvec = box.k_cart(gvec);
+      ofk << kvec << " " << isk << endl;
     }
   }
+  ofk.close();
   // !!!! set k=0 to 0
   vector<double> gvec = {0, 0, 0};
   vector<int> idx3d = get_index3d(gvec, gmin, dg);
-  int cidx1d = get_cindex(idx3d, ng);
-  sk[cidx1d] = 0;
+  int cidx1d = index3d_to_index1d(idx3d, ng);
+  sk[cidx1d] = maxval;
 
 
   // output S(k) on regular grid for debugging
@@ -227,8 +249,8 @@ int main(int argc, char **argv)
   ofs.open("sk3d.dat", ofstream::out);
   int nx = 16;
   RealType kmin, kmax, dk;
-  kmin = -kc/2.;
-  kmax =  kc/2.;
+  kmin = -0.8;
+  kmax =  0.8;
   dk = (kmax-kmin)/(nx-1);
 
   for (int ix=0; ix<nx; ix++)
