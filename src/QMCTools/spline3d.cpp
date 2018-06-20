@@ -118,7 +118,10 @@ int index3d_to_index1d(
 }
 
 
-vector<int> index1d_to_index3d(const int idx1d, const vector<int> ng)
+vector<int> index1d_to_index3d(
+  const int idx1d,
+  const vector<int> ng
+)
 {
   vector<int> idx3d(3);
   idx3d[2] = idx1d % ng[2];
@@ -226,7 +229,8 @@ int main(int argc, char **argv)
     {
       for (int iz=0; iz<ng[2]; iz++)
       {
-        int cidx1d = ix*ng[1]*ng[2] + iy*ng[2] + iz;
+        idx3d = {ix, iy, iz};
+        int cidx1d = index3d_to_index1d(idx3d, ng);
         RealType val = sk[cidx1d];
         PosType kvec(gridx[ix], gridy[iy], gridz[iz]);
         ofs << kvec << " " << val << endl;
