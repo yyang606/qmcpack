@@ -1,96 +1,11 @@
-#include <fstream>
-#include <sstream>
 #include "Message/Communicate.h"
 #include "QMCApp/QMCAppBase.h"
 #include "Lattice/Uniform3DGridLayout.h"
-#include "ParticleIO/ParticleLayoutIO.h"
-#include "Numerics/OneDimGridBase.h"
-#include "einspline/bspline_create.h"
+#include "QMCFiniteSize/fsc_routines.h"
 #include "einspline/bspline_eval_d.h"
 #include "Numerics/Quadrature.h"
 
-using namespace qmcplusplus;
-using namespace std;
-
-typedef QMCTraits::RealType   RealType;
 typedef QMCTraits::PosType     PosType;
-typedef LinearGrid<RealType>  GridType;
-
-
-xmlNodePtr find(const char* expression, xmlXPathContextPtr context)
-{ // find the first node matching xpath expression in the given context
-  OhmmsXPathObject xpath(expression, context);
-  if (xpath.size() != 1)
-  {
-    APP_ABORT("expected 1 " << expression << " found " << xpath.size());
-  }
-  return xpath[0];
-}
-
-
-vector<vector<RealType>> loadtxt(const string fname)
-{ // stack overflow "How to read in a data file of unknown dimensions in C/C++"
-
-  vector<vector<RealType>> mat;
-  ifstream fdat;
-  fdat.open(fname.c_str(), ios_base::in);
-
-  double buf;
-  string line;
-
-  while (!fdat.eof())
-  {
-    getline(fdat, line);
-
-    // skip comment or empty line
-    if (line[0] == '#' || line.empty()) continue;
-
-    // read a row of numbers
-    vector<RealType> row;
-    stringstream ss(line, ios_base::in);
-    while (ss>>buf) row.push_back(buf);
-
-    // add a row to matrix
-    mat.push_back(row);
-  }
-
-  fdat.close();
-  return mat;
-}
-
-
-// NaturalSpline3D
-BCtype_d natural_boundary()
-{
-  BCtype_d bc;
-  bc.lCode = NATURAL;
-  bc.rCode = NATURAL;
-  bc.lVal = 1.0;
-  bc.rVal = 1.0;
-  return bc;
-}
-
-
-UBspline_3d_d* create_spline3d(
-  GridType gridx,
-  GridType gridy,
-  GridType gridz,
-  vector<RealType> vals)
-{ // spline 3D scalar field on regular grid
-  Ugrid esgridx, esgridy, esgridz;
-  esgridx = gridx.einspline_grid();
-  esgridy = gridy.einspline_grid();
-  esgridz = gridz.einspline_grid();
-  BCtype_d bcx, bcy, bcz;
-  bcx = natural_boundary();
-  bcy = natural_boundary();
-  bcz = natural_boundary();
-  UBspline_3d_d* spline3d = create_UBspline_3d_d(
-    esgridx, esgridy, esgridz
-  , bcx, bcy, bcz, vals.data()
-  );
-  return spline3d;
-}
 
 
 vector<int> get_index3d(
@@ -139,15 +54,13 @@ int main(int argc, char **argv)
   string fxml_name = argv[1];
   string fdat_name = argv[2];
  
-  // step 1: construct lattice -> enable box.k_unit, box.k_cart
+  // parse input xml
   Libxml2Document fxml;
   fxml.parse(fxml_name);
   xmlXPathContextPtr doc = fxml.getXPathContext();
-  xmlNodePtr sc_node = find("//simulationcell", doc);
 
-  Uniform3DGridLayout box;
-  LatticeParser parser(box);
-  parser.put(sc_node);
+  // step 1: construct lattice -> enable box.k_unit, box.k_cart
+  Uniform3DGridLayout box = create_box(doc);
   
   // step 2: set up g-vectors (integer vectors in reciprocal lattice units)
   vector<double> gmin, gmax;  // use double b/c rounding error
@@ -240,7 +153,7 @@ int main(int argc, char **argv)
   ofs.close();
 
   // step 5: create 3D spline
-  UBspline_3d_d* spline3d = create_spline3d(gridx, gridy, gridz, sk);
+  UBspline_3d_d* spline3d = create_natural_spline3d(gridx, gridy, gridz, sk.data());
 
   // dump 3D S(k) spline
   ofs.open("sk3d.dat", ofstream::out);
