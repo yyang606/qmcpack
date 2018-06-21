@@ -29,9 +29,9 @@ int main(int argc, char **argv)
     app_log() << "expected " << nval << " found " << nk << endl;
     APP_ABORT("grid mismatch");
   }
-  RealType* vals = new RealType[nval];
 
   // step 4: transfer data to regular grid
+  RealType* vals = new RealType[nval];
   app_log() << "transfer data to regular grid" << endl;
   for (int ik=0; ik<nk; ik++)
   {
@@ -44,8 +44,10 @@ int main(int argc, char **argv)
     vals[idx] = mat[ik][3];
   }
 
-  // step 5: dump regular grid for debugging
-  app_log() << "dump regular grid" << endl;
+  NaturalSpline3D spline3d = NaturalSpline3D(grid3d, vals);
+
+  // step 5: dump regular grid and spline for debugging
+  app_log() << "dump regular grid and spline" << endl;
   ofstream ofs("grid.dat", ofstream::out);
   for (int ix=0; ix<grid3d.x.num; ix++)
   {
@@ -54,16 +56,27 @@ int main(int argc, char **argv)
       for (int iz=0; iz<grid3d.z.num; iz++)
       {
         int idx = get_index3d_flat(grid3d, ix, iy, iz);
-        ofs << vals[idx] << endl;
-        //ofs << grid3d.x[ix] << " "
-        //    << grid3d.y[iy] << " "
-        //    << grid3d.z[iz] << " "
-        //    << vals[idx] << endl;
+        RealType gx = get_grid_point1d(grid3d.x, ix);
+        RealType gy = get_grid_point1d(grid3d.y, iy);
+        RealType gz = get_grid_point1d(grid3d.z, iz);
+        ofs << gx << " " << gy << " " << gz << " "
+            << vals[idx] << " " << spline3d(gx, gy, gz) << endl;
       }
     }
   }
   ofs.close();
 
-  NaturalSpline3D spline3d = NaturalSpline3D(grid3d, vals);
+
+  //NaturalSpline3DInBox boxspl3d = NaturalSpline3DInBox(spline3d, box);
+
+  //int nrule = 4;
+  //RealType kmax = 2.5;
+  //RealType dk = kmax/nk;
+  //vector<RealType> kmags(nk);
+  //for (int ik=0; ik<nk; ik+=dk)
+  //{
+  //  kmags[ik] = ik*dk;
+  //}
+  //vector<RealType> intvals = spherical_integral(boxspl3d, kmags, nrule);
 
 }

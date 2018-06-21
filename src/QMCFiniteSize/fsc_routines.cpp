@@ -109,6 +109,11 @@ Ugrid3D create_ugrid3d(xmlXPathContextPtr doc, string name)
 }
 
 // =======================   structure manipulation   =======================
+// -----------------------   grid               -----------------------
+RealType get_grid_point1d(Ugrid grid, int ix)
+{
+  return grid.start+ix*grid.delta;
+}
 int get_grid_index1d(Ugrid grid, RealType x)
 {
   return nearbyint((x-grid.start)/grid.delta);
@@ -117,3 +122,31 @@ int get_index3d_flat(Ugrid3D grid3d, int ix, int iy, int iz)
 {
   return ix*grid3d.y.num*grid3d.z.num+iy*grid3d.z.num+iz;
 }
+/*
+// -----------------------   spline             -----------------------
+vector<RealType> spherical_integral(
+  NaturalSpline3DInBox boxspl3d,
+  vector<RealType> kmags,
+  int nrule
+)
+{
+  // integral results
+  vector<RealType> intvals(kmags.size(), 0.0);
+
+  // initialize quadrature points and weights
+  Quadrature3D<RealType> qrule(nrule);
+
+  for (int ik=0; ik<kmags.size(); ik++)
+  {
+    RealType kval = kmags[ik];
+    for (int i=0; i<qrule.xyz_m.size(); i++)
+    {
+      double kx = kval*qrule.xyz_m[i][0];
+      double ky = kval*qrule.xyz_m[i][1];
+      double kz = kval*qrule.xyz_m[i][2];
+      intvals[ik] += boxspl3d(kx, ky, kz)*qrule.weight_m[i];
+    }
+  }
+  return intvals;
+}
+*/
