@@ -122,7 +122,6 @@ int get_index3d_flat(Ugrid3D grid3d, int ix, int iy, int iz)
 {
   return ix*grid3d.y.num*grid3d.z.num+iy*grid3d.z.num+iz;
 }
-/*
 // -----------------------   spline             -----------------------
 vector<RealType> spherical_integral(
   NaturalSpline3DInBox boxspl3d,
@@ -149,4 +148,3 @@ vector<RealType> spherical_integral(
   }
   return intvals;
 }
-*/

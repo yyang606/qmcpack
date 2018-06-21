@@ -18,6 +18,7 @@ set(FSC_SRC
 
 set(SPL3D_SRC
   NaturalSpline3D.cpp
+  NaturalSpline3DInBox.cpp
 )
 
 add_library(fsc_common ${FSC_SRC})

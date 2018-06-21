@@ -4,8 +4,8 @@
 #include "OhmmsData/Libxml2Doc.h"
 #include "Lattice/Uniform3DGridLayout.h"
 #include "ParticleIO/ParticleLayoutIO.h"
-//#include "QMCFiniteSize/NaturalSpline3DInBox.h"
-//#include "Numerics/Quadrature.h"
+#include "QMCFiniteSize/NaturalSpline3DInBox.h"
+#include "Numerics/Quadrature.h"
 
 using namespace qmcplusplus;
 using namespace std;
@@ -43,8 +43,8 @@ Ugrid3D create_ugrid3d(xmlXPathContextPtr doc, string name);
 int get_index3d_flat(Ugrid3D grid3d, int ix, int iy, int iz);
 
 // -----------------------   spline               -----------------------
-//vector<RealType> spherical_integral(
-//  NaturalSpline3DInBox boxspl3d,
-//  vector<RealType> kmags,
-//  int nrule
-//);
+vector<RealType> spherical_integral(
+  NaturalSpline3DInBox boxspl3d,
+  vector<RealType> kmags,
+  int nrule
+);

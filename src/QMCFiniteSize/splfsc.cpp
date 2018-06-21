@@ -43,8 +43,9 @@ int main(int argc, char **argv)
     int idx = get_index3d_flat(grid3d, ix, iy, iz);
     vals[idx] = mat[ik][3];
   }
-
   NaturalSpline3D spline3d = NaturalSpline3D(grid3d, vals);
+  delete vals;
+  NaturalSpline3DInBox boxspl3d(spline3d, box);
 
   // step 5: dump regular grid and spline for debugging
   app_log() << "dump regular grid and spline" << endl;
@@ -59,24 +60,35 @@ int main(int argc, char **argv)
         RealType gx = get_grid_point1d(grid3d.x, ix);
         RealType gy = get_grid_point1d(grid3d.y, iy);
         RealType gz = get_grid_point1d(grid3d.z, iz);
+        //RealType val = spline3d(gx, gy, gz);
+        PosType gvec(gx, gy, gz);
+        PosType kvec = box.k_cart(gvec);
+        RealType kx = kvec[0];
+        RealType ky = kvec[1];
+        RealType kz = kvec[2];
+        RealType val = boxspl3d(kx, ky, kz);
         ofs << gx << " " << gy << " " << gz << " "
-            << vals[idx] << " " << spline3d(gx, gy, gz) << endl;
+            << val << endl;
       }
     }
   }
   ofs.close();
 
-
-  //NaturalSpline3DInBox boxspl3d = NaturalSpline3DInBox(spline3d, box);
-
-  //int nrule = 4;
-  //RealType kmax = 2.5;
-  //RealType dk = kmax/nk;
-  //vector<RealType> kmags(nk);
-  //for (int ik=0; ik<nk; ik+=dk)
-  //{
-  //  kmags[ik] = ik*dk;
-  //}
-  //vector<RealType> intvals = spherical_integral(boxspl3d, kmags, nrule);
+  int nrule = 4;
+  nk = 64;
+  RealType kmax = 2.5;
+  RealType dk = kmax/nk;
+  vector<RealType> kmags(nk);
+  for (int ik=0; ik<nk; ik+=1)
+  {
+    kmags[ik] = ik*dk;
+  }
+  vector<RealType> intvals = spherical_integral(boxspl3d, kmags, nrule);
+  ofs.open("avesk.dat", ofstream::out);
+  for (int ik=0; ik<nk; ik+=1)
+  {
+    ofs << kmags[ik] << " " << intvals[ik] << endl;
+  }
+  ofs.close();
 
 }
