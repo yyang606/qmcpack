@@ -41,7 +41,6 @@ vector<vector<RealType>> loadtxt(const string fname)
 }
 
 // =======================   structure creation   =======================
-
 // -----------------------   box                  -----------------------
 Uniform3DGridLayout create_box(xmlXPathContextPtr doc)
 { // delegate to LatticeParser clasee
@@ -52,7 +51,6 @@ Uniform3DGridLayout create_box(xmlXPathContextPtr doc)
   parser.put(sc_node);
   return box;
 }
-
 // -----------------------   grid               -----------------------
 Ugrid create_ugrid1d(xmlNodePtr node)
 {
@@ -106,6 +104,33 @@ Ugrid3D create_ugrid3d(xmlXPathContextPtr doc, string name)
   }
   
   return grid3d;
+}
+// -----------------------   spline             -----------------------
+NaturalSpline3DInBox create_boxspl3d(
+  Ugrid3D grid3d, vector<vector<RealType>> mat, Uniform3DGridLayout box
+)
+{
+  int nk = mat.size();
+  int nval = grid3d.x.num*grid3d.y.num*grid3d.z.num;
+  if (nval!=nk) APP_ABORT("grid mismatch: input " << nval << " data " << nk);
+
+  // transfer data to regular grid
+  RealType* vals = new RealType[nval];
+  app_log() << "transfer data to regular grid" << endl;
+  for (int ik=0; ik<nk; ik++)
+  {
+    PosType kvec(mat[ik][0], mat[ik][1], mat[ik][2]);
+    PosType gvec = box.k_unit(kvec);
+    int ix = get_grid_index1d(grid3d.x, gvec[0]);
+    int iy = get_grid_index1d(grid3d.y, gvec[1]);
+    int iz = get_grid_index1d(grid3d.z, gvec[2]);
+    int idx = get_index3d_flat(grid3d, ix, iy, iz);
+    vals[idx] = mat[ik][3];
+  }
+  NaturalSpline3D spline3d = NaturalSpline3D(grid3d, vals);
+  delete vals;
+  NaturalSpline3DInBox boxspl3d(spline3d, box);
+  return boxspl3d;
 }
 
 // =======================   structure manipulation   =======================

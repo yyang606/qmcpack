@@ -23,25 +23,28 @@ typedef QMCTraits::PosType    PosType;
 xmlNodePtr find(const char* expression, xmlXPathContextPtr context);
 
 // Reads a table of numbers into a matrix. Essentially np.loadtxt in Python
-//  for a 2D table of floats.
+//  for a 2D table of real numbers.
 //
 // Example:
 //   vector<vector<RealType>> mat = loadtxt("matrix.dat");
 vector<vector<RealType>> loadtxt(const string fname);
 
 // =======================   structure creation   =======================
-
 // -----------------------   box                  -----------------------
 Uniform3DGridLayout create_box(xmlXPathContextPtr doc);
-
 // -----------------------   grid                 -----------------------
 Ugrid   create_ugrid1d(xmlNodePtr ug_node);
+Ugrid3D create_ugrid3d(xmlXPathContextPtr doc, string name);
+// -----------------------   spline               -----------------------
+NaturalSpline3DInBox create_boxspl3d(
+  Ugrid3D grid3d, vector<vector<RealType>> mat, Uniform3DGridLayout box
+);
+
+// =======================   structure manipulation   =======================
+// -----------------------   grid                 -----------------------
 RealType get_grid_point1d(Ugrid grid, int ix);
 int get_grid_index1d(Ugrid grid, RealType x);
-
-Ugrid3D create_ugrid3d(xmlXPathContextPtr doc, string name);
 int get_index3d_flat(Ugrid3D grid3d, int ix, int iy, int iz);
-
 // -----------------------   spline               -----------------------
 vector<RealType> spherical_integral(
   NaturalSpline3DInBox boxspl3d,
