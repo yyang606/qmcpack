@@ -1,9 +1,10 @@
 #include "QMCFiniteSize/NaturalSpline3DInBox.h"
 
 NaturalSpline3DInBox::NaturalSpline3DInBox(
-  const NaturalSpline3D &spline3d,
+  const Ugrid3D grid3d,
+  double* vals,
   const Uniform3DGridLayout &box
-) : spline3d_(spline3d), box_(box)
+) : spline3d_(NaturalSpline3D(grid3d, vals)), box_(box)
 {
 }
 

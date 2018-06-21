@@ -39,4 +39,6 @@ int main(int argc, char **argv)
     ofs << kmags[ik] << " " << intvals[ik] << endl;
   }
   ofs.close();
+
+  OHMMS::Controller->finalize();
 }

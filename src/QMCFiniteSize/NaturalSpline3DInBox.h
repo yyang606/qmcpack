@@ -10,7 +10,8 @@ class NaturalSpline3DInBox
 {
  public:
   NaturalSpline3DInBox(
-    const NaturalSpline3D &spline3d,
+    const Ugrid3D grid3d,
+    double* vals,
     const Uniform3DGridLayout &box
   );
   ~NaturalSpline3DInBox();

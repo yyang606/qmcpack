@@ -115,7 +115,7 @@ NaturalSpline3DInBox create_boxspl3d(
   if (nval!=nk) APP_ABORT("grid mismatch: input " << nval << " data " << nk);
 
   // transfer data to regular grid
-  RealType* vals = new RealType[nval];
+  vector<RealType> vals(nval);
   app_log() << "transfer data to regular grid" << endl;
   for (int ik=0; ik<nk; ik++)
   {
@@ -127,9 +127,7 @@ NaturalSpline3DInBox create_boxspl3d(
     int idx = get_index3d_flat(grid3d, ix, iy, iz);
     vals[idx] = mat[ik][3];
   }
-  NaturalSpline3D spline3d = NaturalSpline3D(grid3d, vals);
-  delete vals;
-  NaturalSpline3DInBox boxspl3d(spline3d, box);
+  NaturalSpline3DInBox boxspl3d(grid3d, vals.data(), box);
   return boxspl3d;
 }
 
