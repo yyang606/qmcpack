@@ -12,12 +12,23 @@
 
 PROJECT(qmcfinitesize)
 
-set(QFS_TOOLS spline3d)
+set(FSC_SRC
+  fsc_routines.cpp
+)
+
+set(SPL3D_SRC
+  NaturalSpline3D.cpp
+)
+
+add_library(fsc_common ${FSC_SRC})
+add_library(spl ${SPL3D_SRC})
+
+set(QFS_TOOLS splfsc)
 
 FOREACH(p ${QFS_TOOLS})
 
   ADD_EXECUTABLE(${p} ${p}.cpp)
-  TARGET_LINK_LIBRARIES(${p} qmcbase qmcutil)
+  TARGET_LINK_LIBRARIES(${p} spl fsc_common qmcbase qmcutil)
 
   FOREACH(l ${QMC_UTIL_LIBS})
     TARGET_LINK_LIBRARIES(${p} ${l})

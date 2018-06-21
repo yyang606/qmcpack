@@ -1,12 +1,8 @@
-#include <fstream>
-#include <sstream>
 #include "QMCFiniteSize/fsc_routines.h"
-#include "einspline/bspline_create.h"
 
 // =======================   basic I/O            =======================
-
 xmlNodePtr find(const char* expression, xmlXPathContextPtr context)
-{ // find the first node matching xpath expression in the given context
+{ // delegate to OhmmsXPathObject class
   OhmmsXPathObject xpath(expression, context);
   if (xpath.size() != 1)
   {
@@ -14,8 +10,6 @@ xmlNodePtr find(const char* expression, xmlXPathContextPtr context)
   }
   return xpath[0];
 }
-
-
 vector<vector<RealType>> loadtxt(const string fname)
 { // stack overflow "How to read in a data file of unknown dimensions in C/C++"
 
@@ -49,9 +43,8 @@ vector<vector<RealType>> loadtxt(const string fname)
 // =======================   structure creation   =======================
 
 // -----------------------   box                  -----------------------
-
 Uniform3DGridLayout create_box(xmlXPathContextPtr doc)
-{
+{ // delegate to LatticeParser clasee
   xmlNodePtr sc_node = find("//simulationcell", doc);
 
   Uniform3DGridLayout box;
@@ -60,36 +53,67 @@ Uniform3DGridLayout create_box(xmlXPathContextPtr doc)
   return box;
 }
 
-
-BCtype_d natural_boundary()
+// -----------------------   grid               -----------------------
+Ugrid create_ugrid1d(xmlNodePtr node)
 {
-  BCtype_d bc;
-  bc.lCode = NATURAL;
-  bc.rCode = NATURAL;
-  bc.lVal = 1.0;
-  bc.rVal = 1.0;
-  return bc;
+  vector<double> min_max_num;
+  putContent(min_max_num, node);
+  Ugrid grid;
+  grid.start = min_max_num[0];
+  grid.end   = min_max_num[1];
+  grid.num   = (int) nearbyint(min_max_num[2]);
+  grid.delta = (grid.end-grid.start)/(grid.num-1);
+  grid.delta_inv = 1./grid.delta;
+  return grid;
+}
+Ugrid3D create_ugrid3d(xmlXPathContextPtr doc, string name)
+{ // use create_ugrid1d to make 3 1D grids, stuff'em in a 3D grid
+  string expr = "//ugrid3d[\"" + name + "\"]";
+  xmlNodePtr ug_node = find(expr.c_str(), doc);
+
+  // initialize
+  Ugrid3D grid3d;
+  vector<bool> created(3, false);
+  xmlNodePtr node=ug_node->children;
+  while (node != NULL)
+  {
+    string name((const char*)node->name);
+    if (name == "x")
+    {
+      grid3d.x = create_ugrid1d(node);
+      created[0] = true;
+    }
+    if (name == "y")
+    {
+      grid3d.y = create_ugrid1d(node);
+      created[1] = true;
+    }
+    if (name == "z")
+    {
+      grid3d.z = create_ugrid1d(node);
+      created[2] = true;
+    }
+    node = node->next;
+  }
+
+  // check
+  for (int idim=0; idim<3; idim++)
+  {
+    if (not created[idim])
+    {
+      APP_ABORT("create_ugrid3d failed");
+    }
+  }
+  
+  return grid3d;
 }
 
-// -----------------------   spline               -----------------------
-
-UBspline_3d_d* create_natural_spline3d(
-  GridType gridx,
-  GridType gridy,
-  GridType gridz,
-  RealType* data)
-{ // spline 3D scalar field on regular grid
-  Ugrid esgridx, esgridy, esgridz;
-  esgridx = gridx.einspline_grid();
-  esgridy = gridy.einspline_grid();
-  esgridz = gridz.einspline_grid();
-  BCtype_d bcx, bcy, bcz;
-  bcx = natural_boundary();
-  bcy = natural_boundary();
-  bcz = natural_boundary();
-  UBspline_3d_d* spline3d = create_UBspline_3d_d(
-    esgridx, esgridy, esgridz
-  , bcx, bcy, bcz, data
-  );
-  return spline3d;
+// =======================   structure manipulation   =======================
+int get_grid_index1d(Ugrid grid, RealType x)
+{
+  return nearbyint((x-grid.start)/grid.delta);
+}
+int get_index3d_flat(Ugrid3D grid3d, int ix, int iy, int iz)
+{
+  return ix*grid3d.y.num*grid3d.z.num+iy*grid3d.z.num+iz;
 }
