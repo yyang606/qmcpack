@@ -15,7 +15,6 @@ NaturalSpline3D::NaturalSpline3D(const Ugrid3D grid3d, double* vals)
 
 NaturalSpline3D::~NaturalSpline3D()
 {
-  destroy_Bspline(spline3d_);
 }
 
 BCtype_d NaturalSpline3D::natural_boundary()
