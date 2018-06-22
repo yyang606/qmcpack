@@ -4,10 +4,6 @@
 xmlNodePtr find(const char* expression, xmlXPathContextPtr context)
 { // delegate to OhmmsXPathObject class
   OhmmsXPathObject xpath(expression, context);
-  if (xpath.size() != 1)
-  {
-    APP_ABORT("expected 1 " << expression << " found " << xpath.size());
-  }
   return xpath[0];
 }
 vector<vector<RealType>> loadtxt(const string fname)
@@ -116,7 +112,6 @@ NaturalSpline3DInBox create_boxspl3d(
 
   // transfer data to regular grid
   vector<RealType> vals(nval);
-  app_log() << "transfer data to regular grid" << endl;
   for (int ik=0; ik<nk; ik++)
   {
     PosType kvec(mat[ik][0], mat[ik][1], mat[ik][2]);

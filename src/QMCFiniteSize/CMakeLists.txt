@@ -14,6 +14,7 @@ PROJECT(qmcfinitesize)
 
 set(FSC_SRC
   fsc_routines.cpp
+  lr_routines.cpp
 )
 
 set(SPL3D_SRC
@@ -21,15 +22,20 @@ set(SPL3D_SRC
   NaturalSpline3DInBox.cpp
 )
 
+set(LR_SRC
+  EslerBreak.cpp
+)
+
 add_library(fsc_common ${FSC_SRC})
 add_library(spl ${SPL3D_SRC})
+add_library(lr ${LR_SRC})
 
 set(QFS_TOOLS splfsc)
 
 FOREACH(p ${QFS_TOOLS})
 
   ADD_EXECUTABLE(${p} ${p}.cpp)
-  TARGET_LINK_LIBRARIES(${p} spl fsc_common qmcbase qmcutil)
+  TARGET_LINK_LIBRARIES(${p} lr spl fsc_common qmcbase qmcutil)
 
   FOREACH(l ${QMC_UTIL_LIBS})
     TARGET_LINK_LIBRARIES(${p} ${l})

@@ -1,3 +1,5 @@
+#ifndef FSC_COMMON_H
+#define FSC_COMMON_H
 #include <fstream>
 #include <sstream>
 #include <vector>
@@ -15,7 +17,7 @@ typedef QMCTraits::PosType    PosType;
 
 // =======================   basic I/O            =======================
 
-// Finds the only match for the given xpath expression in given context.
+// Finds the first match for the given xpath expression in given context.
 //
 // Example:
 //   xmlNodePtr sc_node = find("//simulationcell", doc);
@@ -51,3 +53,4 @@ vector<RealType> spherical_integral(
   vector<RealType> kmags,
   int nrule
 );
+#endif

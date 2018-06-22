@@ -1,4 +1,7 @@
 #include "QMCFiniteSize/fsc_routines.h"
+#include "QMCFiniteSize/lr_routines.h"
+#include "QMCFiniteSize/KspaceFunctions.hpp"
+#include "QMCFiniteSize/EslerBreak.h"
 
 int main(int argc, char **argv)
 {
@@ -22,9 +25,17 @@ int main(int argc, char **argv)
   Ugrid3D grid3d = create_ugrid3d(doc, grid_name);
   NaturalSpline3DInBox boxspl3d = create_boxspl3d(grid3d, mat, box);
 
+  // step 3: obtain a long-range potential
+  EslerBreak breaker = create_esler_break(box, doc);
+  app_log() << endl;
+  app_log() << breaker;
+  app_log() << "  chi^2  = " << scientific << breaker.get_chisq() << endl;
+  app_log() << setprecision(10);
+
+  // step 4: construct finite size correction integrals
   int nrule = 4;
   int nk = 64;
-  RealType kmax = 2.5;
+  RealType kmax = breaker.get_kc();
   RealType dk = kmax/nk;
   vector<RealType> kmags(nk);
   for (int ik=0; ik<nk; ik+=1)
