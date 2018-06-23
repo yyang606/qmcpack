@@ -5,6 +5,7 @@ EslerBreak create_esler_break(
   xmlXPathContextPtr doc
 )
 {
+  string basis = "esler";
   int nknot;
   RealType rc, kc, kcut, kmax;
   // set defaults
@@ -16,6 +17,8 @@ EslerBreak create_esler_break(
   kmax = 6000./rc;
   // parse user input
   xmlNodePtr node;
+  node = find("//lrbreak/short-range/basis", doc);
+  if (node) putContent(basis, node);
   node = find("//lrbreak/short-range/rc", doc);
   if (node) putContent(rc, node);
   node = find("//lrbreak/short-range/nknot", doc);
@@ -28,13 +31,14 @@ EslerBreak create_esler_break(
   if (node) putContent(kmax, node);
 
   BreakSpec params;
+  params.basis = basis;
   params.rc = rc;
   params.kc = kc;
   params.kcut = kcut;
   params.kmax = kmax;
   params.nknot = nknot;
+
   EslerCoul<RealType> fxk(box.Volume);
   EslerBreak breaker(fxk, box, params);
-
   return breaker;
 }
