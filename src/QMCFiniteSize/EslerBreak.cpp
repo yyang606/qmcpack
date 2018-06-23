@@ -36,10 +36,10 @@ EslerBreak::~EslerBreak()
 
 RealType EslerBreak::evaluate_fklr(RealType k)
 {
-  RealType val = -fxk_(k, basis_.get_rc());
+  RealType val = fxk_(k, basis_.get_rc());
   for (int n=0; n<basis_.NumBasisElem(); n++)
   {
-    val += coefs_[n]*basis_.c(n, k);
+    val -= coefs_[n]*basis_.c(n, k);
   }
   return val;
 }
