@@ -54,10 +54,6 @@ BreakBase* create_break(
   {
     APP_ABORT("unknown basis " << basis << endl);
   }
-  app_log() << endl;
-  app_log() << breaker;
-  app_log() << "  chi^2  = " << scientific << breaker->get_chisq() << endl;
-  app_log() << setprecision(10);
   return breaker;
 }
 }

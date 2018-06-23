@@ -1,4 +1,5 @@
 #include "QMCFiniteSize/lr_routines.h"
+#include "LongRange/KContainer.h"
 
 using namespace qmcplusplus;
 
@@ -26,6 +27,10 @@ int main(int argc, char **argv)
 
   // step 3: obtain a long-range potential
   BreakBase* breaker = create_break(box, doc);
+  app_log() << endl;
+  breaker->report(app_log());
+  app_log() << "  chi^2  = " << scientific << breaker->get_chisq() << endl;
+  app_log() << setprecision(10);
 
   // step 4: construct finite size correction integrals
   int nrule = 4;
@@ -37,16 +42,45 @@ int main(int argc, char **argv)
   {
     kmags[ik] = ik*dk;
   }
-  //vector<RealType> intvals = spherical_integral(boxspl3d, kmags, nrule);
-  ofstream ofs;
-  //ofs.open("avesk.dat", ofstream::out);
-  ofs.open("vk.dat");
+  vector<RealType> intvals = spherical_integral(boxspl3d, kmags, nrule);
+  ofstream ofs, ofv, ofi;
+  ofs.open("avesk.dat");
+  ofv.open("vk.dat");
+  ofi.open("vint.dat");
   for (int ik=0; ik<nk; ik+=1)
   {
-    //ofs << kmags[ik] << " " << intvals[ik] << endl;
-    ofs << kmags[ik] << " " << breaker->evaluate_fklr(kmags[ik]) << endl;
+    RealType sk = intvals[ik];
+    RealType vklr = breaker->evaluate_fklr(kmags[ik]);
+    RealType norm = box.Volume/(2*M_PI*M_PI);
+    ofs << kmags[ik] << " " << sk << endl;
+    ofv << kmags[ik] << " " << vklr << endl;
+    ofi << kmags[ik] << " " << norm*0.5*std::pow(kmags[ik], 2)*vklr*sk << endl;
   }
   ofs.close();
+  ofv.close();
+  ofi.close();
+
+  // step 5: dump finite size sum
+  KContainer kvecs;
+  kvecs.UpdateKLists(box, breaker->get_kc());
+  nk = kvecs.ksq.size();
+  kmags.resize(nk);
+  for (int ik=0; ik<nk; ik++)
+  {
+    kmags[ik] = sqrt(kvecs.ksq[ik]);
+  }
+  intvals = spherical_integral(boxspl3d, kmags, nrule);
+  RealType vsum = 0.0;
+  for (int ik=0; ik<nk; ik++)
+  {
+    RealType kmag, vklr, sk, uk, uklr;
+    kmag = kmags[ik];
+    vklr = breaker->evaluate_fklr(kmag);
+    sk = intvals[ik];
+    vsum += 0.5*vklr*sk;
+  }
+  vsum = vsum;
+  app_log() << "  vsum = " << vsum << endl;
 
   OHMMS::Controller->finalize();
 }
