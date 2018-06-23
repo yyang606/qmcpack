@@ -33,8 +33,14 @@ int main(int argc, char **argv)
   app_log() << setprecision(10);
 
   // step 4: construct finite size correction integrals
-  int nrule = 4;
-  int nk = 64;
+  int nrule=4, nk=64;
+  xmlNodePtr node;
+  node = find("//output_grid/nk", doc);
+  if (node) putContent(nk, node);
+  node = find("//spherical_average/nrule", doc);
+  if (node) putContent(nrule, node);
+  app_log() << " nrule = " << nrule << endl;
+
   RealType kmax = breaker->get_kc();
   RealType dk = kmax/nk;
   vector<RealType> kmags(nk);
@@ -52,9 +58,10 @@ int main(int argc, char **argv)
     RealType sk = intvals[ik];
     RealType vklr = breaker->evaluate_fklr(kmags[ik]);
     RealType norm = box.Volume/(2*M_PI*M_PI);
+    RealType val = ik==0?0:norm*0.5*std::pow(kmags[ik], 2)*vklr*sk;
     ofs << kmags[ik] << " " << sk << endl;
     ofv << kmags[ik] << " " << vklr << endl;
-    ofi << kmags[ik] << " " << norm*0.5*std::pow(kmags[ik], 2)*vklr*sk << endl;
+    ofi << kmags[ik] << " " << val << endl;
   }
   ofs.close();
   ofv.close();
