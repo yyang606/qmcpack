@@ -6,7 +6,7 @@ BreakBase* create_break(
   xmlXPathContextPtr doc
 )
 {
-  string basis = "natoli";
+  string basis = "esler";
   int nknot;
   RealType rc, kc, kcut, kmax;
   // set defaults
