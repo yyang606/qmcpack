@@ -8,7 +8,7 @@ namespace qmcplusplus
 typedef LPQHISRCoulombBasis                 NatoliBasisType;
 typedef std::function< RealType(RealType) >        FuncType;
 
-class NatoliBreak
+class NatoliBreak : public BreakBase
 {
  public:
   NatoliBreak(
@@ -27,11 +27,9 @@ class NatoliBreak
   FuncType fk_;
   NatoliBasisType basis_;
   LRBreakup<NatoliBasisType>* handler_;
-  BoxType box_;  // define reciprocal lattice
+  BoxType box_;
   std::vector<RealType> coefs_;
-  RealType chisq_;
   friend std::ostream& operator<<(std::ostream& os, const NatoliBreak& breaker);
-  BreakSpec params_;
 };
 
 }

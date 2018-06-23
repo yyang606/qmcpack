@@ -8,7 +8,7 @@ EslerBreak::EslerBreak(
   EslerFuncType fxk,
   BoxType box,
   BreakSpec params
-) : fxk_(fxk), basis_(box), box_(box), params_(params), chisq_(-1)
+) : fxk_(fxk), basis_(box), box_(box), BreakBase(params)
 {
   // define short-range basis, coefs_ still needs to be filled
   basis_.set_Lattice(box);

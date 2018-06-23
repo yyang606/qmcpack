@@ -8,7 +8,7 @@ NatoliBreak::NatoliBreak(
   FuncType fk,
   BoxType box,
   BreakSpec params
-) : fk_(fk), basis_(box), box_(box), params_(params), chisq_(-1)
+) : fk_(fk), basis_(box), box_(box), BreakBase(params)
 {
   // define short-range basis, coefs_ still needs to be filled
   basis_.set_Lattice(box);

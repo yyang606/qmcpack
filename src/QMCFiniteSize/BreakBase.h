@@ -25,5 +25,21 @@ inline std::ostream& operator<<(std::ostream& os, const BreakSpec& params)
   os << "  kmax   = " << params.kmax  << std::endl;
   return os;
 }
+
+class BreakBase
+{
+ public:
+  BreakBase(BreakSpec params):params_(params), chisq_(-1){};
+  ~BreakBase(){};
+  RealType get_chisq(){return chisq_;};
+  RealType get_rc(){return params_.rc;};
+  RealType get_kc(){return params_.kc;};
+
+  // goal in life: evaluate long-range potential at k
+  virtual RealType evaluate_fklr(RealType k) = 0;
+ protected:
+  BreakSpec params_;
+  RealType chisq_;
+};
 }
 #endif

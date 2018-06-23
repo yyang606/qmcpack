@@ -8,7 +8,7 @@ namespace qmcplusplus
 typedef LPQHIBasis                                        BasisType;
 typedef std::function< RealType(RealType, RealType) > EslerFuncType;
 
-class EslerBreak
+class EslerBreak : public BreakBase
 {
  public:
   EslerBreak(
@@ -29,8 +29,6 @@ class EslerBreak
   LRBreakup<BasisType>* handler_;
   BoxType box_;  // define reciprocal lattice
   std::vector<RealType> coefs_;
-  RealType chisq_;
-  BreakSpec params_;
   friend std::ostream& operator<<(std::ostream& os, const EslerBreak& breaker);
 };
 
