@@ -44,10 +44,12 @@ int main(int argc, char **argv)
   }
   vector<RealType> intvals = spherical_integral(boxspl3d, kmags, nrule);
   ofstream ofs;
-  ofs.open("avesk.dat", ofstream::out);
+  //ofs.open("avesk.dat", ofstream::out);
+  ofs.open("vk.dat");
   for (int ik=0; ik<nk; ik+=1)
   {
-    ofs << kmags[ik] << " " << intvals[ik] << endl;
+    //ofs << kmags[ik] << " " << intvals[ik] << endl;
+    ofs << kmags[ik] << " " << breaker.evaluate_fklr(kmags[ik]) << endl;
   }
   ofs.close();
 

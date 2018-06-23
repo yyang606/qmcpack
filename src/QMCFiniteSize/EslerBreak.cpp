@@ -4,14 +4,13 @@ using namespace std;
 
 namespace qmcplusplus
 {
-// fxk(k, rc)
 EslerBreak::EslerBreak(
-  FuncType fxk,
+  EslerFuncType fxk,
   BoxType box,
   BreakSpec params
 ) : fxk_(fxk), basis_(box), box_(box), params_(params), chisq_(-1)
 {
-  // define short-range basis, coefs_ still need to be filled
+  // define short-range basis, coefs_ still needs to be filled
   basis_.set_Lattice(box);
   basis_.set_NumKnots(params.nknot);
   basis_.set_rc(params.rc);
@@ -36,11 +35,7 @@ EslerBreak::~EslerBreak()
 
 RealType EslerBreak::evaluate_fklr(RealType k)
 {
-  RealType val = fxk_(k, basis_.get_rc());
-  for (int n=0; n<basis_.NumBasisElem(); n++)
-  {
-    val -= coefs_[n]*basis_.c(n, k);
-  }
+  RealType val = fxk_(k, basis_.get_rc())-basis_.fk(k, coefs_);
   return val;
 }
 
@@ -48,11 +43,7 @@ ostream& operator<<(ostream& os, const EslerBreak& breaker)
 {
   os << " Esler long-range breakup" << endl;
   os << " ------------------------" << endl;
-  os << "  nknot  = " << breaker.params_.nknot << endl;
-  os << "  rc     = " << breaker.params_.rc    << endl;
-  os << "  kc     = " << breaker.params_.kc    << endl;
-  os << "  kcut   = " << breaker.params_.kcut  << endl;
-  os << "  kmax   = " << breaker.params_.kmax  << endl;
+  os << breaker.params_ << endl;
   return os;
 }
 }
