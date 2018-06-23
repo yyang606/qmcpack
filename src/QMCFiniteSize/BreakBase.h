@@ -34,6 +34,7 @@ class BreakBase
   RealType get_chisq(){return chisq_;};
   RealType get_rc(){return params_.rc;};
   RealType get_kc(){return params_.kc;};
+  virtual void report(std::ostream& os) = 0;
 
   // goal in life: evaluate long-range potential at k
   virtual RealType evaluate_fklr(RealType k) = 0;

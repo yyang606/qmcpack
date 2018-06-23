@@ -1,6 +1,7 @@
 #include "QMCFiniteSize/lr_routines.h"
-
-NatoliBreak create_natoli_break(
+namespace qmcplusplus
+{
+BreakBase* create_break(
   Uniform3DGridLayout box,
   xmlXPathContextPtr doc
 )
@@ -13,8 +14,9 @@ NatoliBreak create_natoli_break(
   rc = box.LR_rc;
   kc = box.LR_kc;
   nknot = 15;
-  kcut = 60*M_PI*pow((box.Volume), -1./3);
+  kcut = 60*M_PI*std::pow((box.Volume), -1./3);
   kmax = 6000./rc;
+
   // parse user input
   xmlNodePtr node;
   node = find("//lrbreak/short-range/basis", doc);
@@ -38,9 +40,24 @@ NatoliBreak create_natoli_break(
   params.kmax = kmax;
   params.nknot = nknot;
 
-  //EslerCoul<RealType> fxk(box.Volume);
-  //EslerBreak breaker(fxk, box, params);
-  NatoliCoul<RealType> fxk(box.Volume);
-  NatoliBreak breaker(fxk, box, params);
+  BreakBase* breaker(0);
+  if (basis == "natoli")
+  {
+    NatoliCoul<RealType> fk(box.Volume);
+    breaker = new NatoliBreak(fk, box, params);
+  } else
+  if (basis == "esler")
+  {
+    EslerCoul<RealType> fxk(box.Volume);
+    breaker = new EslerBreak(fxk, box, params);
+  } else
+  {
+    APP_ABORT("unknown basis " << basis << endl);
+  }
+  app_log() << endl;
+  app_log() << breaker;
+  app_log() << "  chi^2  = " << scientific << breaker->get_chisq() << endl;
+  app_log() << setprecision(10);
   return breaker;
+}
 }

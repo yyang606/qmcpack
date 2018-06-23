@@ -39,11 +39,10 @@ RealType EslerBreak::evaluate_fklr(RealType k)
   return val;
 }
 
-ostream& operator<<(ostream& os, const EslerBreak& breaker)
+void EslerBreak::report(ostream& os)
 {
   os << " Esler long-range breakup" << endl;
   os << " ------------------------" << endl;
-  os << breaker.params_ << endl;
-  return os;
+  os << params_ << endl;
 }
 }

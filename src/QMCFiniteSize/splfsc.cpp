@@ -1,8 +1,6 @@
-#include "QMCFiniteSize/fsc_routines.h"
 #include "QMCFiniteSize/lr_routines.h"
-#include "QMCFiniteSize/KspaceFunctions.hpp"
-#include "QMCFiniteSize/EslerBreak.h"
-#include "QMCFiniteSize/NatoliBreak.h"
+
+using namespace qmcplusplus;
 
 int main(int argc, char **argv)
 {
@@ -27,16 +25,12 @@ int main(int argc, char **argv)
   NaturalSpline3DInBox boxspl3d = create_boxspl3d(grid3d, mat, box);
 
   // step 3: obtain a long-range potential
-  NatoliBreak breaker = create_natoli_break(box, doc);
-  app_log() << endl;
-  app_log() << breaker;
-  app_log() << "  chi^2  = " << scientific << breaker.get_chisq() << endl;
-  app_log() << setprecision(10);
+  BreakBase* breaker = create_break(box, doc);
 
   // step 4: construct finite size correction integrals
   int nrule = 4;
   int nk = 64;
-  RealType kmax = breaker.get_kc();
+  RealType kmax = breaker->get_kc();
   RealType dk = kmax/nk;
   vector<RealType> kmags(nk);
   for (int ik=0; ik<nk; ik+=1)
@@ -50,7 +44,7 @@ int main(int argc, char **argv)
   for (int ik=0; ik<nk; ik+=1)
   {
     //ofs << kmags[ik] << " " << intvals[ik] << endl;
-    ofs << kmags[ik] << " " << breaker.evaluate_fklr(kmags[ik]) << endl;
+    ofs << kmags[ik] << " " << breaker->evaluate_fklr(kmags[ik]) << endl;
   }
   ofs.close();
 

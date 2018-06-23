@@ -14,7 +14,6 @@ PROJECT(qmcfinitesize)
 
 set(FSC_SRC
   fsc_routines.cpp
-  lr_routines.cpp
 )
 
 set(SPL3D_SRC
@@ -23,6 +22,7 @@ set(SPL3D_SRC
 )
 
 set(LR_SRC
+  lr_routines.cpp
   EslerBreak.cpp
   NatoliBreak.cpp
 )

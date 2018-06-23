@@ -54,11 +54,10 @@ RealType NatoliBreak::evaluate_fklr(RealType k)
   return val;
 }
 
-ostream& operator<<(ostream& os, const NatoliBreak& breaker)
+void NatoliBreak::report(ostream& os)
 {
   os << " Natoli long-range breakup" << endl;
   os << " ------------------------" << endl;
-  os << breaker.params_ << endl;
-  return os;
+  os << params_ << endl;
 }
 }

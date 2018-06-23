@@ -20,6 +20,7 @@ class NatoliBreak : public BreakBase
   RealType get_chisq(){return chisq_;};
   RealType get_rc(){return params_.rc;};
   RealType get_kc(){return params_.kc;};
+  void report(std::ostream& os);
 
   // goal in life: evaluate long-range potential at k
   RealType evaluate_fklr(RealType k);
@@ -29,7 +30,6 @@ class NatoliBreak : public BreakBase
   LRBreakup<NatoliBasisType>* handler_;
   BoxType box_;
   std::vector<RealType> coefs_;
-  friend std::ostream& operator<<(std::ostream& os, const NatoliBreak& breaker);
 };
 
 }
