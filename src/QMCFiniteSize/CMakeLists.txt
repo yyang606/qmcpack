@@ -24,6 +24,7 @@ set(SPL3D_SRC
 
 set(LR_SRC
   EslerBreak.cpp
+  NatoliBreak.cpp
 )
 
 add_library(fsc_common ${FSC_SRC})

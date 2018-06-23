@@ -2,6 +2,7 @@
 #include "QMCFiniteSize/lr_routines.h"
 #include "QMCFiniteSize/KspaceFunctions.hpp"
 #include "QMCFiniteSize/EslerBreak.h"
+#include "QMCFiniteSize/NatoliBreak.h"
 
 int main(int argc, char **argv)
 {
@@ -26,7 +27,7 @@ int main(int argc, char **argv)
   NaturalSpline3DInBox boxspl3d = create_boxspl3d(grid3d, mat, box);
 
   // step 3: obtain a long-range potential
-  EslerBreak breaker = create_esler_break(box, doc);
+  NatoliBreak breaker = create_natoli_break(box, doc);
   app_log() << endl;
   app_log() << breaker;
   app_log() << "  chi^2  = " << scientific << breaker.get_chisq() << endl;
@@ -42,7 +43,7 @@ int main(int argc, char **argv)
   {
     kmags[ik] = ik*dk;
   }
-  vector<RealType> intvals = spherical_integral(boxspl3d, kmags, nrule);
+  //vector<RealType> intvals = spherical_integral(boxspl3d, kmags, nrule);
   ofstream ofs;
   //ofs.open("avesk.dat", ofstream::out);
   ofs.open("vk.dat");

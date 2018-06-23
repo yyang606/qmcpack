@@ -1,11 +1,11 @@
 #include "QMCFiniteSize/lr_routines.h"
 
-EslerBreak create_esler_break(
+NatoliBreak create_natoli_break(
   Uniform3DGridLayout box,
   xmlXPathContextPtr doc
 )
 {
-  string basis = "esler";
+  string basis = "natoli";
   int nknot;
   RealType rc, kc, kcut, kmax;
   // set defaults
@@ -38,7 +38,9 @@ EslerBreak create_esler_break(
   params.kmax = kmax;
   params.nknot = nknot;
 
-  EslerCoul<RealType> fxk(box.Volume);
-  EslerBreak breaker(fxk, box, params);
+  //EslerCoul<RealType> fxk(box.Volume);
+  //EslerBreak breaker(fxk, box, params);
+  NatoliCoul<RealType> fxk(box.Volume);
+  NatoliBreak breaker(fxk, box, params);
   return breaker;
 }
