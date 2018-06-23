@@ -112,6 +112,7 @@ NaturalSpline3DInBox create_boxspl3d(
 
   // transfer data to regular grid
   vector<RealType> vals(nval);
+  vector<bool> filled(nval, false);
   for (int ik=0; ik<nk; ik++)
   {
     PosType kvec(mat[ik][0], mat[ik][1], mat[ik][2]);
@@ -121,7 +122,15 @@ NaturalSpline3DInBox create_boxspl3d(
     int iz = get_grid_index1d(grid3d.z, gvec[2]);
     int idx = get_index3d_flat(grid3d, ix, iy, iz);
     vals[idx] = mat[ik][3];
+    filled[idx] = true;
   }
+
+  // verify all grid points are filled
+  for (int ik=0; ik<nk; ik++)
+  {
+    if (not filled[ik]) APP_ABORT(ik << " is missing");
+  }
+
   NaturalSpline3DInBox boxspl3d(grid3d, vals.data(), box);
   return boxspl3d;
 }
