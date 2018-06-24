@@ -16,9 +16,10 @@ class NaturalSpline3DInBox
   );
   ~NaturalSpline3DInBox();
   double operator()(double x, double y, double z);
+
  private:
   NaturalSpline3D spline3d_;
   const Uniform3DGridLayout box_;
 };
-}
+} // qmcplusplus
 #endif

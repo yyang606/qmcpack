@@ -4,7 +4,6 @@
 #include "QMCFiniteSize/BreakBase.h"
 namespace qmcplusplus
 {
-
 typedef LPQHISRCoulombBasis                 NatoliBasisType;
 typedef std::function< RealType(RealType) >        FuncType;
 
@@ -21,6 +20,7 @@ class NatoliBreak : public BreakBase
 
   // goal in life: evaluate long-range potential at k
   RealType evaluate_fklr(RealType k);
+
  private:
   FuncType fk_;
   NatoliBasisType basis_;
@@ -28,6 +28,5 @@ class NatoliBreak : public BreakBase
   BoxType box_;
   std::vector<RealType> coefs_;
 };
-
-}
+} // qmcplusplus
 #endif

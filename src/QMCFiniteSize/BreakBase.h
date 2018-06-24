@@ -51,6 +51,7 @@ class BreakBase
 
   // goal in life: evaluate long-range potential at k
   virtual RealType evaluate_fklr(RealType k) = 0;
+
  protected:
   BreakSpec params_;
   RealType chisq_;

@@ -15,5 +15,5 @@ class BreakFactory
    xmlXPathContextPtr doc
   );
 };
-}
+} // qmcplusplus
 #endif

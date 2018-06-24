@@ -60,4 +60,4 @@ void NatoliBreak::report(ostream& os)
   os << " ------------------------" << endl;
   os << params_ << endl;
 }
-}
+} // qmcplusplus

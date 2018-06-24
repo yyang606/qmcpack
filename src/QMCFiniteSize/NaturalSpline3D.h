@@ -20,9 +20,10 @@ class NaturalSpline3D
 
   // goal in life: evaluate Bspline at a point in 3D space
   double operator()(double x, double y, double z);
+
  private:
   const Ugrid3D grid3d_;
   UBspline_3d_d* spline3d_;  // major data structure to maintain
 };
-}
+} // qmcplusplus
 #endif

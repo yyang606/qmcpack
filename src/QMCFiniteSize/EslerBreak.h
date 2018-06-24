@@ -21,6 +21,7 @@ class EslerBreak : public BreakBase
 
   // goal in life: evaluate long-range potential at k
   RealType evaluate_fklr(RealType k);
+
  private:
   EslerFuncType fxk_;
   BasisType basis_;
@@ -29,5 +30,5 @@ class EslerBreak : public BreakBase
   std::vector<RealType> coefs_;
 };
 
-}
+} // qmcplusplus
 #endif

@@ -56,4 +56,4 @@ BreakBase* BreakFactory::create_break(
   }
   return breaker;
 }
-}
+} // qmcplusplus
