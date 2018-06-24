@@ -6,14 +6,11 @@
 #include "OhmmsData/Libxml2Doc.h"
 #include "Lattice/Uniform3DGridLayout.h"
 #include "ParticleIO/ParticleLayoutIO.h"
-#include "QMCFiniteSize/NaturalSpline3DInBox.h"
-#include "Numerics/Quadrature.h"
 
 using namespace qmcplusplus;
 using namespace std;
 
 typedef QMCTraits::RealType  RealType;
-typedef QMCTraits::PosType    PosType;
 
 // =======================   basic I/O            =======================
 
@@ -34,12 +31,4 @@ vector<vector<RealType>> loadtxt(const string fname);
 // =======================   structure creation   =======================
 // -----------------------   box                  -----------------------
 Uniform3DGridLayout create_box(xmlXPathContextPtr doc);
-
-// =======================   structure manipulation   =======================
-// -----------------------   spline               -----------------------
-vector<RealType> spherical_integral(
-  NaturalSpline3DInBox boxspl3d,
-  vector<RealType> kmags,
-  int nrule
-);
 #endif

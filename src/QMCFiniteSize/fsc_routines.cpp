@@ -47,31 +47,3 @@ Uniform3DGridLayout create_box(xmlXPathContextPtr doc)
   parser.put(sc_node);
   return box;
 }
-
-// =======================   structure manipulation   =======================
-// -----------------------   spline             -----------------------
-vector<RealType> spherical_integral(
-  NaturalSpline3DInBox boxspl3d,
-  vector<RealType> kmags,
-  int nrule
-)
-{
-  // integral results
-  vector<RealType> intvals(kmags.size(), 0.0);
-
-  // initialize quadrature points and weights
-  Quadrature3D<RealType> qrule(nrule);
-
-  for (int ik=0; ik<kmags.size(); ik++)
-  {
-    RealType kval = kmags[ik];
-    for (int i=0; i<qrule.xyz_m.size(); i++)
-    {
-      double kx = kval*qrule.xyz_m[i][0];
-      double ky = kval*qrule.xyz_m[i][1];
-      double kz = kval*qrule.xyz_m[i][2];
-      intvals[ik] += boxspl3d(kx, ky, kz)*qrule.weight_m[i];
-    }
-  }
-  return intvals;
-}
