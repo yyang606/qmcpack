@@ -1,6 +1,7 @@
-#include "QMCFiniteSize/lr_routines.h"
-#include "LongRange/KContainer.h"
-
+#include "QMCFiniteSize/fsc_routines.h"
+#include "QMCFiniteSize/Spline3DFactory.h"
+#include "QMCFiniteSize/SphericalAverage3D.h"
+#include "QMCFiniteSize/BreakFactory.h"
 using namespace qmcplusplus;
 
 int main(int argc, char **argv)
@@ -21,18 +22,21 @@ int main(int argc, char **argv)
 
   // step 2: obtain spline on regular grid (in reciprocal lattice units)
   vector<vector<RealType>> mat = loadtxt(fdat_name);
+  Spline3DFactory spline_factory;
   string grid_name = "input_grid";
-  Ugrid3D grid3d = create_ugrid3d(doc, grid_name);
-  NaturalSpline3DInBox boxspl3d = create_boxspl3d(grid3d, mat, box);
+  Ugrid3D grid3d = spline_factory.create_ugrid3d(doc, grid_name);
+  NaturalSpline3DInBox* boxspl3d = spline_factory.create_boxspl3d(
+    grid3d, mat, box);
 
   // step 3: obtain a long-range potential
-  BreakBase* breaker = create_break(box, doc);
+  BreakFactory break_factory;
+  BreakBase* breaker = break_factory.create_break(box, doc);
   app_log() << endl;
   breaker->report(app_log());
   app_log() << "  chi^2  = " << scientific << breaker->get_chisq() << endl;
   app_log() << setprecision(10);
 
-  // step 4: construct finite size correction integrals
+  // step 4: output useful stuff
   int nrule=4, nk=64;
   xmlNodePtr node;
   node = find("//output_grid/nk", doc);
@@ -41,53 +45,23 @@ int main(int argc, char **argv)
   if (node) putContent(nrule, node);
   app_log() << " nrule = " << nrule << endl;
 
-  RealType kmax = breaker->get_kc();
-  RealType dk = kmax/nk;
-  vector<RealType> kmags(nk);
-  for (int ik=0; ik<nk; ik+=1)
-  {
-    kmags[ik] = ik*dk;
-  }
-  vector<RealType> intvals = spherical_integral(boxspl3d, kmags, nrule);
-  ofstream ofs, ofv, ofi;
+  SphericalAverage3D sphavg(nrule);
+  box.SetLRCutoffs();
+  RealType kmax = box.LR_kc;
+  RealType dk = kmax/(nk-1);
+  ofstream ofs, ofv;
   ofs.open("avesk.dat");
   ofv.open("vk.dat");
-  ofi.open("vint.dat");
   for (int ik=0; ik<nk; ik+=1)
   {
-    RealType sk = intvals[ik];
-    RealType vklr = breaker->evaluate_fklr(kmags[ik]);
-    RealType norm = box.Volume/(2*M_PI*M_PI);
-    RealType val = ik==0?0:norm*0.5*std::pow(kmags[ik], 2)*vklr*sk;
-    ofs << kmags[ik] << " " << sk << endl;
-    ofv << kmags[ik] << " " << vklr << endl;
-    ofi << kmags[ik] << " " << val << endl;
+    RealType kmag = ik*dk;
+    RealType sk = sphavg(*boxspl3d, kmag);
+    RealType vklr = breaker->evaluate_fklr(kmag);
+    ofs << kmag << " " << sk << endl;
+    ofv << kmag << " " << vklr << endl;
   }
   ofs.close();
   ofv.close();
-  ofi.close();
-
-  // step 5: dump finite size sum
-  KContainer kvecs;
-  kvecs.UpdateKLists(box, breaker->get_kc());
-  nk = kvecs.ksq.size();
-  kmags.resize(nk);
-  for (int ik=0; ik<nk; ik++)
-  {
-    kmags[ik] = sqrt(kvecs.ksq[ik]);
-  }
-  intvals = spherical_integral(boxspl3d, kmags, nrule);
-  RealType vsum = 0.0;
-  for (int ik=0; ik<nk; ik++)
-  {
-    RealType kmag, vklr, sk, uk, uklr;
-    kmag = kmags[ik];
-    vklr = breaker->evaluate_fklr(kmag);
-    sk = intvals[ik];
-    vsum += 0.5*vklr*sk;
-  }
-  vsum = vsum;
-  app_log() << "  vsum = " << vsum << endl;
 
   OHMMS::Controller->finalize();
 }
