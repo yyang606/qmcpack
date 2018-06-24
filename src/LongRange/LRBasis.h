@@ -43,6 +43,7 @@ struct  LRBasis
   int BasisSize;
   ///Real-space cutoff for short-range part
   mRealType m_rc;
+  mRealType volume_;
 
   ///Typedef for the lattice-type. We don't need the full particle-set.
   typedef ParticleSet::ParticleLayout_t ParticleLayout_t;
@@ -163,7 +164,7 @@ public:
   }
   inline mRealType get_CellVolume()
   {
-    return Lattice.Volume;
+    return volume_;
   }
   inline ParticleLayout_t& get_Lattice()
   {
@@ -172,6 +173,7 @@ public:
   inline void set_Lattice(ParticleLayout_t& ref)
   {
     Lattice = ref;
+    volume_ = Lattice.Volume;
   }
 };
 

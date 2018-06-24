@@ -181,7 +181,7 @@ LPQHISRCoulombBasis::Dplus(int i, mRealType k, int n)
 {
   std::complex<mRealType> eye(0.0, 1.0);
   std::complex<mRealType> Z1 = Eplus(i,k,n);
-  return 4.0*M_PI/(k*Lattice.Volume)*(Z1.imag());
+  return 4.0*M_PI/(k*volume_)*(Z1.imag());
 }
 
 
@@ -190,7 +190,7 @@ LPQHISRCoulombBasis::Dminus(int i, mRealType k, int n)
 {
   std::complex<mRealType> eye(0.0, 1.0);
   std::complex<mRealType> Z1 = Eminus(i,k,n);
-  return -4.0*M_PI/(k*Lattice.Volume)*(Z1.imag());
+  return -4.0*M_PI/(k*volume_)*(Z1.imag());
 }
 
 LPQHISRCoulombBasis::mRealType
@@ -279,7 +279,7 @@ LPQHISRCoulombBasis::Dplus_dG(int i, mRealType k, int n)
   mRealType kinv=1.0/mRealType(k);
   std::complex<mRealType> Z1 = Eplus_dG(i,k,n);
 
-  return 4.0*M_PI/(k*Lattice.Volume)*Z1.imag()- kinv*Dplus(i,k,n);
+  return 4.0*M_PI/(k*volume_)*Z1.imag()- kinv*Dplus(i,k,n);
 }
 
 
@@ -289,7 +289,7 @@ LPQHISRCoulombBasis::Dminus_dG(int i, mRealType k, int n)
   mRealType kinv=1.0/mRealType(k);
   std::complex<mRealType> eye(0.0, 1.0);
   std::complex<mRealType> Z1 = Eminus_dG(i,k,n);
-  return -4.0*M_PI/(k*Lattice.Volume)*Z1.imag()- kinv*Dminus(i,k,n);
+  return -4.0*M_PI/(k*volume_)*Z1.imag()- kinv*Dminus(i,k,n);
 }
 
 }
