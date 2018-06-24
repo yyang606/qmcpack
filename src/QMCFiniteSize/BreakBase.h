@@ -26,13 +26,17 @@ inline std::ostream& operator<<(std::ostream& os, const BreakSpec& params)
   return os;
 }
 
-// Prototype of Break classes, which store short-range long-range breakup
+// Base class of Break classes, which store short-range long-range breakup
 //  information of periodic potential over the crystal lattice e.g. Ewald.
 // This base class provides the interface of a "breaker". 
-// Instantiate using BreakPrototypeFactory::create_break
+// Instantiate using BreakFactory::create_break
 //
 // Example:
-//   BreakBase* breaker = break_factory.create_break(doc);
+//   Libxml2Document fxml;
+//   fxml.parse("input.xml");
+//   xmlXPathContextPtr doc = fxml.getXPathContext();
+//   Uniform3DGridLayout box = create_box(doc);
+//   BreakBase* breaker = break_factory.create_break(box, doc);
 //   double fklr1 = breaker->evaluate_fklr(1.0);
 class BreakBase
 {
@@ -42,6 +46,7 @@ class BreakBase
   RealType get_chisq(){return chisq_;};
   RealType get_rc(){return params_.rc;};
   RealType get_kc(){return params_.kc;};
+  // do NOT overload operator<<, because instances will have pointer type
   virtual void report(std::ostream& os) = 0;
 
   // goal in life: evaluate long-range potential at k

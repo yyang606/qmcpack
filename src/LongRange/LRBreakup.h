@@ -25,6 +25,7 @@
 #include "LongRange/KContainer.h"
 #include "Numerics/OhmmsBlas.h"
 #include <cassert>
+#include "coulomb_types.h"
 
 namespace qmcplusplus
 {

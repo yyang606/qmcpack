@@ -1,7 +1,7 @@
-#include "QMCFiniteSize/lr_routines.h"
+#include "QMCFiniteSize/BreakFactory.h"
 namespace qmcplusplus
 {
-BreakBase* create_break(
+BreakBase* BreakFactory::create_break(
   Uniform3DGridLayout box,
   xmlXPathContextPtr doc
 )

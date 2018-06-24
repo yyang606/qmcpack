@@ -19,7 +19,7 @@ set(SPL3D_SRC
 )
 
 set(LR_SRC
-  lr_routines.cpp
+  BreakFactory.cpp
   EslerBreak.cpp
   NatoliBreak.cpp
 )
