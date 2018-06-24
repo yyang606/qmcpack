@@ -17,9 +17,6 @@ class NatoliBreak : public BreakBase
     BreakSpec params
   );
   ~NatoliBreak();
-  RealType get_chisq(){return chisq_;};
-  RealType get_rc(){return params_.rc;};
-  RealType get_kc(){return params_.kc;};
   void report(std::ostream& os);
 
   // goal in life: evaluate long-range potential at k
