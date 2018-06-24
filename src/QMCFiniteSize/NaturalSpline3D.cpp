@@ -1,5 +1,6 @@
 #include "NaturalSpline3D.h"
-
+namespace qmcplusplus
+{
 NaturalSpline3D::NaturalSpline3D(const Ugrid3D grid3d, double* vals)
   : grid3d_(grid3d)
 {
@@ -12,11 +13,9 @@ NaturalSpline3D::NaturalSpline3D(const Ugrid3D grid3d, double* vals)
   , bcx, bcy, bcz, vals
   );
 }
-
 NaturalSpline3D::~NaturalSpline3D()
 {
 }
-
 BCtype_d NaturalSpline3D::natural_boundary()
 {
   BCtype_d bc;
@@ -26,10 +25,10 @@ BCtype_d NaturalSpline3D::natural_boundary()
   bc.rVal = 1.0;
   return bc;
 }
-
 double NaturalSpline3D::operator()(double x, double y, double z)
 {
   double val;
   eval_UBspline_3d_d(spline3d_, x, y, z, &val);
   return val;
 }
+} // qmcplusplus

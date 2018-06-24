@@ -1,11 +1,11 @@
+#ifndef QMCPLUSPLUS_NATURAL_SPLINE3D_IN_BOX_H
+#define QMCPLUSPLUS_NATURAL_SPLINE3D_IN_BOX_H
 #include "QMCFiniteSize/NaturalSpline3D.h"
 #include "Lattice/Uniform3DGridLayout.h"
 #include "Configuration.h"
-
-using namespace qmcplusplus;
-
+namespace qmcplusplus
+{
 typedef QMCTraits::PosType PosType;
-
 class NaturalSpline3DInBox
 {
  public:
@@ -20,3 +20,5 @@ class NaturalSpline3DInBox
   NaturalSpline3D spline3d_;
   const Uniform3DGridLayout box_;
 };
+}
+#endif
