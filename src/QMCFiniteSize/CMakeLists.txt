@@ -15,6 +15,8 @@ PROJECT(qmcfinitesize)
 set(FSC_SRC
   fsc_routines.cpp
   SphericalAverage3D.cpp
+  quadrule.cpp
+  Quad1D.cpp
 )
 
 set(SPL3D_SRC
