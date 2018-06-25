@@ -49,6 +49,10 @@ int main(int argc, char **argv)
   SphericalAverage3D sphavg(nrule);
   RealType kmax = box.LR_kc;
 
+  // !!!! HACK: use bare Coulomb below kmin
+  RealType kmin = 0.05;
+  app_log() << " !!!! HACK: use bare Coulomb for k<kmin" << endl;
+
   // step 5: do finite size correction integrals
   RealType vint = 0;
   Quad1D quad1d(0, kmax, nk);
@@ -62,11 +66,11 @@ int main(int argc, char **argv)
     RealType kmag = quad1d.x[ik];
     RealType sk = sphavg(*boxspl3d, kmag);
     RealType vklr = breaker->evaluate_fklr(kmag);
+    if (kmag < kmin) vklr = 4*M_PI/(kmag*kmag)/box.Volume;
     ofs << kmag << " " << sk << endl;
     ofv << kmag << " " << vklr << endl;
-    RealType val = 0.5*sk*breaker->evaluate_fklr(kmag);
+    RealType val = 0.5*sk*vklr;
     ofi << kmag << " " << val << endl;
-    //vint += 0.5*vklr*sk*quad1d.w[ik];
     vint += val*quad1d.w[ik];
   }
   ofs.close();
