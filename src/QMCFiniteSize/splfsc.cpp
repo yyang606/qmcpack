@@ -47,7 +47,7 @@ int main(int argc, char **argv)
   if (node) putContent(nrule, node);
   app_log() << " nrule = " << nrule << endl;
   SphericalAverage3D sphavg(nrule);
-  RealType kmax = box.LR_kc;
+  RealType kmax = breaker->get_kc();
 
   // !!!! HACK: use bare Coulomb below kmin
   RealType kmin = 0.05;
