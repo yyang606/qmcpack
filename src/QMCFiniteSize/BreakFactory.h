@@ -14,6 +14,8 @@ class BreakFactory
    Uniform3DGridLayout box,
    xmlXPathContextPtr doc
   );
+ private:
+  RealType default_kc(Uniform3DGridLayout box);
 };
 } // qmcplusplus
 #endif
