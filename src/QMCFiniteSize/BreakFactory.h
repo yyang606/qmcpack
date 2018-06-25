@@ -1,6 +1,6 @@
 #ifndef QMCPLUSPLUS_BREAK_FACTORY_H
 #define QMCPLUSPLUS_BREAK_FACTORY_H
-#include "QMCFiniteSize/KspaceFunctions.hpp"
+#include "QMCFiniteSize/KspaceFunctions.h"
 #include "BreakBase.h"
 #include "NatoliBreak.h"
 #include "EslerBreak.h"

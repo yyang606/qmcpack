@@ -43,12 +43,12 @@ BreakBase* BreakFactory::create_break(
   BreakBase* breaker(0);
   if (basis == "natoli")
   {
-    NatoliCoul<RealType> fk(box.Volume);
+    NatoliCoul fk(box.Volume);
     breaker = new NatoliBreak(fk, box, params);
   } else
   if (basis == "esler")
   {
-    EslerCoul<RealType> fxk(box.Volume);
+    EslerCoul fxk(box.Volume);
     breaker = new EslerBreak(fxk, box, params);
   } else
   {

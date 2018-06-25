@@ -4,10 +4,12 @@
 #include <vector>
 #include <functional>
 #include "LongRange/LRBreakup.h"
+#include "coulomb_types.h"
 namespace qmcplusplus
 {
-typedef Uniform3DGridLayout                  BoxType;
-typedef QMCTraits::RealType                 RealType;
+DECLARE_COULOMB_TYPES
+typedef Uniform3DGridLayout BoxType;
+typedef mRealType           RealType;
 
 struct BreakSpec
 {

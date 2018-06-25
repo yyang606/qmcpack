@@ -2,6 +2,7 @@
 #include "QMCFiniteSize/Spline3DFactory.h"
 #include "QMCFiniteSize/SphericalAverage3D.h"
 #include "QMCFiniteSize/BreakFactory.h"
+#include "QMCFiniteSize/Quad1D.h"
 using namespace qmcplusplus;
 
 int main(int argc, char **argv)
@@ -19,6 +20,7 @@ int main(int argc, char **argv)
 
   // step 1: construct lattice -> enable box.k_unit, box.k_cart
   Uniform3DGridLayout box = create_box(doc);
+  box.SetLRCutoffs();
 
   // step 2: obtain spline on regular grid (in reciprocal lattice units)
   vector<vector<RealType>> mat = loadtxt(fdat_name);
@@ -36,7 +38,7 @@ int main(int argc, char **argv)
   app_log() << "  chi^2  = " << scientific << breaker->get_chisq() << endl;
   app_log() << setprecision(10);
 
-  // step 4: output useful stuff
+  // step 4: setup integral parameters
   int nrule=4, nk=64;
   xmlNodePtr node;
   node = find("//output_grid/nk", doc);
@@ -44,24 +46,33 @@ int main(int argc, char **argv)
   node = find("//spherical_average/nrule", doc);
   if (node) putContent(nrule, node);
   app_log() << " nrule = " << nrule << endl;
-
   SphericalAverage3D sphavg(nrule);
-  box.SetLRCutoffs();
   RealType kmax = box.LR_kc;
-  RealType dk = kmax/(nk-1);
-  ofstream ofs, ofv;
+
+  // step 5: do finite size correction integrals
+  RealType vint = 0;
+  Quad1D quad1d(0, kmax, nk);
+  // output useful stuff
+  ofstream ofs, ofv, ofi;
   ofs.open("avesk.dat");
   ofv.open("vk.dat");
+  ofi.open("vint.dat");
   for (int ik=0; ik<nk; ik+=1)
   {
-    RealType kmag = ik*dk;
+    RealType kmag = quad1d.x[ik];
     RealType sk = sphavg(*boxspl3d, kmag);
     RealType vklr = breaker->evaluate_fklr(kmag);
     ofs << kmag << " " << sk << endl;
     ofv << kmag << " " << vklr << endl;
+    RealType val = 0.5*sk*breaker->evaluate_fklr(kmag);
+    ofi << kmag << " " << val << endl;
+    //vint += 0.5*vklr*sk*quad1d.w[ik];
+    vint += val*quad1d.w[ik];
   }
   ofs.close();
   ofv.close();
+  ofi.close();
+  app_log() << " vint = " << vint << endl;
 
   OHMMS::Controller->finalize();
 }
