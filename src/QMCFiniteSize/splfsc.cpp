@@ -54,6 +54,7 @@ int main(int argc, char **argv)
   app_log() << " !!!! HACK: use bare Coulomb for k<kmin" << endl;
 
   // step 5: do finite size correction integrals
+  RealType norm = box.Volume/(2*M_PI*M_PI);
   RealType vint = 0;
   Quad1D quad1d(0, kmax, nk);
   // output useful stuff
@@ -69,14 +70,29 @@ int main(int argc, char **argv)
     if (kmag < kmin) vklr = 4*M_PI/(kmag*kmag)/box.Volume;
     ofs << kmag << " " << sk << endl;
     ofv << kmag << " " << vklr << endl;
-    RealType val = 0.5*sk*vklr;
+    RealType val = 0.5*std::pow(kmag, 2)*sk*vklr*norm;
     ofi << kmag << " " << val << endl;
     vint += val*quad1d.w[ik];
   }
   ofs.close();
   ofv.close();
   ofi.close();
+
+  // step 6: do finite size correction sums
+  KContainer kvecs;
+  kvecs.UpdateKLists(box, kmax);
+  RealType vsum = 0.0;
+  for (int ik=0; ik<kvecs.ksq.size(); ik++)
+  {
+    RealType kmag = std::sqrt(kvecs.ksq[ik]);
+    RealType vklr = breaker->evaluate_fklr(kmag);
+    RealType sk = sphavg(*boxspl3d, kmag);
+    vsum += 0.5*vklr*sk;
+  }
+
   app_log() << " vint = " << vint << endl;
+  app_log() << " vsum = " << vsum << endl;
+  app_log() << " dvlr = " << vint - vsum << endl;
 
   OHMMS::Controller->finalize();
 }
