@@ -25,8 +25,18 @@ BCtype_d NaturalSpline3D::natural_boundary()
   bc.rVal = 1.0;
   return bc;
 }
+bool NaturalSpline3D::in_convex_hull(double x, double y, double z)
+{
+  bool inx, iny, inz;
+  inx = iny = inz = true;
+  if (x<grid3d_.x.start | x>grid3d_.x.end) inx = false;
+  if (y<grid3d_.y.start | y>grid3d_.y.end) iny = false;
+  if (z<grid3d_.z.start | z>grid3d_.z.end) inz = false;
+  return (inx & iny & inz);
+}
 double NaturalSpline3D::operator()(double x, double y, double z)
 {
+  if (not in_convex_hull(x, y, z)) return NAN;
   double val;
   eval_UBspline_3d_d(spline3d_, x, y, z, &val);
   return val;

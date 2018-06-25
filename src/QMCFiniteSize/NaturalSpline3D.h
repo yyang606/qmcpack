@@ -17,6 +17,7 @@ class NaturalSpline3D
   NaturalSpline3D(const Ugrid3D grid3d, double* vals);
   ~NaturalSpline3D();
   BCtype_d natural_boundary();
+  bool in_convex_hull(double x, double y, double z);
 
   // goal in life: evaluate Bspline at a point in 3D space
   double operator()(double x, double y, double z);
