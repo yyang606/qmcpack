@@ -15,7 +15,7 @@ BreakBase* BreakFactory::create_break(
   box.SetLRCutoffs();
   rc = box.LR_rc;
   //kc = box.LR_kc; // !!!! dangerous default if S(k) is on rectangular lattice
-  // spline3d needs to extrapolate if max|k| is larger along x than along y
+  // spline3d needs to extrapolate along kx if max|kx| < max|ky| for example
   RealType kc0 = default_kc(box);
   kc = kc0;
   nknot = 15;
@@ -43,7 +43,7 @@ BreakBase* BreakFactory::create_break(
     APP_ABORT("kc = " << kc << " > default "  <<  kc0 << endl << " Note: "
       << "box kc may require 3D S(k) spline to extrapolate in non-cubic cell"
       << endl);
-   }
+  }
   if (kcut < kc) APP_ABORT("continuum kcut = " << kcut << " < kc = " << kc);
   if (kmax < kcut) APP_ABORT("kmax < kcut");
 
