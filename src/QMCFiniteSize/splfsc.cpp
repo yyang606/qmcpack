@@ -57,6 +57,7 @@ int main(int argc, char **argv)
   RealType norm = box.Volume/(2*M_PI*M_PI);
   RealType vint = 0;
   Quad1D quad1d(0, kmax, nk);
+
   // output useful stuff
   ofstream ofs, ofv, ofi;
   ofs.open("avesk.dat");
@@ -77,6 +78,23 @@ int main(int argc, char **argv)
   ofs.close();
   ofv.close();
   ofi.close();
+
+  kmin = -kmax;
+  ofstream ofx, ofy, ofz;
+  ofx.open("sx.dat");
+  ofy.open("sy.dat");
+  ofz.open("sz.dat");
+  RealType dk = (kmax-kmin)/(nk-1);
+  for (int ik=0; ik<nk; ik++)
+  {
+    RealType kmag = kmin+ik*dk;
+    ofx << kmag << " " << (*boxspl3d)(kmag, 0, 0) << endl;
+    ofy << kmag << " " << (*boxspl3d)(0, kmag, 0) << endl;
+    ofz << kmag << " " << (*boxspl3d)(0, 0, kmag) << endl;
+  }
+  ofx.close();
+  ofy.close();
+  ofz.close();
 
   // step 6: do finite size correction sums
   KContainer kvecs;
