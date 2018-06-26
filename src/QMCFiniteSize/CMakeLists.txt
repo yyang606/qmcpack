@@ -23,6 +23,7 @@ set(SPL3D_SRC
   Spline3DFactory.cpp
   NaturalSpline3D.cpp
   NaturalSpline3DInBox.cpp
+  Spline1D.cpp
 )
 
 set(LR_SRC
