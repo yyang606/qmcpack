@@ -36,7 +36,7 @@ add_library(fsc_common ${FSC_SRC})
 add_library(spl ${SPL3D_SRC})
 add_library(lr ${LR_SRC})
 
-set(QFS_TOOLS splfsc)
+set(QFS_TOOLS splfsc sphavg)
 
 FOREACH(p ${QFS_TOOLS})
 
