@@ -3,6 +3,9 @@
 #include "QMCFiniteSize/SphericalAverage3D.h"
 #include "QMCFiniteSize/BreakFactory.h"
 #include "QMCFiniteSize/Quad1D.h"
+#include "QMCFiniteSize/Spline1D.h"
+#include "einspline/nubspline_create.h"
+#include "einspline/nubspline_eval_d.h"
 using namespace qmcplusplus;
 
 int main(int argc, char **argv)
@@ -49,6 +52,7 @@ int main(int argc, char **argv)
   SphericalAverage3D sphavg(nrule);
   RealType kmax = breaker->get_kc();
 
+  /*
   // !!!! HACK: use bare Coulomb below kmin
   RealType kmin = 0.05;
   app_log() << " !!!! HACK: use bare Coulomb for k<kmin" << endl;
@@ -95,8 +99,9 @@ int main(int argc, char **argv)
   ofx.close();
   ofy.close();
   ofz.close();
+  */
 
-  // step 6: do finite size correction sums
+  // step 5: do finite size correction sums
   KContainer kvecs;
   kvecs.UpdateKLists(box, kmax);
   RealType vsum = 0.0;
@@ -108,8 +113,46 @@ int main(int argc, char **argv)
     vsum += 0.5*vklr*sk;
   }
 
+  // step 6: evaluate spline on kshells, check sums
+  ofstream ofg;
+  ofg.open("integrand.dat");
+  int nks = kvecs.kshell.size()-1;  // number of kshells
+  RealType vsum1 = 0.0;
+  // +1 for left value boundary condition
+  vector<RealType> kmags(nks+1, 0);
+  vector<RealType> integrand1d(nks+1, 0);
+  for (int iks=0; iks<nks; iks++)
+  {
+    RealType kmag = std::sqrt(kvecs.ksq[kvecs.kshell[iks]]);
+    RealType vklr = breaker->evaluate_fklr(kmag);
+    RealType sk = sphavg(*boxspl3d, kmag);
+    RealType val = 0.5*vklr*sk;
+    for (int ik=kvecs.kshell[iks]; ik<kvecs.kshell[iks+1]; ik++)
+    {
+      vsum1 += val;
+    }
+    kmags[iks+1] = kmag;
+    integrand1d[iks+1] = std::pow(kmag, 2)*val;
+    ofg << kmags[iks] << " " << integrand1d[iks] << endl;
+  }
+  ofg.close();
+  if (abs(vsum1-vsum)>1e-16) APP_ABORT("vsum mismatch");
+
+  Spline1D spline1d(kmags, integrand1d);
+
+  nk = 128;
+
+  RealType norm = box.Volume/(2*M_PI*M_PI);
+  Quad1D quad1d(0, kmax, nk);
+  RealType vint = 0.0;
+  for (int ik=0; ik<nk; ik+=1)
+  {
+    RealType kmag = quad1d.x[ik];
+    vint += norm*spline1d(kmag)*quad1d.w[ik];
+  }
+
   app_log() << " vint = " << vint << endl;
-  app_log() << " vsum = " << vsum << endl;
+  app_log() << " vsum  = " << vsum << endl;
   app_log() << " dvlr = " << vint - vsum << endl;
 
   OHMMS::Controller->finalize();
