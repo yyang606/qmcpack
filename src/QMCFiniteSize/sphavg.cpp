@@ -17,7 +17,8 @@ int main(int argc, char **argv)
   xmlXPathContextPtr doc = fxml.getXPathContext();
 
   // step 1: construct lattice -> enable box.k_unit, box.k_cart
-  Uniform3DGridLayout box = create_box(doc);
+  xmlNodePtr sc_node = find("//simulationcell", doc);
+  Uniform3DGridLayout box = create_box(sc_node);
   box.SetLRCutoffs();
 
   // step 2: obtain spline on regular grid (in reciprocal lattice units)

@@ -38,10 +38,8 @@ vector<vector<RealType>> loadtxt(const string fname)
 
 // =======================   structure creation   =======================
 // -----------------------   box                  -----------------------
-Uniform3DGridLayout create_box(xmlXPathContextPtr doc)
+Uniform3DGridLayout create_box(xmlNodePtr sc_node)
 { // delegate to LatticeParser clasee
-  xmlNodePtr sc_node = find("//simulationcell", doc);
-
   Uniform3DGridLayout box;
   LatticeParser parser(box);
   parser.put(sc_node);

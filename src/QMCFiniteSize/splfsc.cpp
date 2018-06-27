@@ -22,7 +22,8 @@ int main(int argc, char **argv)
   xmlXPathContextPtr doc = fxml.getXPathContext();
 
   // step 1: construct lattice -> enable box.k_unit, box.k_cart
-  Uniform3DGridLayout box = create_box(doc);
+  xmlNodePtr sc_node = find("//simulationcell", doc);
+  Uniform3DGridLayout box = create_box(sc_node);
   box.SetLRCutoffs();
 
   // step 2: obtain spline on regular grid (in reciprocal lattice units)
@@ -52,20 +53,47 @@ int main(int argc, char **argv)
   SphericalAverage3D sphavg(nrule);
   RealType kmax = breaker->get_kc();
 
-  /*
+  // step 5: do finite size sum, store spherical average at kshells
+  //  the spline is most accurate at kshells
+  KContainer kvecs;
+  kvecs.UpdateKLists(box, kmax);
+  RealType vsum = 0.0;
+  int nks = kvecs.kshell.size()-1;  // number of kshells
+  // +1 for left value boundary condition S(k->0) = 0
+  vector<RealType> kmags(nks+1, 0);
+  vector<RealType> vint1d(nks+1, 0);
+  for (int iks=0; iks<nks; iks++)
+  {
+    RealType kmag = std::sqrt(kvecs.ksq[kvecs.kshell[iks]]);
+    RealType vklr = breaker->evaluate_fklr(kmag);
+    RealType sk = sphavg(*boxspl3d, kmag);
+    RealType val = 0.5*vklr*sk;
+    for (int ik=kvecs.kshell[iks]; ik<kvecs.kshell[iks+1]; ik++)
+    { // KContainer should have a list of pre-calculated weights
+      vsum += val;
+    }
+    kmags[iks+1] = kmag;
+    vint1d[iks+1] = std::pow(kmag, 2)*val;
+  }
+
+  // step 6: estimate thermaldynamic limit of the sums
+  //  !!!! this is the tricky step. Try a few approaches
+  RealType vint = 0.0;
+  RealType norm = box.Volume/(2*M_PI*M_PI);
+
+  // attempt 1: directly use 3D spline
+  // problem: break->evaluate_vklr is numerically unstable for k < 0.05
+  //
   // !!!! HACK: use bare Coulomb below kmin
   RealType kmin = 0.05;
   app_log() << " !!!! HACK: use bare Coulomb for k<kmin" << endl;
 
-  // step 5: do finite size correction integrals
-  RealType norm = box.Volume/(2*M_PI*M_PI);
-  RealType vint = 0;
   Quad1D quad1d(0, kmax, nk);
 
   // output useful stuff
   ofstream ofs, ofv, ofi;
   ofs.open("avesk.dat");
-  ofv.open("vk.dat");
+  ofv.open("vklr.dat");
   ofi.open("vint.dat");
   for (int ik=0; ik<nk; ik+=1)
   {
@@ -83,6 +111,7 @@ int main(int argc, char **argv)
   ofv.close();
   ofi.close();
 
+  /*
   kmin = -kmax;
   ofstream ofx, ofy, ofz;
   ofx.open("sx.dat");
@@ -101,58 +130,52 @@ int main(int argc, char **argv)
   ofz.close();
   */
 
-  // step 5: do finite size correction sums
-  KContainer kvecs;
-  kvecs.UpdateKLists(box, kmax);
-  RealType vsum = 0.0;
-  for (int ik=0; ik<kvecs.ksq.size(); ik++)
-  {
-    RealType kmag = std::sqrt(kvecs.ksq[ik]);
-    RealType vklr = breaker->evaluate_fklr(kmag);
-    RealType sk = sphavg(*boxspl3d, kmag);
-    vsum += 0.5*vklr*sk;
-  }
-
-  // step 6: evaluate spline on kshells, check sums
+  /*
+  // attempt 2: respline integrand in 1D
+  // problem: spline quality depends on the shape of the integrand as k->0
+  //  monotonic = good, oscilitory = bad!
+  //
   ofstream ofg;
-  ofg.open("integrand.dat");
-  int nks = kvecs.kshell.size()-1;  // number of kshells
-  RealType vsum1 = 0.0;
-  // +1 for left value boundary condition
-  vector<RealType> kmags(nks+1, 0);
-  vector<RealType> integrand1d(nks+1, 0);
-  for (int iks=0; iks<nks; iks++)
+  ofg.open("vint1d.dat");
+  Spline1D spline1d(kmags, vint1d);
+  for (int iks=0; iks<vint1d.size(); iks++)
   {
-    RealType kmag = std::sqrt(kvecs.ksq[kvecs.kshell[iks]]);
-    RealType vklr = breaker->evaluate_fklr(kmag);
-    RealType sk = sphavg(*boxspl3d, kmag);
-    RealType val = 0.5*vklr*sk;
-    for (int ik=kvecs.kshell[iks]; ik<kvecs.kshell[iks+1]; ik++)
-    {
-      vsum1 += val;
-    }
-    kmags[iks+1] = kmag;
-    integrand1d[iks+1] = std::pow(kmag, 2)*val;
-    ofg << kmags[iks] << " " << integrand1d[iks] << endl;
+    ofg << kmags[iks] << " " << vint1d[iks]*norm << endl;
   }
   ofg.close();
-  if (abs(vsum1-vsum)>1e-16) APP_ABORT("vsum mismatch");
-
-  Spline1D spline1d(kmags, integrand1d);
 
   nk = 128;
-
-  RealType norm = box.Volume/(2*M_PI*M_PI);
   Quad1D quad1d(0, kmax, nk);
-  RealType vint = 0.0;
+  vint = 0.0;
+  ofg.open("fvint1d.dat");
   for (int ik=0; ik<nk; ik+=1)
   {
     RealType kmag = quad1d.x[ik];
-    vint += norm*spline1d(kmag)*quad1d.w[ik];
+    RealType val = spline1d(kmag)*norm;
+    ofg << kmag << " " << val << endl;
+    vint += val*quad1d.w[ik];
   }
+  ofg.close();
+  */
+
+  /*
+  // attempt 3: do sum in a bigger box
+  node = find("//bigcell", doc);
+  Uniform3DGridLayout bigbox = create_box(node);
+  KContainer bigkvecs;
+  bigkvecs.UpdateKLists(bigbox, kmax);
+  vint = 0.0;
+  for (int ik=0; ik<bigkvecs.ksq.size(); ik++)
+  {
+    RealType kmag = std::sqrt(bigkvecs.ksq[ik]);
+    RealType vklr = breaker->evaluate_fklr(kmag)*box.Volume/bigbox.Volume;
+    RealType sk = sphavg(*boxspl3d, kmag);
+    vint += 0.5*vklr*sk;
+  }
+  */
 
   app_log() << " vint = " << vint << endl;
-  app_log() << " vsum  = " << vsum << endl;
+  app_log() << " vsum = " << vsum << endl;
   app_log() << " dvlr = " << vint - vsum << endl;
 
   OHMMS::Controller->finalize();
