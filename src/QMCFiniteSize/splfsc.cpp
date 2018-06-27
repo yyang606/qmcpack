@@ -24,23 +24,19 @@ int main(int argc, char **argv)
   // step 1: construct lattice -> enable box.k_unit, box.k_cart
   xmlNodePtr sc_node = find("//simulationcell", doc);
   Uniform3DGridLayout box = create_box(sc_node);
-  box.SetLRCutoffs();
 
   // step 2: obtain spline on regular grid (in reciprocal lattice units)
   vector<vector<RealType>> mat = loadtxt(fdat_name);
   Spline3DFactory spline_factory;
-  string grid_name = "input_grid";
-  Ugrid3D grid3d = spline_factory.create_ugrid3d(doc, grid_name);
+  Ugrid3D grid3d = spline_factory.create_ugrid3d(doc, "input_grid");
   NaturalSpline3DInBox* boxspl3d = spline_factory.create_boxspl3d(
     grid3d, mat, box);
 
   // step 3: obtain a long-range potential
   BreakFactory break_factory;
   BreakBase* breaker = break_factory.create_break(box, doc);
-  app_log() << endl;
   breaker->report(app_log());
-  app_log() << "  chi^2  = " << scientific << breaker->get_chisq() << endl;
-  app_log() << setprecision(10);
+  RealType kmax = breaker->get_kc();
 
   // step 4: setup integral parameters
   int nrule=4, nk=64;
@@ -51,7 +47,23 @@ int main(int argc, char **argv)
   if (node) putContent(nrule, node);
   app_log() << " nrule = " << nrule << endl;
   SphericalAverage3D sphavg(nrule);
-  RealType kmax = breaker->get_kc();
+  /* // inspect spline over desired domain
+  ofstream ofx, ofy, ofz;
+  ofx.open("sx.dat");
+  ofy.open("sy.dat");
+  ofz.open("sz.dat");
+  RealType dk = kmax/(nk-1);
+  for (int ik=0; ik<nk; ik++)
+  {
+    RealType kmag = ik*dk;
+    ofx << kmag << " " << (*boxspl3d)(kmag, 0, 0) << endl;
+    ofy << kmag << " " << (*boxspl3d)(0, kmag, 0) << endl;
+    ofz << kmag << " " << (*boxspl3d)(0, 0, kmag) << endl;
+  }
+  ofx.close();
+  ofy.close();
+  ofz.close();
+  */
 
   // step 5: do finite size sum, store spherical average at kshells
   //  the spline is most accurate at kshells
@@ -76,8 +88,8 @@ int main(int argc, char **argv)
     vint1d[iks+1] = std::pow(kmag, 2)*val;
   }
 
-  // step 6: estimate thermaldynamic limit of the sums
-  //  !!!! this is the tricky step. Try a few approaches
+  // step 6: estimate thermaldynamic limit of the sum
+  //  !!!! this is the most tricky step. Try a few approaches
   RealType vint = 0.0;
   RealType norm = box.Volume/(2*M_PI*M_PI);
 
@@ -89,8 +101,7 @@ int main(int argc, char **argv)
   app_log() << " !!!! HACK: use bare Coulomb for k<kmin" << endl;
 
   Quad1D quad1d(0, kmax, nk);
-
-  // output useful stuff
+  vint = 0.0;
   ofstream ofs, ofv, ofi;
   ofs.open("avesk.dat");
   ofv.open("vklr.dat");
@@ -112,25 +123,6 @@ int main(int argc, char **argv)
   ofi.close();
 
   /*
-  kmin = -kmax;
-  ofstream ofx, ofy, ofz;
-  ofx.open("sx.dat");
-  ofy.open("sy.dat");
-  ofz.open("sz.dat");
-  RealType dk = (kmax-kmin)/(nk-1);
-  for (int ik=0; ik<nk; ik++)
-  {
-    RealType kmag = kmin+ik*dk;
-    ofx << kmag << " " << (*boxspl3d)(kmag, 0, 0) << endl;
-    ofy << kmag << " " << (*boxspl3d)(0, kmag, 0) << endl;
-    ofz << kmag << " " << (*boxspl3d)(0, 0, kmag) << endl;
-  }
-  ofx.close();
-  ofy.close();
-  ofz.close();
-  */
-
-  /*
   // attempt 2: respline integrand in 1D
   // problem: spline quality depends on the shape of the integrand as k->0
   //  monotonic = good, oscilitory = bad!
@@ -144,7 +136,6 @@ int main(int argc, char **argv)
   }
   ofg.close();
 
-  nk = 128;
   Quad1D quad1d(0, kmax, nk);
   vint = 0.0;
   ofg.open("fvint1d.dat");

@@ -42,22 +42,13 @@ NatoliBreak::NatoliBreak(
   coefs_[nbasis-3] = 0.0;
   chisq_ = handler_->DoBreakup(vk.data(), coefs_.data(), constraints.data());
 }
-
 NatoliBreak::~NatoliBreak()
 {
   delete handler_;
 }
-
 RealType NatoliBreak::evaluate_fklr(RealType k)
 {
   RealType val = fk_(k)-basis_.fk(k, coefs_);
   return val;
-}
-
-void NatoliBreak::report(ostream& os)
-{
-  os << " Natoli long-range breakup" << endl;
-  os << " ------------------------" << endl;
-  os << params_ << endl;
 }
 } // qmcplusplus

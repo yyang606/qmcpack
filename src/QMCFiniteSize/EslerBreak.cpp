@@ -27,22 +27,13 @@ EslerBreak::EslerBreak(
   }
   chisq_ = handler_->DoBreakup(xk.data(), coefs_.data());
 }
-
 EslerBreak::~EslerBreak()
 {
   delete handler_;
 }
-
 RealType EslerBreak::evaluate_fklr(RealType k)
 {
   RealType val = fxk_(k, basis_.get_rc())-basis_.fk(k, coefs_);
   return val;
-}
-
-void EslerBreak::report(ostream& os)
-{
-  os << " Esler long-range breakup" << endl;
-  os << " ------------------------" << endl;
-  os << params_ << endl;
 }
 } // qmcplusplus

@@ -49,7 +49,16 @@ class BreakBase
   RealType get_rc(){return params_.rc;};
   RealType get_kc(){return params_.kc;};
   // do NOT overload operator<<, because instances will have pointer type
-  virtual void report(std::ostream& os) = 0;
+  void report(std::ostream& os)
+  {
+    os << std::endl;
+    os << " long-range breakup" << std::endl;
+    os << " ------------------" << std::endl;
+    os << params_;
+    std::streamsize ss = std::cout.precision();
+    os << "  chi^2  = " << std::scientific << chisq_ << std::endl;
+    os << std::setprecision(ss);
+  }
 
   // goal in life: evaluate long-range potential at k
   virtual RealType evaluate_fklr(RealType k) = 0;
