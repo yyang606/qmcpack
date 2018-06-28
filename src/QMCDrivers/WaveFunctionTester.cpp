@@ -1338,60 +1338,84 @@ inline void randomize(ParticleAttrib<TinyVector<T,D> >& displ, T fac)
   for(int i=0; i<displ.size()*D; ++i) rv[i] =fac*(rv[i]-0.5);
 }
 
+
+WaveFunctionTester::ValueType WaveFunctionTester::get_ratio(RealType dlog, RealType dphase)
+{
+  #if defined(QMC_COMPLEX)
+  return std::exp(dlog)
+  * std::complex<OHMMS_PRECISION>(
+    std::cos(dphase),
+    std::sin(dphase)
+  );
+  #else
+  return std::exp(dlog)*std::cos(dphase);
+  #endif
+}
+
 void WaveFunctionTester::runQuickTest()
 {
-  app_log() << "running quick test" << std::endl;
+  app_log() << "running quick test" << endl;
   int nat = W.getTotalNum();
   vector<ValueType> psi_ratios(nat);
-  MCWalkerConfiguration::iterator it(W.begin()), it_end(W.end());
-  for (;it != it_end; it++)
+
+  app_log() << " testing the first walker only" << endl;
+  MCWalkerConfiguration::iterator it(W.begin());
+
+  RealType logpsi0, phase0, logpsi1, phase1, dlog, dphase;
+  RealType aratio0, dlog0, dphase0;
+  ValueType ratio0, ratio1;  // internal(0), computed(1)
+
+  // ----------------------- begin custom test  -----------------------
+  // evaluate wavefunction ratios using virtual moves
+  //PosType newpos = {0,0,0};
+  //W.makeVirtualMoves(newpos);
+  //Psi.evaluateRatiosAlltoOne(W, psi_ratios);
+
+  // check virtual ratios, one at a time
+  for (int iat=0;iat<nat;iat++)
   {
+    //ValueType ratio0 = psi_ratios[iat];
     W.loadWalker(**it, true);
     W.update();
-    RealType logpsi0 = Psi.evaluateLog(W);
-    RealType phase0 = Psi.getPhase();
+    logpsi0 = Psi.evaluateLog(W);
+    phase0 = Psi.getPhase();
 
-    // ----------------------- begin custom test  -----------------------
-    // evaluate wavefunction ratios using virtual moves
-    PosType newpos = {0,0,0};
-    W.makeVirtualMoves(newpos);
-    Psi.evaluateRatiosAlltoOne(W, psi_ratios);
+    // evaluate wavefunction ratio using virtual move
+    //PosType dr = newpos-W.R[iat];
+    PosType dr = {0, 0, 0.01};
+    W.makeMove(iat, dr);
+    aratio0 = Psi.ratio(W, iat);
+    dphase0 = Psi.getPhaseDiff();
+    dlog0 = std::log(aratio0);
+    ratio0 = get_ratio(dlog0, dphase0);
 
-    // check virtual ratios
-    for (int iat=0;iat<nat;iat++)
-    {
-      ValueType ratio0 = psi_ratios[iat];
+    // actually move particle and re-evaluate wavefunction
+    W.R[iat] += dr;
+    W.update();
+    logpsi1 = Psi.evaluateLog(W);
+    phase1 = Psi.getPhase();
 
-      // actually move particle and re-evaluate wavefunction
-      W.loadWalker(**it, true);
-      W.R[iat] = newpos;
-      W.update();
+    // directly recompute ratio
+    dlog = logpsi1-logpsi0;
+    dphase = phase1-phase0;
+    ratio1 = get_ratio(dlog, dphase);
 
-      RealType logpsi1 = Psi.evaluateLog(W);
-      RealType phase1 = Psi.getPhase();
-
-      // directly recompute ratio
-      RealType dlog, dphase;
-      dlog = logpsi1-logpsi0;
-      dphase = phase1-phase0;
-
-#if defined(QMC_COMPLEX)
-      ValueType ratio1=std::exp(dlog)
-      * std::complex<OHMMS_PRECISION>(
-        std::cos(dphase),
-        std::sin(dphase)
-      );
-#else
-      ValueType ratio1 = std::exp(dlog)*std::cos(dphase);
-#endif
-
-      // compare virtual(0) and re-computed(1) ratios
-      app_log() << iat << endl;
-      app_log() << ratio0 << endl;
-      app_log() << ratio1 << endl;
-    }
-    // -----------------------   end custom test  -----------------------
+    // compare virtual(0) and re-computed(1) ratios
+    //fout << iat << " " << ratio0 << " " << ratio1 << " " << endl;
+    // complex numbers look bad on output
+    //fout << setw(4) << iat << " "
+    //     << setw(20) << setprecision(16) << fixed
+    //     << dlog-dlog0 << " "
+    //     << setw(6) << setprecision(4) << fixed
+    //     << (dphase-dphase0)/M_PI << endl;
+    // phase can be off by integer multiples of 2pi
+    fout << setw(4) << iat << " "
+         << setw(20) << setprecision(16) << fixed
+         << real(ratio0) << " "  << imag(ratio0) << " "
+         << setw(20) << setprecision(16) << fixed
+         << real(ratio1) << " "  << imag(ratio1) <<  " " << endl;
   }
+  // -----------------------   end custom test  -----------------------
 }
 
 void WaveFunctionTester::runRatioV()
