@@ -1352,7 +1352,7 @@ void WaveFunctionTester::runQuickTest()
     RealType phase0 = Psi.getPhase();
 
     // ----------------------- begin custom test  -----------------------
-    // evaluate virtual ratios
+    // evaluate wavefunction ratios using virtual moves
     PosType newpos = {0,0,0};
     W.makeVirtualMoves(newpos);
     Psi.evaluateRatiosAlltoOne(W, psi_ratios);
@@ -1360,15 +1360,32 @@ void WaveFunctionTester::runQuickTest()
     // check virtual ratios
     for (int iat=0;iat<nat;iat++)
     {
+      ValueType ratio0 = psi_ratios[iat];
+
+      // actually move particle and re-evaluate wavefunction
       W.loadWalker(**it, true);
       W.R[iat] = newpos;
       W.update();
 
       RealType logpsi1 = Psi.evaluateLog(W);
       RealType phase1 = Psi.getPhase();
-      ValueType ratio0 = psi_ratios[iat];
-      ValueType ratio1 = std::exp(logpsi1-logpsi0)*std::cos(phase1-phase0);
 
+      // directly recompute ratio
+      RealType dlog, dphase;
+      dlog = logpsi1-logpsi0;
+      dphase = phase1-phase0;
+
+#if defined(QMC_COMPLEX)
+      ValueType ratio1=std::exp(dlog)
+      * std::complex<OHMMS_PRECISION>(
+        std::cos(dphase),
+        std::sin(dphase)
+      );
+#else
+      ValueType ratio1 = std::exp(dlog)*std::cos(dphase);
+#endif
+
+      // compare virtual(0) and re-computed(1) ratios
       app_log() << iat << endl;
       app_log() << ratio0 << endl;
       app_log() << ratio1 << endl;
