@@ -33,8 +33,10 @@ SlaterDetWithBackflow::~SlaterDetWithBackflow()
 
 void SlaterDetWithBackflow::evaluateRatiosAlltoOne(ParticleSet& P, std::vector<ValueType>& ratios)
 {
-  for(int i=0; i<Dets.size(); ++i)
-    Dets[i]->evaluateRatiosAlltoOne(P,ratios);
+  for (int iat=0; iat<ratios.size(); iat++)
+  {
+    ratios[iat] = ratio(P, iat);
+  }
 }
 
 void SlaterDetWithBackflow::resetTargetParticleSet(ParticleSet& P)

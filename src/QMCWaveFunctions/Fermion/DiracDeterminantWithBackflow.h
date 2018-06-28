@@ -113,8 +113,6 @@ public:
    */
   ValueType ratio(ParticleSet& P, int iat);
 
-  void evaluateRatiosAlltoOne(ParticleSet& P, std::vector<ValueType>& ratios);
-
   ValueType alternateRatio(ParticleSet& P)
   {
     return 1.0;
