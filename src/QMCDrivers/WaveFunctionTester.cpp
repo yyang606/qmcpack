@@ -1367,7 +1367,7 @@ void WaveFunctionTester::runQuickTest()
 
   // ----------------------- begin custom test  -----------------------
   // evaluate wavefunction ratios using virtual moves
-  //PosType newpos = {0,0,0};
+  PosType newpos = {0,0,0};
   //W.makeVirtualMoves(newpos);
   //Psi.evaluateRatiosAlltoOne(W, psi_ratios);
 
@@ -1381,8 +1381,8 @@ void WaveFunctionTester::runQuickTest()
     phase0 = Psi.getPhase();
 
     // evaluate wavefunction ratio using virtual move
-    //PosType dr = newpos-W.R[iat];
-    PosType dr = {0, 0, 0.01};
+    PosType dr = newpos-W.R[iat];
+    //PosType dr = {0, 0, 0.01};
     W.makeMove(iat, dr);
     aratio0 = Psi.ratio(W, iat);
     dphase0 = Psi.getPhaseDiff();
