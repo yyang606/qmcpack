@@ -34,6 +34,9 @@
 #include "Numerics/SymmetryOperations.h"
 #include "Numerics/Blasf.h"
 #include <sstream>
+#include "Numerics/e2iphi.h"
+
+using namespace std;
 
 namespace qmcplusplus
 {
@@ -97,7 +100,11 @@ WaveFunctionTester::run()
 
   put(qmcNode);
   if (checkSlaterDetOption=="no") checkSlaterDet = false;
-  if (checkRatio == "yes")
+  if (checkRatio == "quick")
+  {
+    runQuickTest();
+  }
+  else if (checkRatio == "yes")
   {
     //runRatioTest();
     runRatioTest2();
@@ -1329,6 +1336,45 @@ inline void randomize(ParticleAttrib<TinyVector<T,D> >& displ, T fac)
   T* rv=&(displ[0][0]);
   assignUniformRand(rv, displ.size()*D, Random);
   for(int i=0; i<displ.size()*D; ++i) rv[i] =fac*(rv[i]-0.5);
+}
+
+void WaveFunctionTester::runQuickTest()
+{
+  app_log() << "running quick test" << std::endl;
+  int nat = W.getTotalNum();
+  vector<ValueType> psi_ratios(nat);
+  MCWalkerConfiguration::iterator it(W.begin()), it_end(W.end());
+  for (;it != it_end; it++)
+  {
+    W.loadWalker(**it, true);
+    W.update();
+    RealType logpsi0 = Psi.evaluateLog(W);
+    RealType phase0 = Psi.getPhase();
+
+    // ----------------------- begin custom test  -----------------------
+    // evaluate virtual ratios
+    PosType newpos = {0,0,0};
+    W.makeVirtualMoves(newpos);
+    Psi.evaluateRatiosAlltoOne(W, psi_ratios);
+
+    // check virtual ratios
+    for (int iat=0;iat<nat;iat++)
+    {
+      W.loadWalker(**it, true);
+      W.R[iat] = newpos;
+      W.update();
+
+      RealType logpsi1 = Psi.evaluateLog(W);
+      RealType phase1 = Psi.getPhase();
+      ValueType ratio0 = psi_ratios[iat];
+      ValueType ratio1 = std::exp(logpsi1-logpsi0)*std::cos(phase1-phase0);
+
+      app_log() << iat << endl;
+      app_log() << ratio0 << endl;
+      app_log() << ratio1 << endl;
+    }
+    // -----------------------   end custom test  -----------------------
+  }
 }
 
 void WaveFunctionTester::runRatioV()

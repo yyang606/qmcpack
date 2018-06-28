@@ -79,6 +79,8 @@ private:
   {
     return *this;
   }
+  /** custom test */
+  void runQuickTest();
   /** basic tests for G and L */
   void runBasicTest();
   /** the basic ratios check */
