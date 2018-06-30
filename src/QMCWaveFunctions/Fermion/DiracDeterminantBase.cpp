@@ -278,6 +278,7 @@ void DiracDeterminantBase::copyFromBuffer(ParticleSet& P, WFBufferType& buf)
 DiracDeterminantBase::ValueType DiracDeterminantBase::ratio(ParticleSet& P, int iat)
 {
   UpdateMode=ORB_PBYP_RATIO;
+  if (iat<FirstIndex | iat>=LastIndex) return 1.0;
   WorkingIndex = iat-FirstIndex;
   SPOVTimer.start();
   Phi->evaluate(P, iat, psiV);
