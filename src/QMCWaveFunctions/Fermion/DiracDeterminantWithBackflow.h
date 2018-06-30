@@ -107,12 +107,6 @@ public:
 
   void copyFromBuffer(ParticleSet& P, WFBufferType& buf);
 
-  /** return the ratio only for the  iat-th partcle move
-   * @param P current configuration
-   * @param iat the particle thas is being moved
-   */
-  ValueType ratio(ParticleSet& P, int iat);
-
   ValueType alternateRatio(ParticleSet& P)
   {
     return 1.0;

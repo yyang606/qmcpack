@@ -193,49 +193,6 @@ void DiracDeterminantWithBackflow::copyFromBuffer(ParticleSet& P, WFBufferType& 
   //d2psiM_temp = d2psiM;
 }
 
-/** return the ratio only for the  iat-th partcle move
- * @param P current configuration
- * @param iat the particle thas is being moved
- */
-DiracDeterminantWithBackflow::ValueType DiracDeterminantWithBackflow::ratio(ParticleSet& P, int iat)
-{
-  // FIX FIX FIX : code Woodbury formula
-  psiM_temp=psiM;
-  // either code Woodbury or do multiple single particle updates
-  UpdateMode=ORB_PBYP_RATIO;
-  std::vector<int>::iterator it = BFTrans->indexQP.begin();
-  std::vector<int>::iterator it_end = BFTrans->indexQP.end();
-  while(it != it_end)
-  {
-    if(*it<FirstIndex || *it>=LastIndex )
-    {
-      ++it;
-      continue;
-    }
-    int jat = *it-FirstIndex;
-    PosType dr = BFTrans->newQP[*it] - BFTrans->QP.R[*it];
-    BFTrans->QP.makeMoveAndCheck(*it,dr);
-    Phi->evaluate(BFTrans->QP, *it, psiV);
-    for(int orb=0; orb<psiV.size(); orb++)
-      psiM_temp(orb,jat) = psiV[orb];
-    BFTrans->QP.rejectMove(*it);
-    it++;
-  }
-  // FIX FIX FIX : code Woodbury formula
-  psiMinv_temp = psiM_temp;
-  // FIX FIX FIX : code Woodbury formula
-  InverseTimer.start();
-  RealType NewPhase;
-  RealType NewLog=InvertWithLog(psiMinv_temp.data(),NumPtcls,NumOrbitals,WorkSpace.data(),Pivot.data(),NewPhase);
-  InverseTimer.stop();
-#if defined(QMC_COMPLEX)
-  RealType ratioMag = std::exp(NewLog-LogValue);
-  return curRatio = std::complex<OHMMS_PRECISION>(std::cos(NewPhase-PhaseValue)*ratioMag,std::sin(NewPhase-PhaseValue)*ratioMag);
-#else
-  return curRatio = std::cos(NewPhase-PhaseValue)*std::exp(NewLog-LogValue);
-#endif
-}
-
 DiracDeterminantWithBackflow::GradType
 DiracDeterminantWithBackflow::evalGrad(ParticleSet& P, int iat)
 {
