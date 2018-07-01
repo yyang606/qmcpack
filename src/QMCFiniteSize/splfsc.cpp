@@ -47,23 +47,6 @@ int main(int argc, char **argv)
   if (node) putContent(nrule, node);
   app_log() << " nrule = " << nrule << endl;
   SphericalAverage3D sphavg(nrule);
-  /* // inspect spline over desired domain
-  ofstream ofx, ofy, ofz;
-  ofx.open("sx.dat");
-  ofy.open("sy.dat");
-  ofz.open("sz.dat");
-  RealType dk = kmax/(nk-1);
-  for (int ik=0; ik<nk; ik++)
-  {
-    RealType kmag = ik*dk;
-    ofx << kmag << " " << (*boxspl3d)(kmag, 0, 0) << endl;
-    ofy << kmag << " " << (*boxspl3d)(0, kmag, 0) << endl;
-    ofz << kmag << " " << (*boxspl3d)(0, 0, kmag) << endl;
-  }
-  ofx.close();
-  ofy.close();
-  ofz.close();
-  */
 
   // step 5: do finite size sum, store spherical average at kshells
   //  the spline is most accurate at kshells
@@ -88,11 +71,12 @@ int main(int argc, char **argv)
     vint1d[iks+1] = std::pow(kmag, 2)*val;
   }
 
-  // step 6: estimate thermaldynamic limit of the sum
+  // step 6: estimate thermodynamic limit of the sum
   //  !!!! this is the most tricky step. Try a few approaches
   RealType vint = 0.0;
   RealType norm = box.Volume/(2*M_PI*M_PI);
 
+  /*
   // attempt 1: directly use 3D spline
   // problem: break->evaluate_vklr is numerically unstable for k < 0.05
   //
@@ -121,8 +105,8 @@ int main(int argc, char **argv)
   ofs.close();
   ofv.close();
   ofi.close();
+  */
 
-  /*
   // attempt 2: respline integrand in 1D
   // problem: spline quality depends on the shape of the integrand as k->0
   //  monotonic = good, oscilitory = bad!
@@ -136,7 +120,7 @@ int main(int argc, char **argv)
   }
   ofg.close();
 
-  Quad1D quad1d(0, kmax, nk);
+  Quad1D quad1d(0, kmags[nks], nk);
   vint = 0.0;
   ofg.open("fvint1d.dat");
   for (int ik=0; ik<nk; ik+=1)
@@ -147,7 +131,6 @@ int main(int argc, char **argv)
     vint += val*quad1d.w[ik];
   }
   ofg.close();
-  */
 
   /*
   // attempt 3: do sum in a bigger box

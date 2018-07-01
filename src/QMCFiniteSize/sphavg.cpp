@@ -55,17 +55,26 @@ int main(int argc, char **argv)
   ofs.close();
 
   RealType kmin = 0.0;
-  ofstream ofx, ofy, ofz;
-  ofx.open("s100.dat");
-  ofy.open("s110.dat");
-  ofz.open("s111.dat");
+  ofstream ofx, ofy, ofz, of1, of2, of3;
+  of1.open("s100.dat");
+  of2.open("s110.dat");
+  of3.open("s111.dat");
+  ofx.open("sx.dat");
+  ofy.open("sy.dat");
+  ofz.open("sz.dat");
   for (int ik=0; ik<nk; ik++)
   {
     RealType kmag = kmin+ik*dk;
+    of1 << kmag << " " << (*boxspl3d)(kmag, 0, 0) << endl;
+    of2 << kmag << " " << (*boxspl3d)(kmag/std::sqrt(2), kmag/std::sqrt(2), 0) << endl;
+    of3 << kmag << " " << (*boxspl3d)(kmag/std::sqrt(3), kmag/std::sqrt(3), kmag/std::sqrt(3)) << endl;
     ofx << kmag << " " << (*boxspl3d)(kmag, 0, 0) << endl;
-    ofy << kmag << " " << (*boxspl3d)(kmag/std::sqrt(2), kmag/std::sqrt(2), 0) << endl;
-    ofz << kmag << " " << (*boxspl3d)(kmag/std::sqrt(3), kmag/std::sqrt(3), kmag/std::sqrt(3)) << endl;
+    ofy << kmag << " " << (*boxspl3d)(0, kmag, 0) << endl;
+    ofz << kmag << " " << (*boxspl3d)(0, 0, kmag) << endl;
   }
+  of1.close();
+  of2.close();
+  of3.close();
   ofx.close();
   ofy.close();
   ofz.close();
