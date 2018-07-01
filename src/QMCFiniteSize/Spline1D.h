@@ -7,6 +7,7 @@ class Spline1D
 {
  public:
   Spline1D(std::vector<double> pts, std::vector<double> vals);
+  Spline1D(std::vector<double> pts, std::vector<double> vals, BCtype_d bc);
   double operator()(double x);
  private:
   NUgrid *grid1d_;
