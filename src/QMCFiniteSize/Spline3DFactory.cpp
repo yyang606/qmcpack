@@ -51,7 +51,7 @@ Ugrid Spline3DFactory::create_ugrid1d(xmlNodePtr node)
 }
 Ugrid3D Spline3DFactory::create_ugrid3d(xmlXPathContextPtr doc, string name)
 { // use create_ugrid1d to make 3 1D grids, stuff'em in a 3D grid
-  string expr = "//ugrid3d[\"" + name + "\"]";
+  string expr = "//ugrid3d[@name=\"" + name + "\"]";
   xmlNodePtr ug_node = find(expr.c_str(), doc);
 
   // initialize
