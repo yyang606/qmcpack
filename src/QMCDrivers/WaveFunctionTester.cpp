@@ -1367,30 +1367,43 @@ void WaveFunctionTester::runQuickTest()
 
   // ----------------------- begin custom test  -----------------------
   // evaluate wavefunction ratios using virtual moves
-  PosType newpos = {0,0,0};
+  PosType newpos = {9,9,9};
   //W.makeVirtualMoves(newpos);
   //Psi.evaluateRatiosAlltoOne(W, psi_ratios);
 
+  ofstream fold, fnew, fmove;
+  fold.open("old_pos.dat");
+  fnew.open("new_pos.dat");
+  fmove.open("move.dat");
   // check virtual ratios, one at a time
   for (int iat=0;iat<nat;iat++)
   {
     //ValueType ratio0 = psi_ratios[iat];
     W.loadWalker(**it, true);
     W.update();
+    fold << iat << " " << W.R[iat] << endl;
     logpsi0 = Psi.evaluateLog(W);
     phase0 = Psi.getPhase();
 
     // evaluate wavefunction ratio using virtual move
     PosType dr = newpos-W.R[iat];
+    fmove << iat << " " << dr << endl;
     //PosType dr = {0, 0, 0.01};
     W.makeMove(iat, dr);
-    aratio0 = Psi.ratio(W, iat);
+    ratio0 = Psi.ratio(W, iat);
     dphase0 = Psi.getPhaseDiff();
-    dlog0 = std::log(aratio0);
-    ratio0 = get_ratio(dlog0, dphase0);
+    //dlog0 = std::log(aratio0);
+    //ratio0 = get_ratio(dlog0, dphase0);
+    #ifdef QMC_COMPLEX
+    ratio0 *= std::complex<OHMMS_PRECISION>(
+      std::cos(dphase0),
+      std::sin(dphase0)
+    );
+    #endif
 
     // actually move particle and re-evaluate wavefunction
     W.R[iat] += dr;
+    fnew << iat << " " << W.R[iat] << endl;
     W.update();
     logpsi1 = Psi.evaluateLog(W);
     phase1 = Psi.getPhase();
@@ -1415,6 +1428,9 @@ void WaveFunctionTester::runQuickTest()
          << setw(20) << setprecision(16) << fixed
          << real(ratio1) << " "  << imag(ratio1) <<  " " << endl;
   }
+  fold.close();
+  fnew.close();
+  fmove.close();
   // -----------------------   end custom test  -----------------------
 }
 
