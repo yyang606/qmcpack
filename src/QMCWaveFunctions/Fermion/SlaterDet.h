@@ -203,10 +203,7 @@ public:
   virtual
   inline ValueType ratio(ParticleSet& P, int iat)
   {
-    ValueType ratio(1.0);
-    for (int i=0; i<Dets.size(); i++)
-      ratio *= Dets[i]->ratio(P, iat);
-    return ratio;
+    return Dets[getDetID(iat)]->ratio(P,iat);
   }
 
   virtual
