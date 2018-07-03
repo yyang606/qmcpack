@@ -146,6 +146,17 @@ public:
       Dets[i]->restore(iat);
   }
 
+
+  inline ValueType ratio(ParticleSet& P, int iat)
+  {
+    BFTrans->evaluatePbyP(P,iat);
+    //BFTrans->evaluate(P);
+    ValueType ratio=1.0;
+    for(int i=0; i<Dets.size(); ++i)
+      ratio*=Dets[i]->ratio(P,iat);
+    return ratio;
+  }
+
   inline ValueType alternateRatio(ParticleSet& P)
   {
     APP_ABORT("Need to implement SlaterDetWithBackflow::alternateRatio() \n");
