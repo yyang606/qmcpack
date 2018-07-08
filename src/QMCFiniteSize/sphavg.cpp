@@ -3,6 +3,48 @@
 #include "QMCFiniteSize/SphericalAverage3D.h"
 using namespace qmcplusplus;
 
+vector<RealType> get_hessian_at_zero(NaturalSpline3DInBox* boxspl3d, RealType h)
+{
+  RealType h2 = h*h;
+  RealType x, y, z;
+  x=0; y=0; z=0;
+
+  // evaluate spline at stencils
+  RealType f, fx_p, fx_m, fy_p, fy_m, fz_p, fz_m;
+  RealType fxy_p, fxy_m, fxz_p, fxz_m, fyz_p, fyz_m;
+  f    = (*boxspl3d)(x, y, z);
+  fx_p = (*boxspl3d)(x+h, y, z);
+  fx_m = (*boxspl3d)(x-h, y, z);
+  fy_p = (*boxspl3d)(x, y+h, z);
+  fy_m = (*boxspl3d)(x, y-h, z);
+  fz_p = (*boxspl3d)(x, y, z+h);
+  fz_m = (*boxspl3d)(x, y, z-h);
+  fxy_p = (*boxspl3d)(x+h, y+h, z);
+  fxy_m = (*boxspl3d)(x-h, y-h, z);
+  fxz_p = (*boxspl3d)(x+h, y, z+h);
+  fxz_m = (*boxspl3d)(x-h, y, z-h);
+  fyz_p = (*boxspl3d)(x, y+h, z+h);
+  fyz_m = (*boxspl3d)(x, y-h, z-h);
+
+  // build hessian matrix
+  RealType hxx, hyy, hzz, hxy, hxz, hyz;
+  hxx = (fx_p+fx_m-2*f)/h2;
+  hyy = (fy_p+fy_m-2*f)/h2;
+  hzz = (fz_p+fz_m-2*f)/h2;
+  hxy = (fxy_p+fxy_m+2*f-fx_p-fx_m-fy_p-fy_m)/(2*h2);
+  hxz = (fxz_p+fxz_m+2*f-fx_p-fx_m-fz_p-fz_m)/(2*h2);
+  hyz = (fyz_p+fyz_m+2*f-fy_p-fy_m-fz_p-fz_m)/(2*h2);
+
+  vector<RealType> hessian(6);
+  hessian[0] = hxx;
+  hessian[1] = hyy;
+  hessian[2] = hzz;
+  hessian[3] = hxy;
+  hessian[4] = hxz;
+  hessian[5] = hyz;
+  return hessian;
+}
+
 int main(int argc, char **argv)
 {
   OHMMS::Controller->initialize(argc, argv);
@@ -29,10 +71,24 @@ int main(int argc, char **argv)
   NaturalSpline3DInBox* boxspl3d = spline_factory.create_boxspl3d(
     grid3d, mat, box);
 
+  xmlNodePtr node;
+  RealType h = 0.0001;
+  node = find("//hessian/h", doc);
+  if (node) putContent(h, node);
+
+  // !!!! get hessian matrix
+  vector<RealType> hess = get_hessian_at_zero(boxspl3d, h);
+  ofstream ofh;
+  ofh.open("hess.dat");
+  for (int i=0;i<hess.size();i++)
+  {
+    ofh << hess[i] << endl;
+  }
+  ofh.close();
+
   // step 3: setup integral parameters
   int nrule=4, nk=64;
   RealType kmax = box.LR_kc;
-  xmlNodePtr node;
   node = find("//output_grid/nk", doc);
   if (node) putContent(nk, node);
   node = find("//output_grid/kmax", doc);
