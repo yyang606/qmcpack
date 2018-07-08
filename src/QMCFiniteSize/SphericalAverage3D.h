@@ -16,6 +16,7 @@ class SphericalAverage3D
     std::function< RealType(RealType, RealType, RealType) > func,
     RealType r
   );
+  void report(std::ostream &os);
  private:
   Quadrature3D<RealType> qrule_;
 };

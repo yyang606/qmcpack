@@ -18,4 +18,11 @@ RealType SphericalAverage3D::operator()(
   }
   return intval;
 }
+void SphericalAverage3D::report(ostream &os)
+{
+  for (int i=0; i<qrule_.xyz_m.size(); i++)
+  {
+    os << qrule_.xyz_m[i] << " " << qrule_.weight_m[i] << endl;
+  }
+}
 } // qmcplusplus
