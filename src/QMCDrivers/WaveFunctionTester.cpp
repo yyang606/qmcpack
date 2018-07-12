@@ -1368,8 +1368,11 @@ void WaveFunctionTester::runQuickTest()
   // ----------------------- begin custom test  -----------------------
   // evaluate wavefunction ratios using virtual moves
   PosType newpos = {9,9,9};
-  //W.makeVirtualMoves(newpos);
-  //Psi.evaluateRatiosAlltoOne(W, psi_ratios);
+  W.loadWalker(**it, true);
+  W.update();
+  Psi.evaluateLog(W);
+  W.makeVirtualMoves(newpos);
+  Psi.evaluateRatiosAlltoOne(W, psi_ratios);
 
   ofstream fold, fnew, fmove;
   fold.open("old_pos.dat");
@@ -1378,7 +1381,7 @@ void WaveFunctionTester::runQuickTest()
   // check virtual ratios, one at a time
   for (int iat=0;iat<nat;iat++)
   {
-    //ValueType ratio0 = psi_ratios[iat];
+    ValueType ratio0 = psi_ratios[iat];
     W.loadWalker(**it, true);
     W.update();
     fold << iat << " " << W.R[iat] << endl;
@@ -1388,18 +1391,6 @@ void WaveFunctionTester::runQuickTest()
     // evaluate wavefunction ratio using virtual move
     PosType dr = newpos-W.R[iat];
     fmove << iat << " " << dr << endl;
-    //PosType dr = {0, 0, 0.01};
-    W.makeMove(iat, dr);
-    ratio0 = Psi.ratio(W, iat);
-    dphase0 = Psi.getPhaseDiff();
-    //dlog0 = std::log(aratio0);
-    //ratio0 = get_ratio(dlog0, dphase0);
-    #ifdef QMC_COMPLEX
-    ratio0 *= std::complex<OHMMS_PRECISION>(
-      std::cos(dphase0),
-      std::sin(dphase0)
-    );
-    #endif
 
     // actually move particle and re-evaluate wavefunction
     W.R[iat] += dr;
@@ -1414,14 +1405,6 @@ void WaveFunctionTester::runQuickTest()
     ratio1 = get_ratio(dlog, dphase);
 
     // compare virtual(0) and re-computed(1) ratios
-    //fout << iat << " " << ratio0 << " " << ratio1 << " " << endl;
-    // complex numbers look bad on output
-    //fout << setw(4) << iat << " "
-    //     << setw(20) << setprecision(16) << fixed
-    //     << dlog-dlog0 << " "
-    //     << setw(6) << setprecision(4) << fixed
-    //     << (dphase-dphase0)/M_PI << endl;
-    // phase can be off by integer multiples of 2pi
     fout << setw(4) << iat << " "
          << setw(20) << setprecision(16) << fixed
          << real(ratio0) << " "  << imag(ratio0) << " "
