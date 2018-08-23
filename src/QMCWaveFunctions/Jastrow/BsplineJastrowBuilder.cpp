@@ -360,6 +360,7 @@ bool BsplineJastrowBuilder::put(xmlNodePtr cur)
 
     bool success = J2->checkInitialization();
     if (!success) APP_ABORT("failed to initialize two-body Jastrow");
+    app_log() << "Chiesa KE correction = " << J2->ChiesaKEcorrection() << std::endl;
     J2->dPsi=dJ2;
     targetPsi.addOrbital(J2,"J2_bspline");
     J2->setOptimizable(Opt);

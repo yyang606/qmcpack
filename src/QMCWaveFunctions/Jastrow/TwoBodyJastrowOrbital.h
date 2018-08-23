@@ -123,12 +123,6 @@ public:
     // also assign rf to correlate species pairs (ia,ib), (ib,ia)
     F[ia*NumGroups+ib]=rf;
     F[ib*NumGroups+ia]=rf; // enforce exchange symmetry
-
-    if (FirstTime)
-    { // write Chiesa kinetic energy correction to file
-      ChiesaKEcorrection();
-      FirstTime = false;
-    }
   }
 
   void linkFunc(int ia, int ib, FT* rf, bool exchange=true)
