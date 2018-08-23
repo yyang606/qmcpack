@@ -63,7 +63,6 @@ protected:
 
   std::map<std::string,FT*> J2Unique;
   ParticleSet *PtclRef;
-  bool FirstTime;
   RealType KEcorr;
 
 public:
@@ -78,7 +77,6 @@ public:
   {
     PtclRef = &p;
     init(p);
-    FirstTime = true;
     OrbitalName = "TwoBodyJastrow";
   }
 
@@ -244,13 +242,6 @@ public:
       (*it).second->resetParameters(active);
       ++it;
     }
-    //if (FirstTime) {
-    // if(!IsOptimizing)
-    // {
-    //   app_log() << "  Chiesa kinetic energy correction = "
-    //     << ChiesaKEcorrection() << std::endl;
-    //   //FirstTime = false;
-    // }
     if(dPsi)
       dPsi->resetParameters( active );
     for(int i=0; i<myVars.size(); ++i)
@@ -270,7 +261,6 @@ public:
       (*it).second->myVars.print(os);
       ++it;
     }
-    ChiesaKEcorrection();
   }
 
 
@@ -293,11 +283,6 @@ public:
                        ParticleSet::ParticleGradient_t& G,
                        ParticleSet::ParticleLaplacian_t& L)
   {
-    if (FirstTime)
-    {
-      FirstTime = false;
-      ChiesaKEcorrection();
-    }
     LogValue=0.0;
     const DistanceTableData* d_table=P.DistTables[0];
     RealType dudr, d2udr2;
@@ -615,11 +600,6 @@ public:
                                   ParticleSet::ParticleGradient_t& dG,
                                   ParticleSet::ParticleLaplacian_t& dL)
   {
-    if (FirstTime)
-    {
-      FirstTime = false;
-      ChiesaKEcorrection();
-    }
     const DistanceTableData* d_table=P.DistTables[0];
     RealType dudr, d2udr2,u;
     LogValue=0.0;
@@ -816,59 +796,12 @@ public:
   void
   finalizeOptimization()
   {
-    ChiesaKEcorrection();
   }
 
   RealType KECorrection()
   {
     return KEcorr;
   }
-
-// RealType ChiesaKEcorrection()
-//     {
-//       // Find magnitude of the smallest nonzero G-vector
-//       RealType Gmag = std::sqrt(PtclRef->SK->KLists.ksq[0]);
-//       //app_log() << "Gmag = " << Gmag << std::endl;
-
-//       const int numPoints = 1000;
-//       RealType vol = PtclRef->Lattice.Volume;
-//       RealType aparam = 0.0;
-//       int nsp = PtclRef->groups();
-//       FILE *fout = fopen ("uk.dat", "w");
-//       RealType sum;
-//       for (RealType s=0.001; s<6.0; s+=0.001) {
-//        	RealType k = s * M_PI/F[0]->cutoff_radius;
-// 	sum = 0.0;
-// 	for (int i=0; i<PtclRef->groups(); i++) {
-// 	  int Ni = PtclRef->last(i) - PtclRef->first(i);
-// 	  RealType aparam = 0.0;
-// 	  for (int j=0; j<PtclRef->groups(); j++) {
-// 	    int Nj = PtclRef->last(j) - PtclRef->first(j);
-// 	    if (F[i*nsp+j]) {
-// 	      FT& ufunc = *(F[i*nsp+j]);
-// 	      RealType radius = ufunc.cutoff_radius;
-// 	      RealType k = 1.0*M_PI/radius;
-// 	      //RealType k = Gmag;
-// 	      RealType dr = radius/(RealType)(numPoints-1);
-// 	      for (int ir=0; ir<numPoints; ir++) {
-// 		RealType r = dr * (RealType)ir;
-// 		RealType u = ufunc.evaluate(r);
-// 		aparam += (1.0/4.0)*k*k*
-// 		  4.0*M_PI*r*std::sin(k*r)/k*u*dr;
-// 		//aparam += 0.25* 4.0*M_PI*r*r*u*dr;
-// 	      }
-// 	    }
-// 	  }
-// 	  //app_log() << "A = " << aparam << std::endl;
-// 	  sum += Ni * aparam / vol;
-// 	}
-// 	fprintf (fout, "%1.8f %1.12e\n", k/Gmag, sum);
-//       }
-//       fclose(fout);
-//       return sum;
-//     }
-
-
 
 };
 
