@@ -79,6 +79,12 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
       for (int ik=0; ik<nk; ++ik)
         nofK_here[ik] += ( phases_c[ik]*phases_vPos_c[ik] - phases_s[ik]*phases_vPos_s[ik] ) * ratio_c
                        - ( phases_s[ik]*phases_vPos_c[ik] + phases_c[ik]*phases_vPos_s[ik] ) * ratio_s ;
+      // nofK_here is Re[ e^{i dot(k, r-r')} * psi'/psi ]
+      // To add J(p):
+      //  1. if kmag is unique
+      //  2. then calculate kmag*|r-r'|
+      //  3. eval_e2iphi(nkmag, krr1.data(), phases_mag.data(0), phases_mag.data(1));
+      //  4. jofP_here[ikmag] += phases_mag_c*ratio_c-phases_mag_s*ratio_s;
     }
   }
   if (hdf5_out)
@@ -106,6 +112,7 @@ void MomentumEstimator::registerCollectables(std::vector<observable_helper*>& h5
     std::vector<int> ng(1);
     //add nofk
     ng[0]=nofK.size();
+    // tag on jofP
     observable_helper* h5o=new observable_helper("nofk");
     h5o->set_dimensions(ng,myIndex);
     h5o->open(gid);
@@ -413,6 +420,7 @@ bool MomentumEstimator::putSpecial(xmlNodePtr cur, ParticleSet& elns, bool rootN
     phases_vPos[im].resize(kPoints.size());
   psi_ratios_all.resize(M,psi_ratios.size());
   norm_nofK=1.0/RealType(M);
+  // 0. set up 1D kmag grid for J(p)
   return true;
 }
 
