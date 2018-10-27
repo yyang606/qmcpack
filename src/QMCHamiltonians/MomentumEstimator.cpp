@@ -420,7 +420,36 @@ bool MomentumEstimator::putSpecial(xmlNodePtr cur, ParticleSet& elns, bool rootN
     phases_vPos[im].resize(kPoints.size());
   psi_ratios_all.resize(M,psi_ratios.size());
   norm_nofK=1.0/RealType(M);
-  // 0. set up 1D kmag grid for J(p)
+  // set up 1D kmag grid for J(p)
+  // step 1: register all unique integers up to a given zoom
+  std::vector<int> kids;
+  float zoom=100.;
+  for (int ik=0; ik<kPoints.size(); ik++)
+  {
+    float khere(std::sqrt(dot(kPoints[ik],kPoints[ik])));
+    int kid = rint(khere*zoom);
+    std::vector<int>::iterator it;
+    it = std::find(kids.begin(), kids.end(), kid);
+    if (it == kids.end())
+    {
+      kmap[kid] = kids.size();
+      kids.push_back(kid);
+      kmags.push_back(khere);
+    }
+  }
+
+  if (rootNode)
+  {
+    std::ofstream fout("kmags.dat");
+    fout.setf(std::ios::scientific, std::ios::floatfield);
+    fout << "# kid  kmap  kmag        ";
+    fout << std::endl;
+    for (int i=0; i<kmags.size(); i++)
+    {
+      fout<< kids[i] << "  " << kmap[kids[i]] << "  " << kmags[i] << std::endl;
+    }
+    fout.close();
+  }
   return true;
 }
 
