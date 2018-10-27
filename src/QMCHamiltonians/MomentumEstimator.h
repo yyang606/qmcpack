@@ -77,6 +77,7 @@ public:
   std::map<int, int> kmap;
   std::vector<RealType> kmags;
   std::vector<RealType> jofp;
+  Matrix<RealType> rij;
 };
 
 }

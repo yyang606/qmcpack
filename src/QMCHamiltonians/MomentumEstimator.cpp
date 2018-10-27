@@ -40,6 +40,7 @@ void MomentumEstimator::resetTargetParticleSet(ParticleSet& P)
 
 MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
 {
+  const DistanceTableData *restrict dtable = P.DistTables[0];
   const int np=P.getTotalNum();
   const int nk=kPoints.size();
   for (int s=0; s<M; ++s)
@@ -57,6 +58,11 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
     for (int ik=0; ik<nk; ++ik)
        kdotp[ik] = -dot(kPoints[ik], vPos[s]);
     eval_e2iphi(nk, kdotp.data(), phases_vPos[s].data(0), phases_vPos[s].data(1));
+    // store |r-r'| for every particle and every move
+    for (int i=0; i<np; i++)
+    {
+      rij[s][i] = dtable->Temp[i].r1;
+    }
   }
 
   std::fill_n(nofK.begin(),nk,RealType(0));
@@ -80,11 +86,15 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
         nofK_here[ik] += ( phases_c[ik]*phases_vPos_c[ik] - phases_s[ik]*phases_vPos_s[ik] ) * ratio_c
                        - ( phases_s[ik]*phases_vPos_c[ik] + phases_c[ik]*phases_vPos_s[ik] ) * ratio_s ;
       // nofK_here is Re[ e^{i dot(k, r-r')} * psi'/psi ]
-      // To add J(p):
-      //  1. if kmag is unique
-      //  2. then calculate kmag*|r-r'|
-      //  3. eval_e2iphi(nkmag, krr1.data(), phases_mag.data(0), phases_mag.data(1));
-      //  4. jofP_here[ikmag] += phases_mag_c*ratio_c-phases_mag_s*ratio_s;
+
+      // jofp[ikmag] += phases_mag_c*ratio_c-phases_mag_s*ratio_s;
+      for (int ik=0; ik<kmags.size(); ik++)
+      {
+        RealType kr_s, kr_c;
+        RealType kr_theta = kmags[ik]*rij[s][i];
+        sincos(kr_theta, &kr_s, &kr_c);
+        jofp[ik] += kr_c*ratio_c-kr_s*ratio_s;
+      }
     }
   }
   if (hdf5_out)
@@ -93,6 +103,10 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
     int j=myIndex;
     for (int ik=0; ik<nofK.size(); ++ik,++j)
       P.Collectables[j]+= w*nofK[ik];
+    for (int ik=0; ik<jofp.size(); ++ik, ++j)
+      P.Collectables[j] += w*jofp[ik];
+    if (j>myIndex+nofK.size()+jofp.size())
+      APP_ABORT("MomentumEstimator is overwriting memory!");
   }
   else
   {
@@ -440,6 +454,7 @@ bool MomentumEstimator::putSpecial(xmlNodePtr cur, ParticleSet& elns, bool rootN
     }
   }
   jofp.resize(kmags.size());
+  rij.resize(M, kmags.size());
   return true;
 }
 
@@ -477,6 +492,7 @@ void MomentumEstimator::resize(const std::vector<PosType>& kin,
   //jofp data
   kmap = kmap_in;
   jofp.resize(kmap.size());
+  rij.resize(M, kmap.size());
 }
 
 void MomentumEstimator::setRandomGenerator(RandomGenerator_t* rng)
