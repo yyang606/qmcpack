@@ -111,11 +111,12 @@ void MomentumEstimator::registerCollectables(std::vector<observable_helper*>& h5
     //descriptor for the data, 1-D data
     std::vector<int> ng(1);
     //add nofk
-    ng[0]=nofK.size();
+    ng[0]=nofK.size()+jofp.size();
     // tag on jofP
     observable_helper* h5o=new observable_helper("nofk");
     h5o->set_dimensions(ng,myIndex);
     h5o->open(gid);
+    h5o->addProperty(const_cast<std::vector<RealType>&>(kmags),"kmags");
     h5o->addProperty(const_cast<std::vector<PosType>&>(kPoints),"kpoints");
     h5o->addProperty(const_cast<std::vector<int>&>(kWeights),"kweights");
     h5desc.push_back(h5o);
@@ -128,7 +129,8 @@ void MomentumEstimator::addObservables(PropertySetType& plist, BufferType& colle
   if (hdf5_out)
   {
     myIndex=collectables.size();
-    collectables.add(nofK.begin(),nofK.end());
+    std::vector<RealType> tmp(nofK.size()+jofp.size());
+    collectables.add(tmp.begin(),tmp.end());
   }
   else
   {
@@ -426,7 +428,7 @@ bool MomentumEstimator::putSpecial(xmlNodePtr cur, ParticleSet& elns, bool rootN
   float zoom=100.;
   for (int ik=0; ik<kPoints.size(); ik++)
   {
-    float khere(std::sqrt(dot(kPoints[ik],kPoints[ik])));
+    RealType khere(std::sqrt(dot(kPoints[ik],kPoints[ik])));
     int kid = rint(khere*zoom);
     std::vector<int>::iterator it;
     it = std::find(kids.begin(), kids.end(), kid);
@@ -437,19 +439,7 @@ bool MomentumEstimator::putSpecial(xmlNodePtr cur, ParticleSet& elns, bool rootN
       kmags.push_back(khere);
     }
   }
-
-  if (rootNode)
-  {
-    std::ofstream fout("kmags.dat");
-    fout.setf(std::ios::scientific, std::ios::floatfield);
-    fout << "# kid  kmap  kmag        ";
-    fout << std::endl;
-    for (int i=0; i<kmags.size(); i++)
-    {
-      fout<< kids[i] << "  " << kmap[kids[i]] << "  " << kmags[i] << std::endl;
-    }
-    fout.close();
-  }
+  jofp.resize(kmags.size());
   return true;
 }
 
@@ -462,14 +452,15 @@ QMCHamiltonianBase* MomentumEstimator::makeClone(ParticleSet& qp
     , TrialWaveFunction& psi)
 {
   MomentumEstimator* myclone=new MomentumEstimator(qp,psi);
-  myclone->resize(kPoints,M);
+  myclone->resize(kPoints, kmap, M);
   myclone->myIndex=myIndex;
   myclone->norm_nofK=norm_nofK;
   myclone->hdf5_out=hdf5_out;
   return myclone;
 }
 
-void MomentumEstimator::resize(const std::vector<PosType>& kin, const int Min)
+void MomentumEstimator::resize(const std::vector<PosType>& kin,
+  const std::map<int, int> kmap_in, const int Min)
 {
   //copy kpoints
   kPoints=kin;
@@ -483,6 +474,9 @@ void MomentumEstimator::resize(const std::vector<PosType>& kin, const int Min)
   phases_vPos.resize(M);
   for(int im=0; im<M; im++)
     phases_vPos[im].resize(kPoints.size());
+  //jofp data
+  kmap = kmap_in;
+  jofp.resize(kmap.size());
 }
 
 void MomentumEstimator::setRandomGenerator(RandomGenerator_t* rng)
