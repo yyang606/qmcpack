@@ -58,7 +58,7 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
     for (int ik=0; ik<nk; ++ik)
        kdotp[ik] = -dot(kPoints[ik], vPos[s]);
     eval_e2iphi(nk, kdotp.data(), phases_vPos[s].data(0), phases_vPos[s].data(1));
-    // store |r-r'| for every particle and every move
+    // store |r-r'|_z for every particle and every move
     for (int i=0; i<np; i++)
     {
       rij[s][i] = std::abs(dtable->Temp[i].dr1[2]);
@@ -457,7 +457,7 @@ bool MomentumEstimator::putSpecial(xmlNodePtr cur, ParticleSet& elns, bool rootN
     }
   }
   jofp.resize(kmags.size());
-  rij.resize(M, kmags.size());
+  rij.resize(M, elns.getTotalNum());
   return true;
 }
 
@@ -495,7 +495,7 @@ void MomentumEstimator::resize(const std::vector<PosType>& kin,
   //jofp data
   kmap = kmap_in;
   jofp.resize(kmap.size());
-  rij.resize(M, kmap.size());
+  rij.resize(M, psi_ratios.size());
 }
 
 void MomentumEstimator::setRandomGenerator(RandomGenerator_t* rng)
