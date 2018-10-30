@@ -50,6 +50,9 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
       newpos[i]=myRNG();
     //make it cartesian
     vPos[s]=Lattice.toCart(newpos);
+    // !!!! HACK for J(p), fix x and y
+    vPos[s][0] = P.R[0][0];
+    vPos[s][1] = P.R[0][1];
     P.makeVirtualMoves(vPos[s]);
     refPsi.evaluateRatiosAlltoOne(P,psi_ratios);
     for (int i=0; i<np; ++i)
@@ -61,7 +64,7 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
     // store |r-r'| for every particle and every move
     for (int i=0; i<np; i++)
     {
-      rij[s][i] = dtable->Temp[i].r1;
+      rij[s][i] = dtable->Temp[i].dr1[2];
     }
   }
 
@@ -88,12 +91,18 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
       // nofK_here is Re[ e^{i dot(k, r-r')} * psi'/psi ]
 
       // jofp[ikmag] += phases_mag_c*ratio_c-phases_mag_s*ratio_s;
-      for (int ik=0; ik<kmags.size(); ik++)
+      if (i==0)
       {
-        RealType kr_s, kr_c;
-        RealType kr_theta = kmags[ik]*rij[s][i];
-        sincos(kr_theta, &kr_s, &kr_c);
-        jofp[ik] += kr_c*ratio_c-kr_s*ratio_s;
+        for (int ik=0; ik<kmags.size(); ik++)
+        {
+          RealType myk = kmags[ik];
+          RealType myr = rij[s][i];
+          RealType kr_s, kr_c;
+          RealType kr_theta = myk*myr;
+          sincos(kr_theta, &kr_s, &kr_c);
+          jofp[ik] += kr_c*ratio_c-kr_s*ratio_s;
+          //jofp[ik] += 2*M_PI*(1-std::pow(myk*myr, 2)/4.+ std::pow(myk*myr, 4)/64.)*ratio_c;
+        }
       }
     }
   }
