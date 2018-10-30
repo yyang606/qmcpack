@@ -68,6 +68,7 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
     }
   }
 
+  std::fill_n(jofp.begin(),jofp.size(), RealType(0));
   std::fill_n(nofK.begin(),nk,RealType(0));
   for (int i=0; i<np; ++i)
   {
