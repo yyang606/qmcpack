@@ -58,13 +58,15 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
     for (int ik=0; ik<nk; ++ik)
        kdotp[ik] = -dot(kPoints[ik], vPos[s]);
     eval_e2iphi(nk, kdotp.data(), phases_vPos[s].data(0), phases_vPos[s].data(1));
-    // store |r-r'|_z for every particle and every move
+    // store |r-r'| for every particle and every move
     for (int i=0; i<np; i++)
     {
-      rij[s][i] = std::abs(dtable->Temp[i].dr1[2]);
+      rij[s][i] = dtable->Temp[i].r1;
     }
   }
+  RealType dr = rmags[1]-rmags[0];
 
+  std::fill_n(fofr.begin(),fofr.size(), RealType(0));
   std::fill_n(jofp.begin(),jofp.size(), RealType(0));
   std::fill_n(nofK.begin(),nk,RealType(0));
   for (int i=0; i<np; ++i)
@@ -88,6 +90,10 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
                        - ( phases_s[ik]*phases_vPos_c[ik] + phases_c[ik]*phases_vPos_s[ik] ) * ratio_s ;
       // nofK_here is Re[ e^{i dot(k, r-r')} * psi'/psi ]
 
+      // record 1RDM
+      int idx = (int)std::floor(rij[s][i]/dr);
+      fofr[idx] += ratio_c;
+
       // jofp[ikmag] += phases_mag_c*ratio_c-phases_mag_s*ratio_s;
       for (int ik=0; ik<kmags.size(); ik++)
       {
@@ -109,7 +115,9 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
       P.Collectables[j]+= w*nofK[ik];
     for (int ik=0; ik<jofp.size(); ++ik, ++j)
       P.Collectables[j] += w*jofp[ik];
-    if (j>myIndex+nofK.size()+jofp.size())
+    for (int ik=0; ik<fofr.size(); ++ik, ++j)
+      P.Collectables[j] += w*fofr[ik];
+    if (j>myIndex+nofK.size()+jofp.size()+fofr.size())
       APP_ABORT("MomentumEstimator is overwriting memory!");
   }
   else
@@ -129,12 +137,13 @@ void MomentumEstimator::registerCollectables(std::vector<observable_helper*>& h5
     //descriptor for the data, 1-D data
     std::vector<int> ng(1);
     //add nofk
-    ng[0]=nofK.size()+jofp.size();
+    ng[0]=nofK.size()+jofp.size()+fofr.size();
     // tag on jofP
     observable_helper* h5o=new observable_helper("nofk");
     h5o->set_dimensions(ng,myIndex);
     h5o->open(gid);
     h5o->addProperty(const_cast<std::vector<RealType>&>(kmags),"kmags");
+    h5o->addProperty(const_cast<std::vector<RealType>&>(rmags),"rmags");
     h5o->addProperty(const_cast<std::vector<PosType>&>(kPoints),"kpoints");
     h5o->addProperty(const_cast<std::vector<int>&>(kWeights),"kweights");
     h5desc.push_back(h5o);
@@ -147,7 +156,7 @@ void MomentumEstimator::addObservables(PropertySetType& plist, BufferType& colle
   if (hdf5_out)
   {
     myIndex=collectables.size();
-    std::vector<RealType> tmp(nofK.size()+jofp.size());
+    std::vector<RealType> tmp(nofK.size()+jofp.size()+fofr.size());
     collectables.add(tmp.begin(),tmp.end());
   }
   else
@@ -459,6 +468,16 @@ bool MomentumEstimator::putSpecial(xmlNodePtr cur, ParticleSet& elns, bool rootN
   }
   jofp.resize(kmags.size());
   rij.resize(M, elns.getTotalNum());
+  // setup 1D grid for 1RDM f(r)
+  RealType rmax = elns.Lattice.WignerSeitzRadius;
+  int nr = 64; // should be input
+  rmags.resize(nr);
+  RealType dr = rmax/nr;
+  for (int ir=0;ir<nr;ir++)
+  {
+    rmags[ir] = ir*dr;
+  }
+  fofr.resize(nr);
   return true;
 }
 
@@ -471,7 +490,7 @@ QMCHamiltonianBase* MomentumEstimator::makeClone(ParticleSet& qp
     , TrialWaveFunction& psi)
 {
   MomentumEstimator* myclone=new MomentumEstimator(qp,psi);
-  myclone->resize(kPoints, kmap, M);
+  myclone->resize(kPoints, kmap, M, kmags);
   myclone->myIndex=myIndex;
   myclone->norm_nofK=norm_nofK;
   myclone->hdf5_out=hdf5_out;
@@ -479,7 +498,7 @@ QMCHamiltonianBase* MomentumEstimator::makeClone(ParticleSet& qp
 }
 
 void MomentumEstimator::resize(const std::vector<PosType>& kin,
-  const std::map<int, int> kmap_in, const int Min)
+  const std::map<int, int> kmap_in, const int Min, const std::vector<RealType>& rmags)
 {
   //copy kpoints
   kPoints=kin;
@@ -497,6 +516,7 @@ void MomentumEstimator::resize(const std::vector<PosType>& kin,
   kmap = kmap_in;
   jofp.resize(kmap.size());
   rij.resize(M, psi_ratios.size());
+  fofr.resize(rmags.size());
 }
 
 void MomentumEstimator::setRandomGenerator(RandomGenerator_t* rng)

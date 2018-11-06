@@ -41,7 +41,7 @@ public:
   QMCHamiltonianBase* makeClone(ParticleSet& qp, TrialWaveFunction& psi);
   void setRandomGenerator(RandomGenerator_t* rng);
   //resize the internal data by input k-point list
-  void resize(const std::vector<PosType>& kin, const std::map<int, int> kmap_in, const int Min);
+  void resize(const std::vector<PosType>& kin, const std::map<int, int> kmap_in, const int Min, const std::vector<RealType>& rmags);
   ///number of samples
   int M;
   ///normalization factor for n(k)
@@ -78,6 +78,9 @@ public:
   std::vector<RealType> kmags;
   std::vector<RealType> jofp;
   Matrix<RealType> rij;
+  ///fofr temporary data
+  std::vector<RealType> rmags;
+  std::vector<RealType> fofr;
 };
 
 }
