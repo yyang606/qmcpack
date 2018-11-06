@@ -50,9 +50,6 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
       newpos[i]=myRNG();
     //make it cartesian
     vPos[s]=Lattice.toCart(newpos);
-    // HACK for J(pz)
-    vPos[s][0] = P.R[0][0];
-    vPos[s][1] = P.R[0][1];
     P.makeVirtualMoves(vPos[s]);
     refPsi.evaluateRatiosAlltoOne(P,psi_ratios);
     for (int i=0; i<np; ++i)
@@ -92,8 +89,6 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
       // nofK_here is Re[ e^{i dot(k, r-r')} * psi'/psi ]
 
       // jofp[ikmag] += phases_mag_c*ratio_c-phases_mag_s*ratio_s;
-      if (i==0)
-      {
       for (int ik=0; ik<kmags.size(); ik++)
       {
         RealType myk = kmags[ik];
@@ -103,7 +98,6 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
         sincos(kr_theta, &kr_s, &kr_c);
         jofp[ik] += kr_c*ratio_c-kr_s*ratio_s;
         //jofp[ik] += 2*M_PI*(1-std::pow(myk*myr, 2)/4.+ std::pow(myk*myr, 4)/64.)*ratio_c;
-      }
       }
     }
   }
@@ -452,9 +446,7 @@ bool MomentumEstimator::putSpecial(xmlNodePtr cur, ParticleSet& elns, bool rootN
   float zoom=100.;
   for (int ik=0; ik<kPoints.size(); ik++)
   {
-    //RealType khere(std::sqrt(dot(kPoints[ik],kPoints[ik])));
-    // HACK to use kz
-    RealType khere(std::abs(kPoints[ik][2]));
+    RealType khere(std::sqrt(dot(kPoints[ik],kPoints[ik])));
     int kid = rint(khere*zoom);
     std::vector<int>::iterator it;
     it = std::find(kids.begin(), kids.end(), kid);
