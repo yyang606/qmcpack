@@ -698,7 +698,7 @@ class Structure(Sobj):
         if elem is None:
             elem = []
         #end if
-        if posu!=None:
+        if posu is not None:
             pos = posu
         #end if
         if pos is None:
@@ -729,7 +729,7 @@ class Structure(Sobj):
         else:
             self.kaxes=2*pi*inv(self.axes).T
         #end if
-        if posu!=None:
+        if posu is not None:
             self.pos_to_cartesian()
         #end if
         if frozen!=None:
