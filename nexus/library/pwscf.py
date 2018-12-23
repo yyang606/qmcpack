@@ -221,12 +221,19 @@ class Pwscf(Simulation):
             if res_path==loc_path:
                 None # don't need to do anything if in same directory
             elif self.sync_from_scf: # rsync output into nscf dir
+                old_save_dir = os.path.join(result.outdir,
+                  'pwscf.save')
                 outdir = os.path.join(self.locdir,c.outdir)
-                command = 'rsync -avz {0}/* {1}/'.format(result.outdir,outdir)
+                save_dir = os.path.join(outdir,
+                  'pwscf.save')
                 if not os.path.exists(outdir):
-                    os.makedirs(outdir)
+                  os.makedirs(outdir)
+                  os.makedirs(save_dir)
                 #end if
-                execute(command)
+                for fname in ['charge-density.dat', 'data-file.xml']:
+                  command = 'cp {0}/{1} {2}'.format(
+                    old_save_dir, fname, save_dir)
+                  execute(command)
             else: # attempt to use symbolic links instead
                 link_loc = os.path.join(self.locdir,c.outdir,c.prefix+'.save')
                 cd_loc = result.location
