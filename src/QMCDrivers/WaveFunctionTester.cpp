@@ -35,6 +35,8 @@
 #include "Numerics/Blasf.h"
 #include <sstream>
 
+using namespace std;
+
 namespace qmcplusplus
 {
 
@@ -46,7 +48,7 @@ WaveFunctionTester::WaveFunctionTester(MCWalkerConfiguration& w,
                                        WaveFunctionPool& ppool,
                                        Communicate* comm):
   QMCDriver(w,psi,h,ppool,comm),checkRatio("no"),checkClone("no"), checkHamPbyP("no"),
-  PtclPool(ptclPool), wftricks("no"),checkEloc("no"), checkBasic("yes"), checkRatioV("no"),
+  PtclPool(ptclPool), wftricks("no"),checkEloc("no"), checkBasic("yes"), checkRatioV("no"), checkAlltoOne("no"),
   deltaParam(0.0), toleranceParam(0.0), outputDeltaVsError(false), checkSlaterDet(true)
 {
   m_param.add(checkRatio,"ratio","string");
@@ -56,6 +58,7 @@ WaveFunctionTester::WaveFunctionTester(MCWalkerConfiguration& w,
   m_param.add(wftricks,"orbitalutility","string");
   m_param.add(checkEloc,"printEloc","string");
   m_param.add(checkBasic,"basic","string");
+  m_param.add(checkAlltoOne,"alltoone","string");
   m_param.add(checkRatioV,"virtual_move","string");
   m_param.add(deltaParam,"delta","none");
   m_param.add(toleranceParam,"tolerance","none");
@@ -130,6 +133,8 @@ WaveFunctionTester::run()
     runBasicTest();
   else if (checkRatioV == "yes")
     runRatioV();
+  else if (checkAlltoOne == "yes")
+    runAlltoOneTest();
   else
     app_log() << "No wavefunction test specified" << std::endl;
 
@@ -1045,6 +1050,78 @@ void WaveFunctionTester::runBasicTest()
 #endif
   }
   app_log() << "Ratio test: " << (any_ratio_fail?"FAIL":"PASS") << std::endl;
+}
+
+void WaveFunctionTester::runAlltoOneTest()
+{
+#if defined(QMC_COMPLEX)
+  // W, Psi, fout are setup before this call
+  //  temporary variables
+  int nat = W.getTotalNum();
+  PosType dr;  // move vector
+  ValueType ratio_ref;
+  RealType ratio_mag, ratio_phase;
+  RealType logpsi0, phase0, logpsi1, phase1;
+  vector<ValueType> psi_ratios(nat), all_to_one(nat), wf_ratios(nat);
+  // initilization
+  fout.precision(4);
+  logpsi0 = Psi.evaluateLog(W);  // initialize wavefunction internals
+  phase0 = Psi.getPhase();
+  fout << "initialized " << nat << " electrons at " << endl
+       << W.R << endl;
+  fout << "current wf value is " << endl
+       << logpsi0 << " " << phase0 << " "
+       << std::exp(logpsi0)*ValueType(std::cos(phase0), std::sin(phase0)) << endl;
+  // make move and test wf ratios
+  //  method 1: evaluateRatiosAlltoOne
+  PosType origin(0, 0, 0);
+  W.makeVirtualMoves(origin);
+  Psi.evaluateRatiosAlltoOne(W, all_to_one);
+  //  method 2: ratio(W, iat)
+  //  method 3: evauateLog <- true ratio
+  for (int iat=0; iat<nat; iat++)
+  {
+    // evaluate wf before move
+    W.update();
+    logpsi0 = Psi.evaluateLog(W);
+    phase0 = Psi.evaluateLog(W);
+    // make move
+    dr = origin - W.R[iat];
+    W.makeMove(iat, dr);
+    // calculate wf ratio
+    ratio_mag = Psi.ratio(W, iat);
+    ratio_phase = Psi.getPhaseDiff();
+    psi_ratios[iat] = ratio_mag*ValueType(
+      std::cos(ratio_phase), std::sin(ratio_phase)
+    );
+    // actually move particle and evaluate wf
+    W.R[iat] = origin;
+    W.update();
+    logpsi1 = Psi.evaluateLog(W);
+    phase1 = Psi.getPhase();
+    // calculate true wf ratio
+    RealType aratio = std::exp(logpsi1-logpsi0);
+    RealType dphase = phase1-phase0;
+    ratio_ref = aratio * ValueType(
+      std::cos(dphase), std::sin(dphase)
+    );
+    wf_ratios[iat] = ratio_ref;
+    // put particle back
+    W.R[iat] -= dr;
+    W.update();
+  }
+
+  for (int iat=0; iat<nat; iat++)
+  {
+    //fout << "true ratio: " << aratio << " " << dphase << " " << ratio_ref << endl;
+    fout << "true ratio: " << wf_ratios[iat] << endl;
+    fout << all_to_one[iat] << " " << endl
+         << psi_ratios[iat] << " " << endl
+         << all_to_one[iat] - psi_ratios[iat] << endl;
+  }
+#else
+  app_log() << "runAlltoOne is not available for real build" << endl;
+#endif
 }
 
 void WaveFunctionTester::runRatioTest()
