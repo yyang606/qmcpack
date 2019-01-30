@@ -37,6 +37,7 @@
 #include "QMCHamiltonians/SkEstimator.h"
 #include "QMCHamiltonians/HarmonicExternalPotential.h"
 #include "QMCHamiltonians/StaticStructureFactor.h"
+#include "QMCHamiltonians/ChargedSk.h"
 #include "QMCHamiltonians/SpinDensity.h"
 #include "QMCHamiltonians/OrbitalImages.h"
 #if !defined(REMOVE_TRACEMANAGER)
@@ -240,6 +241,13 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
       else if(potType == "gofr")
       {
         PairCorrEstimator* apot=new PairCorrEstimator(*targetPtcl,sourceInp);
+        apot->put(cur);
+        targetH->addOperator(apot,potName,false);
+      }
+      else if(potType == "csk")
+      {
+        app_log()<<"  Adding ChargedSk"<< std::endl;
+        ChargedSk* apot=new ChargedSk(*targetPtcl);
         apot->put(cur);
         targetH->addOperator(apot,potName,false);
       }
