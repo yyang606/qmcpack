@@ -1084,7 +1084,7 @@ void WaveFunctionTester::runAlltoOneTest()
     // evaluate wf before move
     W.update();
     logpsi0 = Psi.evaluateLog(W);
-    phase0 = Psi.evaluateLog(W);
+    phase0 = Psi.getPhase();
     // make move
     dr = origin - W.R[iat];
     W.makeMove(iat, dr);
@@ -1108,16 +1108,13 @@ void WaveFunctionTester::runAlltoOneTest()
     wf_ratios[iat] = ratio_ref;
     // put particle back
     W.R[iat] -= dr;
-    W.update();
   }
 
   for (int iat=0; iat<nat; iat++)
   {
-    //fout << "true ratio: " << aratio << " " << dphase << " " << ratio_ref << endl;
-    fout << "true ratio: " << wf_ratios[iat] << endl;
-    fout << all_to_one[iat] << " " << endl
-         << psi_ratios[iat] << " " << endl
-         << all_to_one[iat] - psi_ratios[iat] << endl;
+    fout << "true ratio: " << wf_ratios[iat]  << " " << endl
+         << "AlltoOne:   " << all_to_one[iat] << " " << endl
+         << "psi.ratio:  " << psi_ratios[iat] << " " << endl;
   }
 #else
   app_log() << "runAlltoOne is not available for real build" << endl;
