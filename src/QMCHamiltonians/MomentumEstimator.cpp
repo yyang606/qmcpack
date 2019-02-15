@@ -55,7 +55,7 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
       psi_ratios_all[s][i] = psi_ratios[i];
 
     for (int ik=0; ik<nk; ++ik)
-       kdotp[ik] = dot(kPoints[ik], vPos[s]);
+       kdotp[ik] = -dot(kPoints[ik], vPos[s]);
     eval_e2iphi(nk, kdotp.data(), phases_vPos[s].data(0), phases_vPos[s].data(1));
   }
 
@@ -63,7 +63,7 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
   for (int i=0; i<np; ++i)
   {
     for (int ik=0; ik<nk; ++ik)
-      kdotp[ik] = -dot(kPoints[ik], P.R[i]);
+      kdotp[ik] = dot(kPoints[ik], P.R[i]);
     eval_e2iphi(nk, kdotp.data(), phases.data(0), phases.data(1));
     for (int s=0; s<M; ++s)
     {
@@ -220,9 +220,9 @@ bool MomentumEstimator::putSpecial(xmlNodePtr cur, ParticleSet& elns, bool rootN
       for (int k=-kgrid; k<(kgrid+1); k++)
       {
         PosType ikpt,kpt;
-        ikpt[0]=i-twist[0];
-        ikpt[1]=j-twist[1];
-        ikpt[2]=k-twist[2];
+        ikpt[0]=-(i-twist[0]);
+        ikpt[1]=-(j-twist[1]);
+        ikpt[2]=-(k-twist[2]);
         //convert to Cartesian: note that 2Pi is multiplied
         kpt=Lattice.k_cart(ikpt);
         bool not_recorded=true;
