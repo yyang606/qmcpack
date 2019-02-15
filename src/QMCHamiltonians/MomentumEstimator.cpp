@@ -55,7 +55,7 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
       psi_ratios_all[s][i] = psi_ratios[i];
 
     for (int ik=0; ik<nk; ++ik)
-       kdotp[ik] = -dot(kPoints[ik], vPos[s]);
+       kdotp[ik] = dot(kPoints[ik], vPos[s]);
     eval_e2iphi(nk, kdotp.data(), phases_vPos[s].data(0), phases_vPos[s].data(1));
   }
 
@@ -63,7 +63,7 @@ MomentumEstimator::Return_t MomentumEstimator::evaluate(ParticleSet& P)
   for (int i=0; i<np; ++i)
   {
     for (int ik=0; ik<nk; ++ik)
-      kdotp[ik] = dot(kPoints[ik], P.R[i]);
+      kdotp[ik] = -dot(kPoints[ik], P.R[i]);
     eval_e2iphi(nk, kdotp.data(), phases.data(0), phases.data(1));
     for (int s=0; s<M; ++s)
     {
