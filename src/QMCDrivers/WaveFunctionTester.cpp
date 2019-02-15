@@ -1059,10 +1059,12 @@ void WaveFunctionTester::runAlltoOneTest()
   //  temporary variables
   int nat = W.getTotalNum();
   PosType dr;  // move vector
-  ValueType ratio_ref;
+  ValueType ratio_ref, ratio_diff;
   RealType ratio_mag, ratio_phase;
   RealType logpsi0, phase0, logpsi1, phase1;
-  vector<ValueType> psi_ratios(nat), all_to_one(nat), wf_ratios(nat);
+  vector<ValueType> psi_ratios(nat), ato_ratios(nat), wf_ratios(nat);
+  bool any_ratio_fail = false;
+  ParticleSet::Scalar_t abs_tol = 1e-7;
   // initilization
   fout.precision(4);
   logpsi0 = Psi.evaluateLog(W);  // initialize wavefunction internals
@@ -1076,7 +1078,7 @@ void WaveFunctionTester::runAlltoOneTest()
   //  method 1: evaluateRatiosAlltoOne
   PosType origin(0, 0, 0);
   W.makeVirtualMoves(origin);
-  Psi.evaluateRatiosAlltoOne(W, all_to_one);
+  Psi.evaluateRatiosAlltoOne(W, ato_ratios);
   //  method 2: ratio(W, iat)
   //  method 3: evauateLog <- true ratio
   for (int iat=0; iat<nat; iat++)
@@ -1113,9 +1115,19 @@ void WaveFunctionTester::runAlltoOneTest()
   for (int iat=0; iat<nat; iat++)
   {
     fout << "true ratio: " << wf_ratios[iat]  << " " << endl
-         << "AlltoOne:   " << all_to_one[iat] << " " << endl
+         << "AlltoOne:   " << ato_ratios[iat] << " " << endl
          << "psi.ratio:  " << psi_ratios[iat] << " " << endl;
+    ratio_diff = wf_ratios[iat]-ato_ratios[iat];
+    if (std::abs(ratio_diff) > abs_tol)
+    {
+      any_ratio_fail = true;
+      app_log() << "ptcl " << iat << endl
+                << "  AlltoOne:   " << ato_ratios[iat] << endl
+                << "  true ratio: " << wf_ratios[iat] << endl
+                << "  difference: " << ratio_diff << endl;
+    }
   }
+  app_log() << "AlltoOne test: " << (any_ratio_fail?"FAIL":"PASS") << endl;
 #else
   app_log() << "runAlltoOne is not available for real build" << endl;
 #endif
