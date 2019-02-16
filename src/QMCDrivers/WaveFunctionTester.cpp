@@ -1054,12 +1054,11 @@ void WaveFunctionTester::runBasicTest()
 
 void WaveFunctionTester::runAlltoOneTest()
 {
-#if defined(QMC_COMPLEX)
   // W, Psi, fout are setup before this call
   //  temporary variables
   int nat = W.getTotalNum();
   PosType dr;  // move vector
-  ValueType ratio_ref, ratio_diff;
+  ValueType wf_eip, ratio_eip, ratio_diff;  // eip <- exp(i*phase)
   RealType ratio_mag, ratio_phase;
   RealType logpsi0, phase0, logpsi1, phase1;
   vector<ValueType> psi_ratios(nat), ato_ratios(nat), wf_ratios(nat);
@@ -1072,8 +1071,8 @@ void WaveFunctionTester::runAlltoOneTest()
   fout << "initialized " << nat << " electrons at " << endl
        << W.R << endl;
   fout << "current wf value is " << endl
-       << logpsi0 << " " << phase0 << " "
-       << std::exp(logpsi0)*ValueType(std::cos(phase0), std::sin(phase0)) << endl;
+       << logpsi0 << " " << phase0 << " " << endl;
+  //     << std::exp(logpsi0)*ValueType(std::cos(phase0), std::sin(phase0)) << endl;
   // make move and test wf ratios
   //  method 1: evaluateRatiosAlltoOne
   PosType origin(0, 0, 0);
@@ -1093,27 +1092,36 @@ void WaveFunctionTester::runAlltoOneTest()
     // calculate wf ratio
     ratio_mag = Psi.ratio(W, iat);
     ratio_phase = Psi.getPhaseDiff();
-    psi_ratios[iat] = ratio_mag*ValueType(
+#if QMC_COMPLEX
+    ratio_eip = ValueType(
       std::cos(ratio_phase), std::sin(ratio_phase)
     );
+#else
+    ratio_eip = std::cos(ratio_phase);
+#endif
+    psi_ratios[iat] = ratio_mag*ratio_eip;
     // actually move particle and evaluate wf
     W.R[iat] = origin;
     W.update();
     logpsi1 = Psi.evaluateLog(W);
     phase1 = Psi.getPhase();
     // calculate true wf ratio
-    RealType aratio = std::exp(logpsi1-logpsi0);
+    RealType wf_mag = std::exp(logpsi1-logpsi0);
     RealType dphase = phase1-phase0;
-    ratio_ref = aratio * ValueType(
+#if QMC_COMPLEX
+    wf_eip = ValueType(
       std::cos(dphase), std::sin(dphase)
     );
-    wf_ratios[iat] = ratio_ref;
+#else
+    wf_eip = std::cos(dphase);
+#endif
+    wf_ratios[iat] = wf_mag*wf_eip;
     // put particle back
     W.R[iat] -= dr;
   }
-
   for (int iat=0; iat<nat; iat++)
   {
+    fout << "ptcl " << iat << endl;
     fout << "true ratio: " << wf_ratios[iat]  << " " << endl
          << "AlltoOne:   " << ato_ratios[iat] << " " << endl
          << "psi.ratio:  " << psi_ratios[iat] << " " << endl;
@@ -1128,9 +1136,6 @@ void WaveFunctionTester::runAlltoOneTest()
     }
   }
   app_log() << "AlltoOne test: " << (any_ratio_fail?"FAIL":"PASS") << endl;
-#else
-  app_log() << "runAlltoOne is not available for real build" << endl;
-#endif
 }
 
 void WaveFunctionTester::runRatioTest()
