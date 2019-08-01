@@ -29,6 +29,7 @@
 #include "LongRange/LRRPABFeeHandlerTemp.h"
 #include "Particle/ParticleSet.h"
 #include "Configuration.h"
+#include <qmc_common.h>
 #include <map>
 #include <cmath>
 #include "OhmmsPETE/OhmmsArray.h"
@@ -135,6 +136,7 @@ void BackflowBuilder::addOneBody(xmlNodePtr cur)
   SpeciesSet &sSet = ions->getSpeciesSet();
   SpeciesSet &tSet = targetPtcl.getSpeciesSet();
   int numSpecies = sSet.getTotalNum();
+  int taskid = targetPsi.is_manager() ? targetPsi.getGroupID():-1;
   if(spin=="yes")
   {
     if(funct!="Bspline")
@@ -272,6 +274,25 @@ void BackflowBuilder::addOneBody(xmlNodePtr cur)
         dum->uniqueRadFun.push_back(bsp);
         offsets.push_back(tbf->numParams);
         tbf->numParams += bsp->NumParams;
+        if(qmc_common.io_node)
+        {
+          char fname[128];
+          if(qmc_common.mpi_groups>1)
+          {
+            sprintf(fname,"BFe-I.%s.g%03d.dat",(bsp->myVars.NameAndValue[0].first).c_str(),taskid);
+          } else
+          {
+            sprintf(fname,"BFe-I.%s.dat",(bsp->myVars.NameAndValue[0].first).c_str());
+          }
+          if (taskid==0)
+          {
+            std::ofstream fout(fname);
+            fout.setf(std::ios::scientific, std::ios::floatfield);
+            fout << "# Backflow radial function \n";
+            bsp->print(fout);
+            fout.close();
+          }
+        }
       }
       tbf->derivs.resize(tbf->numParams);
       dum->offsetPrms.resize(nIons);
@@ -311,6 +332,7 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
   Backflow_ee<BsplineFunctor<RealType> > *tbf = new Backflow_ee<BsplineFunctor<RealType> >(targetPtcl,targetPtcl);
   SpeciesSet& species(targetPtcl.getSpeciesSet());
   std::vector<int> offsets;
+  int taskid = targetPsi.is_manager() ? targetPsi.getGroupID():-1;
     if(funct == "Bspline")
     {
       app_log() <<"Using BsplineFunctor type. \n";
@@ -347,16 +369,25 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
           tbf->addFunc(ia,ib,bsp);
           offsets.push_back(tbf->numParams);
           tbf->numParams += bsp->NumParams;
-//            if(OHMMS::Controller->rank()==0)
-//            {
-//              char fname[64];
-//              sprintf(fname,"BFe-e.%s.dat",(spA+spB).c_str());
-//              std::ofstream fout(fname);
-//              fout.setf(std::ios::scientific, std::ios::floatfield);
-//              fout << "# Backflow radial function \n";
-//              bsp->print(fout);
-//              fout.close();
-//            }
+          if(qmc_common.io_node)
+          {
+            char fname[64];
+            if(qmc_common.mpi_groups>1)
+            {
+              sprintf(fname,"BFe-e.%s.g%03d.dat",(spA+spB).c_str(),taskid);
+            } else
+            {
+              sprintf(fname,"BFe-e.%s.dat",(spA+spB).c_str());
+            }
+            if (taskid==0)
+            {
+              std::ofstream fout(fname);
+              fout.setf(std::ios::scientific, std::ios::floatfield);
+              fout << "# Backflow radial function \n";
+              bsp->print(fout);
+              fout.close();
+            }
+          }
         }
         cur = cur->next;
       }
