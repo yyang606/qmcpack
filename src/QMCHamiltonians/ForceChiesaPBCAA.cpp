@@ -235,7 +235,7 @@ void ForceChiesaPBCAA::evaluateSR_AA()
       for(size_t jpart=0; jpart<ipart; ++jpart)
       {
         RealType V = -AB->srDf(dist[jpart],RealType(1)/dist[jpart]);
-        PosType grad = -Zat[jpart]*Zat[ipart]*V*dist[jpart]*d_aa.Displacements[ipart][jpart];
+        PosType grad = -Zat[jpart]*Zat[ipart]*V/dist[jpart]*d_aa.Displacements[ipart][jpart];
         forces_IonIon[ipart] += grad;
         forces_IonIon[jpart] -= grad;
       }
