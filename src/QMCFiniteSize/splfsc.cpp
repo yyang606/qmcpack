@@ -47,6 +47,7 @@ int main(int argc, char **argv)
   if (node) putContent(nrule, node);
   app_log() << " nrule = " << nrule << endl;
   SphericalAverage3D sphavg(nrule);
+  RealType dvlr;
 
   // step 5: do finite size sum, store spherical average at kshells
   //  the spline is most accurate at kshells
@@ -76,7 +77,6 @@ int main(int argc, char **argv)
   RealType vint = 0.0;
   RealType norm = box.Volume/(2*M_PI*M_PI);
 
-  /*
   // attempt 1: directly use 3D spline
   // problem: break->evaluate_vklr is numerically unstable for k < 0.05
   //
@@ -105,7 +105,14 @@ int main(int argc, char **argv)
   ofs.close();
   ofv.close();
   ofi.close();
-  */
+  dvlr = vint - vsum;
+  app_log() << endl;
+  app_log() << " Directly using 3D spline " << endl;
+  app_log() << " ========================" << endl;
+  app_log() << " vint = " << vint << endl;
+  app_log() << " vsum = " << vsum << endl;
+  app_log() << " dvlr = " << dvlr << endl;
+  app_log() << endl;
 
   // attempt 2: respline integrand in 1D
   // problem: spline quality depends on the shape of the integrand as k->0
@@ -120,7 +127,7 @@ int main(int argc, char **argv)
   }
   ofg.close();
 
-  Quad1D quad1d(0, kmags[nks], nk);
+  //Quad1D quad1d(0, kmags[nks], nk);
   vint = 0.0;
   ofg.open("fvint1d.dat");
   for (int ik=0; ik<nk; ik+=1)
@@ -132,7 +139,15 @@ int main(int argc, char **argv)
   }
   ofg.close();
 
-  /*
+  dvlr = vint - vsum;
+  app_log() << endl;
+  app_log() << " Respline integrand in 1D " << endl;
+  app_log() << " =========================" << endl;
+  app_log() << " vint = " << vint << endl;
+  app_log() << " vsum = " << vsum << endl;
+  app_log() << " dvlr = " << dvlr << endl;
+  app_log() << endl;
+
   // attempt 3: do sum in a bigger box
   node = find("//bigcell", doc);
   Uniform3DGridLayout bigbox = create_box(node);
@@ -146,11 +161,16 @@ int main(int argc, char **argv)
     RealType sk = sphavg(*boxspl3d, kmag);
     vint += 0.5*vklr*sk;
   }
-  */
 
-  app_log() << " vint = " << vint << endl;
+  app_log() << endl;
+  app_log() << " Do bigger cell, then 1/N extrap." << endl;
+  app_log() << " ================================" << endl;
+  int nvol = bigbox.Volume/box.Volume;
+  dvlr = (nvol*vint-vsum)/(nvol-1.) - vsum;
+  app_log() << " vbgs = " << vint << endl;
   app_log() << " vsum = " << vsum << endl;
-  app_log() << " dvlr = " << vint - vsum << endl;
+  app_log() << " dvlr = " << dvlr << endl;
+  app_log() << endl;
 
   OHMMS::Controller->finalize();
 }
