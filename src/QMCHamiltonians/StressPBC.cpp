@@ -123,6 +123,7 @@ SymTensor<StressPBC::RealType, OHMMS_DIM> StressPBC::evaluateSR_AB(ParticleSet& 
 {
   const auto& d_ab = P.getDistTable(ei_table_index);
   SymTensor<RealType, OHMMS_DIM> res = 0.0;
+#if defined(ENABLE_SOA)
   //Loop over distinct eln-ion pairs
   for (int jpart = 0; jpart < NptclB; jpart++)
   {
@@ -134,6 +135,20 @@ SymTensor<StressPBC::RealType, OHMMS_DIM> StressPBC::evaluateSR_AB(ParticleSet& 
       res += Zat[iat]*e*AA->evaluateSR_dstrain(drijs[iat], rijs[iat]);
     }
   }
+#else
+  for(int iat=0; iat<NptclA; iat++)
+  {
+    SymTensor<RealType, OHMMS_DIM> esum = 0.0;
+   // RadFunctorType* rVs=Vat[iat];
+    for(int nn=d_ab.M[iat], jat=0; nn<d_ab.M[iat+1]; ++nn,++jat)
+    {
+      // if(d_ab.r(nn)>=(myRcut-0.1)) continue;
+      esum += Qat[jat]*AA->evaluateSR_dstrain(d_ab.dr(nn), d_ab.r(nn));
+    }
+    //Accumulate pair sums...species charge for atom i.
+    res += Zat[iat]*esum;
+  }
+#endif
   return res;
 }
 
@@ -142,6 +157,7 @@ SymTensor<StressPBC::RealType, OHMMS_DIM> StressPBC::evaluateSR_AA(ParticleSet& 
   const auto& d_aa = P.getDistTable(itabSelf);
 
   SymTensor<RealType, OHMMS_DIM> stress_aa;
+#if defined(ENABLE_SOA)
   for (int ipart = 0; ipart < NptclB; ipart++)
   {
     SymTensor<RealType, OHMMS_DIM> esum = 0.0;
@@ -153,6 +169,17 @@ SymTensor<StressPBC::RealType, OHMMS_DIM> StressPBC::evaluateSR_AA(ParticleSet& 
     }
     stress_aa += P.Z[ipart] * esum;
   }
+#else
+  for(int ipart=0; ipart<P.getTotalNum(); ipart++)
+  {
+    SymTensor<RealType, OHMMS_DIM> esum = 0.0;
+    for(int nn=d_aa.M[ipart],jpart=ipart+1; nn<d_aa.M[ipart+1]; nn++,jpart++)
+    {
+      esum += P.Z[jpart]* AA->evaluateSR_dstrain(d_aa.dr(nn), d_aa.r(nn));
+    }
+    stress_aa += P.Z[ipart]*esum;
+  }
+#endif
 
   return stress_aa;
 }

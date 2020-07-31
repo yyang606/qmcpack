@@ -91,9 +91,9 @@ TEST_CASE("Stress BCC H Ewald3D", "[hamiltonian]")
 
   TrialWaveFunction psi(c);
 
-  LRCoulombSingleton::CoulombHandler = std::make_unique<EwaldHandler3D>(ions);
+  LRCoulombSingleton::CoulombHandler = new EwaldHandler3D(ions);
   LRCoulombSingleton::CoulombHandler->initBreakup(ions);
-  LRCoulombSingleton::CoulombDerivHandler = std::make_unique<EwaldHandler3D>(ions);
+  LRCoulombSingleton::CoulombDerivHandler = new EwaldHandler3D(ions);
   LRCoulombSingleton::CoulombDerivHandler->initBreakup(ions);
 
   StressPBC est(ions, elec, psi);
@@ -123,9 +123,5 @@ TEST_CASE("Stress BCC H Ewald3D", "[hamiltonian]")
   //REQUIRE(est.stress_ei(2, 0) == Approx(0.0));
   //REQUIRE(est.stress_ei(2, 1) == Approx(0.0));
   REQUIRE(est.stress_ei(2, 2) == Approx(-0.00745376));
-
-  LRCoulombSingleton::CoulombHandler.reset(nullptr);
-
-  LRCoulombSingleton::CoulombDerivHandler.reset(nullptr);
 }
 }
