@@ -1804,7 +1804,7 @@ class qmcsystem(QIxml):
 
 class simulationcell(QIxml):
     attributes = ['name','tilematrix']
-    parameters = ['lattice','reciprocal','bconds','lr_dim_cutoff','rs','nparticles','scale','uc_grid']
+    parameters = ['lattice','reciprocal','bconds','lr_handler','lr_dim_cutoff','rs','nparticles','scale','uc_grid']
 #end class simulationcell
 
 class particleset(QIxml):
@@ -2661,6 +2661,7 @@ Names.set_expanded_names(
     energydensity    = 'EnergyDensity',
     gevmethod        = 'GEVMethod',
     localenergy      = 'LocalEnergy',
+    lr_handler       = 'LR_handler',
     lr_dim_cutoff    = 'LR_dim_cutoff',
     minmethod        = 'MinMethod',
     one_body         = 'One-Body',
@@ -4227,13 +4228,14 @@ class QmcpackInputTemplate(SimulationInputTemplate):
 
 
 
-def generate_simulationcell(bconds='ppp',lr_dim_cutoff=15,system=None):
+def generate_simulationcell(bconds='ppp',lr_handler='ewald',lr_dim_cutoff=15,system=None):
     bconds = tuple(bconds)
     sc = simulationcell(bconds=bconds)
     periodic = 'p' in bconds
     axes_valid = system!=None and len(system.structure.axes)>0
     if periodic:
         sc.lr_dim_cutoff = lr_dim_cutoff
+        sc.lr_handler = lr_handler
         if not axes_valid:
             QmcpackInput.class_error('invalid axes in generate_simulationcell\nargument system must be provided\naxes of the structure must have non-zero dimension')
         #end if
@@ -6218,6 +6220,7 @@ gen_basic_input_defaults = obj(
     bconds         = None,             
     truncate       = False,            
     buffer         = None,             
+    lr_handler     = 'ewald',
     lr_dim_cutoff  = 15,               
     remove_cell    = False,            
     randomsrc      = False,            
@@ -6346,6 +6349,7 @@ def generate_basic_input(**kwargs):
 
     simcell = generate_simulationcell(
         bconds        = kw.bconds,
+        lr_handler    = kw.lr_handler,
         lr_dim_cutoff = kw.lr_dim_cutoff,
         system        = kw.system,
         )
