@@ -4228,7 +4228,7 @@ class QmcpackInputTemplate(SimulationInputTemplate):
 
 
 
-def generate_simulationcell(bconds='ppp',lr_handler='ewald',lr_dim_cutoff=15,system=None):
+def generate_simulationcell(bconds='ppp',lr_handler='opt_breakup',lr_dim_cutoff=15,system=None):
     bconds = tuple(bconds)
     sc = simulationcell(bconds=bconds)
     periodic = 'p' in bconds
@@ -6220,7 +6220,7 @@ gen_basic_input_defaults = obj(
     bconds         = None,             
     truncate       = False,            
     buffer         = None,             
-    lr_handler     = 'ewald',
+    lr_handler     = 'opt_breakup',
     lr_dim_cutoff  = 15,               
     remove_cell    = False,            
     randomsrc      = False,            
