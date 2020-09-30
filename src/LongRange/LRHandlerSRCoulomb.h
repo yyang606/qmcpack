@@ -283,7 +283,7 @@ private:
     //Initialise the breakup - pass in basis.
     LRBreakup<BreakupBasis> breakuphandler(Basis);
     //Find size of basis from cutoffs
-    mRealType kc = (LR_kc < 0) ? ref.LR_kc : LR_kc;
+    mRealType kc = ref.LR_dim_cutoff_deriv/ref.LR_rc;
     LR_kc        = kc; // set internal kc
     //mRealType kc(ref.LR_kc); //User cutoff parameter...
     //kcut is the cutoff for switching to approximate k-point degeneracies for

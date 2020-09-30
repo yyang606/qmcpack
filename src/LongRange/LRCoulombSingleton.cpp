@@ -31,6 +31,7 @@ namespace qmcplusplus
 LRCoulombSingleton::LRHandlerType* LRCoulombSingleton::CoulombHandler      = 0;
 LRCoulombSingleton::LRHandlerType* LRCoulombSingleton::CoulombDerivHandler = 0;
 LRCoulombSingleton::lr_type LRCoulombSingleton::this_lr_type = ESLER;
+LRCoulombSingleton::lr_type LRCoulombSingleton::deriv_lr_type = EWALD;
 /** CoulombFunctor
  *
  * An example for a Func for LRHandlerTemp. Four member functions have to be provided
@@ -166,17 +167,17 @@ LRCoulombSingleton::LRHandlerType* LRCoulombSingleton::getDerivHandler(ParticleS
   //APP_ABORT("SR Coulomb Basis Handler has cloning issues.  Stress also has some kinks");
   if (CoulombDerivHandler == 0)
   {
-    if (this_lr_type == EWALD)
+    if (deriv_lr_type == EWALD)
     {
       app_log() << "\n  Creating CoulombDerivHandler with the 3D Ewald Breakup. " << std::endl;
       CoulombDerivHandler= new EwaldHandler3D(ref);
     } 
-    else if (this_lr_type == NATOLI)
+    else if (deriv_lr_type == NATOLI)
     {
       app_log() << "\n  Creating CoulombDerivHandler with the Natoli Optimized Breakup. " << std::endl;
       CoulombDerivHandler = new LRHandlerSRCoulomb<CoulombFunctor<mRealType>, LPQHISRCoulombBasis>(ref);
     } 
-    else if (this_lr_type == ESLER)
+    else if (deriv_lr_type == ESLER)
     {
       APP_ABORT("\n  Derivatives are not supported with Esler Optimized Breakup.\n"); 
     }
