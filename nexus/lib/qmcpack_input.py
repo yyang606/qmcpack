@@ -1804,7 +1804,7 @@ class qmcsystem(QIxml):
 
 class simulationcell(QIxml):
     attributes = ['name','tilematrix']
-    parameters = ['lattice','reciprocal','bconds','lr_handler','lr_dim_cutoff','rs','nparticles','scale','uc_grid']
+    parameters = ['lattice','reciprocal','bconds','lr_handler','lr_dim_cutoff','rs','nparticles','scale','uc_grid','lr_handler_deriv','lr_dim_cutoff_deriv']
 #end class simulationcell
 
 class particleset(QIxml):
@@ -2663,6 +2663,8 @@ Names.set_expanded_names(
     localenergy      = 'LocalEnergy',
     lr_handler       = 'LR_handler',
     lr_dim_cutoff    = 'LR_dim_cutoff',
+    lr_handler_deriv = 'LR_handler_deriv',
+    lr_dim_cutoff_deriv = 'LR_dim_cutoff_deriv',
     minmethod        = 'MinMethod',
     one_body         = 'One-Body',
     speciesa         = 'speciesA',
@@ -4228,7 +4230,7 @@ class QmcpackInputTemplate(SimulationInputTemplate):
 
 
 
-def generate_simulationcell(bconds='ppp',lr_handler='opt_breakup',lr_dim_cutoff=15,system=None):
+def generate_simulationcell(bconds='ppp',lr_handler='opt_breakup',lr_dim_cutoff=15,system=None,lr_handler_deriv=None,lr_dim_cutoff_deriv=None):
     bconds = tuple(bconds)
     sc = simulationcell(bconds=bconds)
     periodic = 'p' in bconds
@@ -4236,6 +4238,10 @@ def generate_simulationcell(bconds='ppp',lr_handler='opt_breakup',lr_dim_cutoff=
     if periodic:
         sc.lr_dim_cutoff = lr_dim_cutoff
         sc.lr_handler = lr_handler
+        if lr_handler_deriv is not None:
+            sc.lr_handler_deriv = lr_handler_deriv
+        if lr_dim_cutoff_deriv is not None:
+            sc.lr_dim_cutoff_deriv = lr_dim_cutoff_deriv
         if not axes_valid:
             QmcpackInput.class_error('invalid axes in generate_simulationcell\nargument system must be provided\naxes of the structure must have non-zero dimension')
         #end if
@@ -6221,7 +6227,9 @@ gen_basic_input_defaults = obj(
     truncate       = False,            
     buffer         = None,             
     lr_handler     = 'opt_breakup',
-    lr_dim_cutoff  = 15,               
+    lr_dim_cutoff  = 15,
+    lr_handler_deriv = None,
+    lr_dim_cutoff_deriv = None,
     remove_cell    = False,            
     randomsrc      = False,            
     meshfactor     = 1.0,              
@@ -6347,12 +6355,17 @@ def generate_basic_input(**kwargs):
         application = application(),
         )
 
-    simcell = generate_simulationcell(
+    sc_params = dict(
         bconds        = kw.bconds,
         lr_handler    = kw.lr_handler,
         lr_dim_cutoff = kw.lr_dim_cutoff,
         system        = kw.system,
-        )
+    )
+    if kw.lr_handler_deriv is not None:
+      sc_params['lr_handler_deriv'] = kw.lr_handler_deriv
+    if kw.lr_dim_cutoff_deriv is not None:
+      sc_params['lr_dim_cutoff_deriv'] = kw.lr_dim_cutoff_deriv
+    simcell = generate_simulationcell(**sc_params)
 
     if kw.system is not None:
         kw.system.structure.set_bconds(kw.bconds)
