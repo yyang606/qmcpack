@@ -121,6 +121,23 @@ bool LatticeParser::put(xmlNodePtr cur)
           APP_ABORT("\n  Long range breakup handler not recognized.\n");
          
       }
+      else if (aname == "LR_dim_cutoff_deriv")
+      {
+        putContent(ref_.LR_dim_cutoff_deriv, cur);
+      }
+      else if ( aname == "LR_handler_deriv" )
+      {
+        putContent(handler_type, cur);
+        tolower(handler_type);
+        if(handler_type=="ewald")
+          LRCoulombSingleton::deriv_lr_type = LRCoulombSingleton::EWALD;
+        else if (handler_type=="opt_breakup")
+          LRCoulombSingleton::deriv_lr_type = LRCoulombSingleton::ESLER;
+        else if (handler_type=="opt_breakup_original")
+          LRCoulombSingleton::deriv_lr_type = LRCoulombSingleton::NATOLI;
+        else
+          APP_ABORT("\n  Long range deriv handler not recognized.\n");
+      }
       else if (aname == "LR_tol")
       {
         putContent(ref_.LR_tol, cur);
