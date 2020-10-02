@@ -18,7 +18,7 @@ void EwaldHandler3D::initBreakup(ParticleSet& ref)
 {
   SuperCellEnum = ref.Lattice.SuperCellEnum;
   LR_rc         = ref.Lattice.LR_rc;
-  LR_kc         = ref.Lattice.LR_kc;
+  LR_kc         = ref.Lattice.LR_dim_cutoff_deriv/LR_rc;
 
   //  Sigma=3.5;
   //We provide two means of choosing sigma here...
@@ -38,6 +38,7 @@ void EwaldHandler3D::initBreakup(ParticleSet& ref)
   //This heuristic for choosing Sigma is from the 1992 Natoli Ceperley Optimized Breakup Paper.
   Sigma = std::sqrt(LR_kc / (2.0 * LR_rc));
   app_log() << "  Sigma=" << Sigma << std::endl;
+  app_log() << "  Rc=" << LR_rc << "  Kc=" << LR_kc << std::endl;
   Volume     = ref.Lattice.Volume;
   PreFactors = 0.0;
   fillFk(ref.SK->KLists);

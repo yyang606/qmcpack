@@ -128,11 +128,13 @@ LRCoulombSingleton::LRHandlerType* LRCoulombSingleton::getHandler(ParticleSet& r
       }
       else if (this_lr_type == EWALD)
       {
+        APP_ABORT("Ewald breakup class has been specialized to force calculation. You can set LR_handler_deriv to opt_breakup_original, but not LR_handler.");
         app_log() << "\n  Creating CoulombHandler with the 3D Ewald Breakup. " << std::endl;
         CoulombHandler= new EwaldHandler3D(ref); 
       }
       else if (this_lr_type == NATOLI)
       {
+        APP_ABORT("Natoli optimized breakup class has been specialized to force calculation. You can set LR_handler_deriv to opt_breakup_original, but not LR_handler.");
         app_log() << "\n  Creating CoulombHandler with the Natoli Optimized Breakup. " << std::endl;
         CoulombHandler = new LRHandlerSRCoulomb<CoulombFunctor<mRealType>, LPQHISRCoulombBasis>(ref);
       }
