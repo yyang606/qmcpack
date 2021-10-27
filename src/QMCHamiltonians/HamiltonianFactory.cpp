@@ -35,6 +35,7 @@
 #include "QMCHamiltonians/DensityEstimator.h"
 #include "QMCHamiltonians/SkEstimator.h"
 #include "QMCHamiltonians/HarmonicExternalPotential.h"
+#include "QMCHamiltonians/ShortRangePairPotential.h"
 #include "QMCHamiltonians/GridExternalPotential.h"
 #include "QMCHamiltonians/StaticStructureFactor.h"
 #include "QMCHamiltonians/SpinDensity.h"
@@ -178,6 +179,13 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
         addMPCPotential(cur);
       else if (potType == "pseudo")
         addPseudoPotential(cur);
+      else if (potType == "short")
+      {
+        ShortRangePairPotential* hs = new ShortRangePairPotential(targetPtcl);
+        hs->put(cur);
+        hs->get(app_log());
+        targetH->addOperator(hs, "ShortRange", true);
+      }
 #endif
     }
     else if (cname == "constant")
