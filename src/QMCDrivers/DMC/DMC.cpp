@@ -58,6 +58,7 @@ DMC::DMC(MCWalkerConfiguration& w, TrialWaveFunction& psi, QMCHamiltonian& h, Co
   m_param.add(NonLocalMove, "nonlocalmoves");
   m_param.add(mover_MaxAge, "MaxAge");
   m_param.add(L2, "L2_diffusion");
+  m_param.add(move_in_xy, "move_in_xy");
 }
 
 void DMC::resetUpdateEngines()
@@ -207,6 +208,18 @@ void DMC::resetUpdateEngines()
     o << "  Steps per block = " << nSteps << "\n";
     o << "  Number of blocks = " << nBlocks << "\n";
     app_log() << o.str() << std::endl;
+  }
+  if (move_in_xy == "yes")
+  {
+    app_log() << "  Walker moves in x-y plane" << std::endl;
+    for (int i = 0; i < Movers.size(); i++)
+      Movers[i]->move_in_xy = true;
+  }
+  else
+  {
+    app_log() << "  Walker moves in xyz" << std::endl;
+    for (int i = 0; i < Movers.size(); i++)
+      Movers[i]->move_in_xy = false;
   }
   app_log() << "  DMC Engine Initialization = " << init_timer.elapsed() << " secs" << std::endl;
 }
