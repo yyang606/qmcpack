@@ -45,6 +45,7 @@ VMC::VMC(MCWalkerConfiguration& w, TrialWaveFunction& psi, QMCHamiltonian& h, Co
   m_param.add(UseDrift, "useDrift");
   m_param.add(UseDrift, "usedrift");
   m_param.add(UseDrift, "use_drift");
+  m_param.add(move_in_xy, "move_in_xy");
 
   prevSteps               = nSteps;
   prevStepsBetweenSamples = nStepsBetweenSamples;
@@ -236,6 +237,19 @@ void VMC::resetRun()
     app_log() << "  Walker moves without drift" << std::endl;
     for (int i = 0; i < Movers.size(); i++)
       Movers[i]->UseDrift = false;
+  }
+
+  if (move_in_xy == "yes")
+  {
+    app_log() << "  Walker moves in x-y plane" << std::endl;
+    for (int i = 0; i < Movers.size(); i++)
+      Movers[i]->move_in_xy = true;
+  }
+  else
+  {
+    app_log() << "  Walker moves in xyz" << std::endl;
+    for (int i = 0; i < Movers.size(); i++)
+      Movers[i]->move_in_xy = false;
   }
 
   if (SpinMoves == "yes")

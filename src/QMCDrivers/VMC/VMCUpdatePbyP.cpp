@@ -39,6 +39,7 @@ VMCUpdatePbyP::~VMCUpdatePbyP() {}
 
 void VMCUpdatePbyP::advanceWalker(Walker_t& thisWalker, bool recompute)
 {
+  move_in_xy = true;
   buffer_timer_.start();
   W.loadWalker(thisWalker, true);
   Walker_t::WFBuffer_t& w_buffer(thisWalker.DataSet);
@@ -53,6 +54,11 @@ void VMCUpdatePbyP::advanceWalker(Walker_t& thisWalker, bool recompute)
   {
     //create a 3N-Dimensional Gaussian with variance=1
     makeGaussRandomWithEngine(deltaR, RandomGen);
+    if (move_in_xy)
+    {
+      for (int iat = 0; iat < deltaR.size(); ++iat)
+        deltaR[iat][2] = 0;
+    }
     moved = false;
     for (int ig = 0; ig < W.groups(); ++ig) //loop over species
     {

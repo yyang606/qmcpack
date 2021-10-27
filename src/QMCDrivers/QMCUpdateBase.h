@@ -72,6 +72,8 @@ public:
   RealType spinMass;
   ///use Drift
   bool UseDrift;
+  ///move in x-y plane
+  bool move_in_xy;
 
   /// Constructor.
   QMCUpdateBase(MCWalkerConfiguration& w, TrialWaveFunction& psi, QMCHamiltonian& h, RandomGenerator_t& rg);
