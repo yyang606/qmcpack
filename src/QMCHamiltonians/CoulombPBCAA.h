@@ -65,6 +65,7 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
   std::vector<int> NofSpecies;
   std::vector<int> SpeciesID;
 
+  RealType e2ea1, e2ea2; // inverse dielectric for intra- and inter-layer
   Matrix<RealType> e2ea;
   Matrix<RealType> SR2;
   Vector<RealType> dSR;
@@ -83,7 +84,7 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
 
 
   /** constructor */
-  CoulombPBCAA(ParticleSet& ref, bool active, bool computeForces = false);
+  CoulombPBCAA(ParticleSet& ref, bool active, bool computeForces = false, RealType e2ea1=1.0, RealType e2ea2=0.0);
 
   ~CoulombPBCAA();
 

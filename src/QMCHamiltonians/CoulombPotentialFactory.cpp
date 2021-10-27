@@ -76,16 +76,20 @@ void HamiltonianFactory::addCoulombPotential(xmlNodePtr cur)
   std::string sourceInp(targetPtcl.getName());
   std::string title("ElecElec"), pbc("yes");
   std::string forces("no");
+  QMCHamiltonian::RealType e2ea1(1.0), e2ea2(0.0);
   bool physical = true;
   OhmmsAttributeSet hAttrib;
   hAttrib.add(title, "id");
   hAttrib.add(title, "name");
+  hAttrib.add(e2ea1, "e2ea1");
+  hAttrib.add(e2ea2, "e2ea2");
   hAttrib.add(targetInp, "target");
   hAttrib.add(sourceInp, "source");
   hAttrib.add(pbc, "pbc");
   hAttrib.add(physical, "physical");
   hAttrib.add(forces, "forces");
   hAttrib.put(cur);
+  app_log() << "e2ea1 = " << e2ea1 << "; e2ea2 = " << e2ea2 << std::endl;
   bool applyPBC      = (PBCType && pbc == "yes");
   bool doForces      = (forces == "yes") || (forces == "true");
   ParticleSet* ptclA = &targetPtcl;
@@ -122,7 +126,7 @@ void HamiltonianFactory::addCoulombPotential(xmlNodePtr cur)
     }
 #else
     if (applyPBC)
-      targetH->addOperator(new CoulombPBCAA(*ptclA, quantum, doForces), title, physical);
+      targetH->addOperator(new CoulombPBCAA(*ptclA, quantum, doForces, e2ea1, e2ea2), title, physical);
     else
     {
       targetH->addOperator(new CoulombPotential<Return_t>(*ptclA, quantum, doForces), title, physical);

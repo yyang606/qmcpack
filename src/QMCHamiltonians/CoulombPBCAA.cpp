@@ -22,7 +22,7 @@
 
 namespace qmcplusplus
 {
-CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, bool computeForces)
+CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, bool computeForces, RealType e2ea1_in, RealType e2ea2_in)
     : ForceBase(ref, ref),
       myGrid(0),
       rVs(0),
@@ -33,7 +33,9 @@ CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, bool computeForces)
       myConst(0.0),
       ComputeForces(computeForces),
       Ps(ref),
-      d_aa_ID(ref.addTable(ref))
+      d_aa_ID(ref.addTable(ref)),
+      e2ea1(e2ea1_in),
+      e2ea2(e2ea2_in)
 {
   ReportEngine PRE("CoulombPBCAA", "CoulombPBCAA");
   set_energy_domain(potential);
@@ -282,8 +284,6 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   NumSpecies       = tspecies.TotalNum;
   // !!!! HACK inverse dielectric matrix for two layers
   e2ea.resize(NumSpecies, NumSpecies);
-  RealType e2ea1 = 1.0;  // within same layer
-  RealType e2ea2 = 0.1;  // between layers
   int ilayer, jlayer;
   app_log() << "Inverse Dieletric Matrix" << std::endl;
   for (int ispec=0; ispec<NumSpecies; ispec++)
