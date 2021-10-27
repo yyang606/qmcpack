@@ -53,9 +53,13 @@ ElectronGasComplexOrbitalBuilder::ElectronGasComplexOrbitalBuilder(Communicate* 
 WaveFunctionComponent* ElectronGasComplexOrbitalBuilder::buildComponent(xmlNodePtr cur)
 {
   int nc = 0;
+  int nup = -1;
+  int ndn = -1;
   PosType twist(0.0);
   OhmmsAttributeSet aAttrib;
   aAttrib.add(nc, "shell");
+  aAttrib.add(nup, "nup");
+  aAttrib.add(ndn, "ndn");
   aAttrib.add(twist, "twist");
   aAttrib.put(cur);
   //typedef DiracDeterminant<EGOSet>  Det_t;
@@ -63,23 +67,50 @@ WaveFunctionComponent* ElectronGasComplexOrbitalBuilder::buildComponent(xmlNodeP
   typedef DiracDeterminant<> Det_t;
   typedef SlaterDet SlaterDeterminant_t;
   int nat = targetPtcl.getTotalNum();
-  int nup = nat / 2;
+  if (nup < 0) nup = nat/2;
+  if (ndn < 0) ndn = nup;
   HEGGrid<RealType, OHMMS_DIM> egGrid(targetPtcl.Lattice);
   if (nc == 0)
     nc = egGrid.getShellIndex(nup);
+  app_log() << "In ElectronGasComplexOrbitalBuilder:" << std::endl;
+  app_log() << "  nup = " << nup << std::endl;
+  app_log() << "  ndn = " << ndn << std::endl;
+  app_log() << "  ntot = " << nat << std::endl;
+  app_log() << "  nc = " << nc << std::endl;
   egGrid.createGrid(nc, nup, twist);
   targetPtcl.setTwist(twist);
+  int noffset = 0;
   //create up determinant
   Det_t* updet = new Det_t(std::make_unique<EGOSet>(egGrid.kpt, egGrid.mk2));
-  updet->set(0, nup);
+  updet->set(noffset, nup);
+  noffset += nup;
   //create down determinant
   Det_t* downdet = new Det_t(std::make_unique<EGOSet>(egGrid.kpt, egGrid.mk2));
-  downdet->set(nup, nup);
-  //create a Slater determinant
-  //SlaterDeterminant_t *sdet  = new SlaterDeterminant_t;
+  downdet->set(noffset, ndn);
+  noffset += ndn;
   SlaterDet* sdet = new SlaterDet(targetPtcl);
   sdet->add(updet, 0);
   sdet->add(downdet, 1);
+  if (noffset < nat)
+  {
+  //create more up determinant
+  Det_t* up1det = new Det_t(std::make_unique<EGOSet>(egGrid.kpt, egGrid.mk2));
+  up1det->set(noffset, nup);
+  noffset += nup;
+  //create more down determinant
+  Det_t* dn1det = new Det_t(std::make_unique<EGOSet>(egGrid.kpt, egGrid.mk2));
+  dn1det->set(noffset, ndn);
+  noffset += ndn;
+  //create a Slater determinant
+  //SlaterDeterminant_t *sdet  = new SlaterDeterminant_t;
+  sdet->add(up1det, 2);
+  sdet->add(dn1det, 3);
+  }
+  if (noffset != nat)
+  {
+    app_log() << "  noffset = " << noffset << std::endl;
+    APP_ABORT("particle number mismatch in ElectronGasComplexOrbitalBuilder");
+  }
   return sdet;
 }
 
