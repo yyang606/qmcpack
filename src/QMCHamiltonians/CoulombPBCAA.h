@@ -65,6 +65,7 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
   std::vector<int> NofSpecies;
   std::vector<int> SpeciesID;
 
+  Matrix<RealType> e2ea;
   Matrix<RealType> SR2;
   Vector<RealType> dSR;
   Vector<ComplexType> del_eikr;

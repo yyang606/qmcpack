@@ -280,6 +280,25 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   MemberAttribIndx = tspecies.addAttribute("membersize");
   NumCenters       = P.getTotalNum();
   NumSpecies       = tspecies.TotalNum;
+  // !!!! HACK inverse dielectric matrix for two layers
+  e2ea.resize(NumSpecies, NumSpecies);
+  RealType e2ea1 = 1.0;  // within same layer
+  RealType e2ea2 = 0.1;  // between layers
+  int ilayer, jlayer;
+  app_log() << "Inverse Dieletric Matrix" << std::endl;
+  for (int ispec=0; ispec<NumSpecies; ispec++)
+  {
+    ilayer = ispec/2;
+    for (int jspec=ispec; jspec<NumSpecies; jspec++)
+    {
+      jlayer = jspec/2;
+      e2ea(ispec, jspec) = (ilayer == jlayer) ? e2ea1 : e2ea2;
+      if (ispec != jspec)
+        e2ea(jspec, ispec) = e2ea(ispec, jspec);
+      app_log() << ispec << " " << jspec << " " << e2ea(ispec, jspec) << std::endl;
+    }
+  }
+  // end HACK !!!!
 
 #if !defined(REMOVE_TRACEMANAGER)
   V_const.resize(NumCenters);
@@ -442,23 +461,32 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
 {
   const DistanceTableData& d_aa(P.getDistTable(d_aa_ID));
   mRealType SR = 0.0;
+  int ispec, jspec;
 #pragma omp parallel for reduction(+ : SR)
   for (size_t ipart = 1; ipart < (NumCenters / 2 + 1); ipart++)
   {
+    ispec = SpeciesID[ipart];
     mRealType esum   = 0.0;
     const auto& dist = d_aa.getDistRow(ipart);
     for (size_t j = 0; j < ipart; ++j)
-      esum += Zat[j] * rVs->splint(dist[j]) / dist[j];
+    {
+      jspec = SpeciesID[j];
+      esum += e2ea(ispec, jspec) * Zat[j] * rVs->splint(dist[j]) / dist[j];
+    }
     SR += Zat[ipart] * esum;
 
     const size_t ipart_reverse = NumCenters - ipart;
     if (ipart == ipart_reverse)
       continue;
 
+    ispec = SpeciesID[ipart_reverse];
     esum              = 0.0;
     const auto& dist2 = d_aa.getDistRow(ipart_reverse);
     for (size_t j = 0; j < ipart_reverse; ++j)
-      esum += Zat[j] * rVs->splint(dist2[j]) / dist2[j];
+    {
+      jspec = SpeciesID[j];
+      esum += e2ea(ispec, jspec) * Zat[j] * rVs->splint(dist2[j]) / dist2[j];
+    }
     SR += Zat[ipart_reverse] * esum;
   }
   return SR;
@@ -501,7 +529,7 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalLR(ParticleSet& P)
 #endif
         if (spec2 == spec1)
           temp *= 0.5;
-        res += Z1 * Zspec[spec2] * temp;
+        res += e2ea(spec1, spec2) * Z1 * Zspec[spec2] * temp;
       } //spec2
     }   //spec1
   }
