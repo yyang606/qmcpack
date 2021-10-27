@@ -11,7 +11,8 @@ struct ShortRangePairPotential : public OperatorBase
   RealType amplitute, sigma;
 
   //construction/destruction
-  ShortRangePairPotential(ParticleSet& P)
+  ShortRangePairPotential(ParticleSet& P) :
+    id_daa(P.addTable(P))
   {
     set_energy_domain(potential);
     two_body_quantum_domain(P);
@@ -30,6 +31,9 @@ struct ShortRangePairPotential : public OperatorBase
   //functions for physical (hamiltonian component) estimator
   Return_t evaluate(ParticleSet& P);
   inline Return_t evaluate(ParticleSet& P, std::vector<NonLocalData>& Txy) { return evaluate(P); }
+
+  private:
+    const int id_daa; // ID of AA distance table
 };
 } // namespace qmcplusplus
 #endif

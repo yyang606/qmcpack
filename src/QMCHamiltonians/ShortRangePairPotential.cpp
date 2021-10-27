@@ -1,5 +1,6 @@
 #include "ShortRangePairPotential.h"
 #include "OhmmsData/AttributeSet.h"
+#include "Particle/DistanceTableData.h"
 
 namespace qmcplusplus
 {
@@ -34,6 +35,17 @@ OperatorBase* ShortRangePairPotential::makeClone(ParticleSet& P, TrialWaveFuncti
 ShortRangePairPotential::Return_t ShortRangePairPotential::evaluate(ParticleSet& P)
 {
   Value              = 0.0;
+  const DistanceTableData& d_aa(P.getDistTable(id_daa));
+  RealType s2=2*sigma*sigma;
+  for (size_t i=1; i<P.getTotalNum(); i++)
+  {
+    const auto& dist = d_aa.getDistRow(i);
+    for (size_t j=0; j<i; j++)
+    {
+      auto rij = dist[j];
+      Value += amplitute*std::exp(-rij*rij/s2);
+    }
+  }
   return Value;
 }
 
