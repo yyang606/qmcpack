@@ -4,18 +4,25 @@
 
 namespace qmcplusplus
 {
+
+ShortRangePairPotential::ShortRangePairPotential(ParticleSet& P) :
+  amplitute(-0.5),
+  sigma(0.1),
+  id_daa(P.addTable(P))
+{
+  set_energy_domain(potential);
+  two_body_quantum_domain(P);
+}
+
 bool ShortRangePairPotential::put(xmlNodePtr cur)
 {
   using std::sqrt;
-  amplitute = 1.0;
-  sigma = 0.2;
   OhmmsAttributeSet attrib;
   attrib.add(amplitute, "amplitute");
   attrib.add(sigma, "sigma");
   attrib.put(cur);
   return true;
 }
-
 
 bool ShortRangePairPotential::get(std::ostream& os) const
 {
@@ -25,12 +32,10 @@ bool ShortRangePairPotential::get(std::ostream& os) const
   return true;
 }
 
-
 OperatorBase* ShortRangePairPotential::makeClone(ParticleSet& P, TrialWaveFunction& psi)
 {
   return new ShortRangePairPotential(*this);
 }
-
 
 ShortRangePairPotential::Return_t ShortRangePairPotential::evaluate(ParticleSet& P)
 {

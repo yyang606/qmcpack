@@ -7,17 +7,9 @@ namespace qmcplusplus
 {
 struct ShortRangePairPotential : public OperatorBase
 {
-  //data members
-  RealType amplitute, sigma;
 
   //construction/destruction
-  ShortRangePairPotential(ParticleSet& P) :
-    id_daa(P.addTable(P))
-  {
-    set_energy_domain(potential);
-    two_body_quantum_domain(P);
-  }
-
+  ShortRangePairPotential(ParticleSet& P);
   ~ShortRangePairPotential() {}
 
   //unneeded interface functions
@@ -32,8 +24,9 @@ struct ShortRangePairPotential : public OperatorBase
   Return_t evaluate(ParticleSet& P);
   inline Return_t evaluate(ParticleSet& P, std::vector<NonLocalData>& Txy) { return evaluate(P); }
 
-  private:
-    const int id_daa; // ID of AA distance table
+private:
+  RealType amplitute, sigma;
+  const int id_daa; // ID of AA distance table
 };
 } // namespace qmcplusplus
 #endif
