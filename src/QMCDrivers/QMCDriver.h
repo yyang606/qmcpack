@@ -333,6 +333,7 @@ protected:
 
   ///turn on spin moves
   std::string SpinMoves;
+  std::string move_in_xy;
   RealType SpinMass;
 
   bool putQMCInfo(xmlNodePtr cur);
