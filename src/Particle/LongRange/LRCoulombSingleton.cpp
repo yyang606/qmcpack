@@ -18,12 +18,9 @@
  * @brief Define a LRHandler with two template parameters
  */
 #include "LRCoulombSingleton.h"
-#if OHMMS_DIM == 3
 #include "LongRange/EwaldHandler.h"
 #include "LongRange/EwaldHandler3D.h"
-#elif OHMMS_DIM == 2
 #include "LongRange/TwoDEwaldHandler.h"
-#endif
 #include <numeric>
 namespace qmcplusplus
 {
@@ -112,7 +109,6 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getHandle
 {
   if (CoulombHandler == 0)
   {
-#if OHMMS_DIM == 3
     if (ref.SK->SuperCellEnum == SUPERCELL_SLAB)
     {
       app_log() << "\n   Creating CoulombHandler using quasi-2D Ewald method for the slab. " << std::endl;
@@ -135,6 +131,11 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getHandle
         app_log() << "\n  Creating CoulombHandler with the Natoli Optimized Breakup. " << std::endl;
         CoulombHandler = std::make_unique<LRHandlerSRCoulomb<CoulombFunctor<mRealType>, LPQHISRCoulombBasis>>(ref);
       }
+      else if (this_lr_type == EWALD2D)
+      {
+        app_log() << "\n   Creating CoulombHandler using 2D Ewald method. " << std::endl;
+        CoulombHandler = std::make_unique<TwoDEwaldHandler>(ref);
+      }
       else
       {
         APP_ABORT("\n  Long range breakup method not recognized.\n");
@@ -145,10 +146,6 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getHandle
 //          app_log() << "\n   Creating CoulombHandler using quasi-2D Ewald method for the slab. " << std::endl;
 //          CoulombHandler= new EwaldHandler(ref);
 //        }
-#elif OHMMS_DIM == 2
-    app_log() << "\n   Creating CoulombHandler using 2D Ewald method. " << std::endl;
-    CoulombHandler = std::make_unique<TwoDEwaldHandler>(ref);
-#endif
     CoulombHandler->initBreakup(ref);
     return std::unique_ptr<LRHandlerType>(CoulombHandler->makeClone(ref));
   }

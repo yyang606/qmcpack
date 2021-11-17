@@ -34,6 +34,7 @@ SET(PARTICLE
   LongRange/EwaldHandler.cpp
   LongRange/EwaldHandler3D.cpp
   LongRange/LRCoulombSingleton.cpp
+  LongRange/TwoDEwaldHandler.cpp
   )
 
 IF(ENABLE_OFFLOAD)
@@ -42,10 +43,6 @@ IF(ENABLE_OFFLOAD)
     createDistanceTableABOMPTarget.cpp
     )
 ENDIF(ENABLE_OFFLOAD)
-
-IF(OHMMS_DIM MATCHES 2)
-  SET(PARTICLE ${PARTICLE} LongRange/TwoDEwaldHandler.cpp)
-ENDIF(OHMMS_DIM MATCHES 2)
 
 SET(PARTICLEIO
   ParticleTags.cpp
