@@ -322,6 +322,10 @@ ParticleSet* ParticleSetPool::createESParticleSet(xmlNodePtr cur, const std::str
     {
       LRCoulombSingleton::this_lr_type = LRCoulombSingleton::EWALD;
     }
+    else if (lr_handler == "ewald2d")
+    {
+      LRCoulombSingleton::this_lr_type = LRCoulombSingleton::EWALD2D;
+    }
     else if (lr_handler == "opt_breakup")
     {
       LRCoulombSingleton::this_lr_type = LRCoulombSingleton::ESLER;

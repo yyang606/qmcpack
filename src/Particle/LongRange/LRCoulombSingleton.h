@@ -42,7 +42,8 @@ struct LRCoulombSingleton
   {
     ESLER = 0,
     EWALD,
-    NATOLI
+    NATOLI,
+    EWALD2D
   };
   static lr_type this_lr_type;
   ///Stores the energ optimized LR handler.
