@@ -14,8 +14,8 @@
 /** @file LRHandlerTemp.h
  * @brief Define a LRHandler with two template parameters
  */
-#ifndef QMCPLUSPLUS_EWALD_HANDLER_H
-#define QMCPLUSPLUS_EWALD_HANDLER_H
+#ifndef QMCPLUSPLUS_EWALD2D_HANDLER_H
+#define QMCPLUSPLUS_EWALD2D_HANDLER_H
 
 #include "LongRange/LRHandlerBase.h"
 
@@ -33,12 +33,12 @@ class TwoDEwaldHandler : public LRHandlerBase
 {
 public:
   /// Related to the Gaussian width: \f$ v_l = v(r)erf(\sigma r)\f$
-  RealType Sigma;
-  RealType Volume;
+  mRealType Sigma;
+  mRealType Volume;
   ///store |k|
-  std::vector<RealType> kMag;
+  std::vector<mRealType> kMag;
   /// Constructor
-  TwoDEwaldHandler(ParticleSet& ref, RealType kc_in = -1.0) : LRHandlerBase(kc_in)
+  TwoDEwaldHandler(ParticleSet& ref, mRealType kc_in = -1.0) : LRHandlerBase(kc_in)
   {
     Sigma = LR_kc = ref.Lattice.LR_kc;
   }
@@ -52,30 +52,32 @@ public:
    */
   TwoDEwaldHandler(const TwoDEwaldHandler& aLR, ParticleSet& ref);
 
-  LRHandlerBase* makeClone(ParticleSet& ref) { return new TwoDEwaldHandler(*this, ref); }
+  LRHandlerBase* makeClone(ParticleSet& ref) override { return new TwoDEwaldHandler(*this, ref); }
 
-  void initBreakup(ParticleSet& ref);
+  void initBreakup(ParticleSet& ref) override;
 
-  void Breakup(ParticleSet& ref, RealType rs_in) { initBreakup(ref); }
+  void Breakup(ParticleSet& ref, mRealType rs_in) override { initBreakup(ref); }
 
-  void resetTargetParticleSet(ParticleSet& ref) {}
+  void resetTargetParticleSet(ParticleSet& ref) override {}
 
-  inline RealType evaluate(RealType r, RealType rinv) { return erfc(r * Sigma) * rinv; }
+  inline mRealType evaluate(mRealType r, mRealType rinv) override { return erfc(r * Sigma) * rinv; }
 
   /** evaluate the contribution from the long-range part for for spline
    */
-  inline RealType evaluateLR(RealType r) { return -erf(r * Sigma) / r; }
+  inline mRealType evaluateLR(mRealType r) override { return -erf(r * Sigma) / r; }
 
-  inline RealType evaluateSR_k0() { return 2.0 * std::sqrt(M_PI) / (Sigma * Volume); }
+  inline mRealType evaluate_vlr_k(mRealType k) override { return 2.0*std::sqrt(M_PI)/k * erfc(k/(2*Sigma)) / Volume; }
 
-  inline RealType evaluateLR_r0() { return 2.0 * Sigma / std::sqrt(M_PI); }
+  inline mRealType evaluateSR_k0() override { return 2.0 * std::sqrt(M_PI) / (Sigma * Volume); }
+
+  inline mRealType evaluateLR_r0() override { return 2.0 * Sigma / std::sqrt(M_PI); }
 
   /**  evaluate the first derivative of the short range part at r
    *
    * @param r  radius
    * @param rinv 1/r
    */
-  inline RealType srDf(RealType r, RealType rinv) { return 0.0; }
+  inline mRealType srDf(mRealType r, mRealType rinv) override { return 0.0; }
 
   void fillFk(KContainer& KList);
 };
