@@ -436,9 +436,9 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
   MC0 = 0.0;
   for (int i = 0; i < AA->Fk.size(); i++)
     MC0 += AA->Fk[i];
-  MC0 = 0.5 * (MC0 - vl_r0);
   //Neutraling background term
   mRealType vs_k0 = AA->evaluateSR_k0(); //v_s(k=0)
+  MC0 = 0.5 * (MC0 - vl_r0 - vs_k0);
   for (int ipart = 0; ipart < NumCenters; ipart++)
   {
     v1 = 0.0;
