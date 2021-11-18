@@ -19,7 +19,7 @@ void TwoDEwaldHandler::initBreakup(ParticleSet& ref)
 {
   LR_rc = ref.Lattice.LR_rc;
   LR_kc = ref.Lattice.LR_kc;
-  Sigma = 4.0; // !!!! hard-code reciprocal-space screening length
+  Sigma = ref.Lattice.alpha;
   app_log() << "  Sigma=" << Sigma << std::endl;
   Volume = ref.Lattice.Volume/ref.Lattice.R(2, 2);
   app_log() << "  Area=" << Volume << std::endl;
