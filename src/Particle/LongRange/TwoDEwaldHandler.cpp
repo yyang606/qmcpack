@@ -19,7 +19,7 @@ void TwoDEwaldHandler::initBreakup(ParticleSet& ref)
 {
   LR_rc = ref.Lattice.LR_rc;
   LR_kc = ref.Lattice.LR_kc;
-  Sigma = 1.0; // !!!! hard-code reciprocal-space screening length
+  Sigma = 4.0; // !!!! hard-code reciprocal-space screening length
   app_log() << "  Sigma=" << Sigma << std::endl;
   Volume = ref.Lattice.Volume/ref.Lattice.R(2, 2);
   app_log() << "  Area=" << Volume << std::endl;
@@ -39,13 +39,27 @@ void TwoDEwaldHandler::fillFk(KContainer& KList)
   kMag.resize(MaxKshell);
   mRealType knorm           = 2.0 * M_PI / Volume;
   mRealType oneovertwosigma = 1.0 / (2.0 * Sigma);
+  int nxy, nz;
   for (int ks = 0, ki = 0; ks < Fk_symm.size(); ks++)
   {
     kMag[ks]    = std::sqrt(KList.ksq[ki]);
     mRealType uk = knorm * erfc(kMag[ks] * oneovertwosigma) / kMag[ks];
-    Fk_symm[ks] = uk;
+    nxy = nz = 0;
     while (ki < KList.kshell[ks + 1] && ki < Fk.size())
-      Fk[ki++] = std::abs(KList.kpts[ki][2]) < 1e-8 ? uk : 0;
+    {
+      if (std::abs(KList.kpts[ki][2]) < 1e-8)
+      {
+        Fk[ki] = uk;
+        nxy++;
+      } else {
+        Fk[ki] = 0;
+        nz++;
+      }
+      //app_log() << KList.kpts_cart[ki] << " " << kMag[ks] << " " << Fk[ki] << std::endl;
+      ki++;
+    }
+    Fk_symm[ks] = uk*nxy/(nxy+nz);
+    //app_log() << kMag[ks] << " " << uk << " " << nxy << " " << nz << " " << Fk_symm[ks]  << std::endl;
     //       app_log()<<kMag[ks]<<" "<<uk<< std::endl;
   }
   app_log().flush();
