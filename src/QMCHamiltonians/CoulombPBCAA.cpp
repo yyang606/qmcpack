@@ -331,9 +331,23 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   int nr = 128;
   double dr = Rws/nr;
   double rVsr_at_image = rVs->splint(Rws-dr);
-  app_log() << "r*Vsr(Rws) = " << rVsr_at_image << std::endl;
-  //if (std::abs(rVsr_at_image) > 1e-8) APP_ABORT("increase alpha");
-  //if (std::abs(rVs->splint(Rws/4)) < 1e-8) APP_ABORT("decrease alpha");
+  double rVsr_at_short = rVs->splint(Rws/4);
+  bool more_screen = std::abs(rVsr_at_image) > 1e-8;
+  bool less_screen = std::abs(rVsr_at_short) < 1e-8;
+  app_log() << "r*Vsr(Rws) = " << rVsr_at_image << " at Rws/4 " << rVsr_at_short << std::endl;
+  if (more_screen or less_screen)
+  { // dump short-range piece
+    double r;
+    app_log() << "!!!! splint begin !!!!" << std::endl;
+    for (int ir=0;ir<nr;ir++)
+    {
+      r = ir*dr;
+      app_log() << r << " " << rVs->splint(r) << std::endl;
+    }
+    app_log() << "!!!! end splint !!!!" << std::endl;
+  }
+  if (more_screen) APP_ABORT("increase alpha");
+  if (less_screen) APP_ABORT("decrease alpha");
   if (ComputeForces)
   {
     dAA = LRCoulombSingleton::getDerivHandler(P);
