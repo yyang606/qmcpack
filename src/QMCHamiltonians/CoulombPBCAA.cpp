@@ -326,6 +326,14 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   {
     rVs = LRCoulombSingleton::createSpline4RbyVs(AA.get(), myRcut, myGrid);
   }
+  // check rVs
+  double Rws = Ps.Lattice.WignerSeitzRadius;
+  int nr = 128;
+  double dr = Rws/nr;
+  double rVsr_at_image = rVs->splint(Rws-dr);
+  app_log() << "r*Vsr(Rws) = " << rVsr_at_image << std::endl;
+  //if (std::abs(rVsr_at_image) > 1e-8) APP_ABORT("increase alpha");
+  //if (std::abs(rVs->splint(Rws/4)) < 1e-8) APP_ABORT("decrease alpha");
   if (ComputeForces)
   {
     dAA = LRCoulombSingleton::getDerivHandler(P);
