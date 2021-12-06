@@ -70,9 +70,10 @@ struct HEGGrid<T, 3>
 
   kpoints_t* kpoints_grid;
   int nctmp;
+  int ndim;
 
 
-  HEGGrid(PL_t& lat) : Lattice(lat), twist(0.0), kpoints_grid(0), nctmp(-1)
+  HEGGrid(PL_t& lat) : Lattice(lat), twist(0.0), kpoints_grid(0), nctmp(-1), ndim(3)
   {
     n_within_shell.resize(31);
     n_within_shell[0]  = 1;
@@ -250,23 +251,32 @@ struct HEGGrid<T, 3>
     app_log() << "  resizing kpoint grid" << std::endl;
     app_log() << "  current size = " << kpoints.size() << std::endl;
     // make space for the kpoint grid
-    int nkpoints = pow(2 * (nc + 1) + 1, 3);
+    int nkpoints = std::pow(2 * (nc + 1) + 1, 3);
+    if (ndim == 2) nkpoints /= 2*(nc+1)+1;
     kpoints.resize(nkpoints);
     app_log() << "  cubic size = " << kpoints.size() << std::endl;
     typename kpoints_t::iterator kptmp, kp = kpoints.begin(), kp_end = kpoints.end();
     // make the kpoint grid
     T k2max = std::numeric_limits<RealType>::max();
+    int count = 0;
     for (int i0 = -nc - 1; i0 <= nc + 1; ++i0)
       for (int i1 = -nc - 1; i1 <= nc + 1; ++i1)
         for (int i2 = -nc - 1; i2 <= nc + 1; ++i2)
         {
+          if ((ndim == 2) && (i2 != 0)) continue;
           PosType k(i0 + tw[0], i1 + tw[1], i2 + tw[2]);
           kp->k  = Lattice.k_cart(k);
           kp->k2 = Lattice.ksq(k);
           if (std::abs(i0) == (nc + 1) || std::abs(i1) == (nc + 1) || std::abs(i2) == (nc + 1))
             k2max = std::min(k2max, kp->k2);
           ++kp;
+          ++count;
         }
+    app_log() << "got " << count << "/" << nkpoints << " PWs" << std::endl;
+    if (count != nkpoints)
+    {
+      APP_ABORT("HEGGrid::create_kpoints");
+    }
     // sort kpoints by magnitude
     sort(kpoints.begin(), kpoints.end(), kpdata_comp<T, 3>);
     // eliminate kpoints outside of inscribing sphere

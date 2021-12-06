@@ -55,12 +55,14 @@ WaveFunctionComponent* ElectronGasComplexOrbitalBuilder::buildComponent(xmlNodeP
   int nc = 0;
   int nup = -1;
   int ndn = -1;
+  int ndim = 3;
   PosType twist(0.0);
   OhmmsAttributeSet aAttrib;
   aAttrib.add(nc, "shell");
   aAttrib.add(nup, "nup");
   aAttrib.add(ndn, "ndn");
   aAttrib.add(twist, "twist");
+  aAttrib.add(ndim, "ndim");
   aAttrib.put(cur);
   //typedef DiracDeterminant<EGOSet>  Det_t;
   //typedef SlaterDeterminant<EGOSet> SlaterDeterminant_t;
@@ -70,6 +72,8 @@ WaveFunctionComponent* ElectronGasComplexOrbitalBuilder::buildComponent(xmlNodeP
   if (nup < 0) nup = nat/2;
   if (ndn < 0) ndn = nup;
   HEGGrid<RealType, OHMMS_DIM> egGrid(targetPtcl.Lattice);
+  if (ndim != 3) app_log() << " setting HEGGrid to " << ndim << " dimensions." << std::endl;
+  egGrid.ndim = ndim;
   if (nc == 0)
     nc = egGrid.getShellIndex(nup);
   app_log() << "In ElectronGasComplexOrbitalBuilder:" << std::endl;
