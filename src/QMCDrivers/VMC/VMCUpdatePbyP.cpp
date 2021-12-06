@@ -39,7 +39,6 @@ VMCUpdatePbyP::~VMCUpdatePbyP() {}
 
 void VMCUpdatePbyP::advanceWalker(Walker_t& thisWalker, bool recompute)
 {
-  move_in_xy = true;
   buffer_timer_.start();
   W.loadWalker(thisWalker, true);
   Walker_t::WFBuffer_t& w_buffer(thisWalker.DataSet);
