@@ -69,8 +69,8 @@ WaveFunctionComponent* ElectronGasComplexOrbitalBuilder::buildComponent(xmlNodeP
   typedef DiracDeterminant<> Det_t;
   typedef SlaterDet SlaterDeterminant_t;
   int nat = targetPtcl.getTotalNum();
-  if (nup < 0) nup = nat/2;
-  if (ndn < 0) ndn = nup;
+  if (nup < 0) APP_ABORT("nup must be given");
+  if (ndn < 0) ndn = nat-nup;
   HEGGrid<RealType, OHMMS_DIM> egGrid(targetPtcl.Lattice);
   if (ndim != 3) app_log() << " setting HEGGrid to " << ndim << " dimensions." << std::endl;
   egGrid.ndim = ndim;
@@ -88,15 +88,19 @@ WaveFunctionComponent* ElectronGasComplexOrbitalBuilder::buildComponent(xmlNodeP
   Det_t* updet = new Det_t(std::make_unique<EGOSet>(egGrid.kpt, egGrid.mk2));
   updet->set(noffset, nup);
   noffset += nup;
-  //create down determinant
-  Det_t* downdet = new Det_t(std::make_unique<EGOSet>(egGrid.kpt, egGrid.mk2));
-  downdet->set(noffset, ndn);
-  noffset += ndn;
   SlaterDet* sdet = new SlaterDet(targetPtcl);
   sdet->add(updet, 0);
-  sdet->add(downdet, 1);
+  if (ndn > 0)
+  {
+    //create down determinant
+    Det_t* downdet = new Det_t(std::make_unique<EGOSet>(egGrid.kpt, egGrid.mk2));
+    downdet->set(noffset, ndn);
+    noffset += ndn;
+    sdet->add(downdet, 1);
+  }
   if (noffset < nat)
   {
+  app_log() << " !!!! adding more than 2 determinants!" << std::endl;
   //create more up determinant
   Det_t* up1det = new Det_t(std::make_unique<EGOSet>(egGrid.kpt, egGrid.mk2));
   up1det->set(noffset, nup);
