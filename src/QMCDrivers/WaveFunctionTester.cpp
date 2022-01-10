@@ -35,7 +35,8 @@ namespace qmcplusplus
 {
 using WP = WalkerProperties::Indexes;
 
-WaveFunctionTester::WaveFunctionTester(MCWalkerConfiguration& w,
+WaveFunctionTester::WaveFunctionTester(xmlNodePtr cur,
+                                       MCWalkerConfiguration& w,
                                        TrialWaveFunction& psi,
                                        QMCHamiltonian& h,
                                        ParticleSetPool& ptclPool,
@@ -49,10 +50,13 @@ WaveFunctionTester::WaveFunctionTester(MCWalkerConfiguration& w,
       checkEloc("no"),
       checkBasic("yes"),
       checkRatioV("no"),
+      myNode(cur),
       deltaParam(0.0),
       toleranceParam(0.0),
       outputDeltaVsError(false),
-      checkSlaterDet(true)
+      checkSlaterDet(true),
+      move_in_xy(false),
+      ndim(3)
 {
   m_param.add(checkRatio, "ratio");
   m_param.add(checkClone, "clone");
@@ -65,9 +69,20 @@ WaveFunctionTester::WaveFunctionTester(MCWalkerConfiguration& w,
   m_param.add(deltaParam, "delta");
   m_param.add(toleranceParam, "tolerance");
   m_param.add(checkSlaterDetOption, "sd");
+  std::string xystr;
+  m_param.add(xystr, "move_in_xy");
+  m_param.put(myNode);
 
   deltaR.resize(w.getTotalNum());
   makeGaussRandom(deltaR);
+  if (xystr == "yes")
+  {
+    app_log() << "WF test in 2D" << std::endl;
+    move_in_xy = true;
+    ndim = 2;
+    for (int iat = 0; iat < deltaR.size(); ++iat)
+      deltaR[iat][2] = 0;
+  }
 }
 
 WaveFunctionTester::~WaveFunctionTester() {}
@@ -300,9 +315,10 @@ public:
     FiniteDiff_LowOrder,  // use simplest low-order formulas
     FiniteDiff_Richardson // use Richardson extrapolation
   };
-  FiniteDifference(FiniteDiffType fd_type = FiniteDiff_Richardson) : m_RichardsonSize(10), m_fd_type(fd_type) {}
+  FiniteDifference(FiniteDiffType fd_type = FiniteDiff_Richardson, size_t ndim_in=3) : m_RichardsonSize(10), ndim(ndim_in), m_fd_type(fd_type) {}
 
   int m_RichardsonSize;
+  size_t ndim;
 
 
   FiniteDiffType m_fd_type;
@@ -420,13 +436,13 @@ void FiniteDifference::computeFiniteDiffLowOrder(RealType delta,
   ValueType c1 = 1.0 / delta / 2.0;
   ValueType c2 = 1.0 / delta / delta;
 
-  const RealType twoD(2 * OHMMS_DIM);
+  const RealType twoD(2 * ndim);
   const int pt_per_deriv = 2; // number of points per derivative
-  for (int pt_i = 1; pt_i < values.size(); pt_i += pt_per_deriv * OHMMS_DIM)
+  for (int pt_i = 1; pt_i < values.size(); pt_i += pt_per_deriv * ndim)
   {
     GradType g0;
     ValueType lap0 = 0.0;
-    for (int idim = 0; idim < OHMMS_DIM; idim++)
+    for (int idim = 0; idim < ndim; idim++)
     {
       int idx            = pt_i + idim * pt_per_deriv;
       ValueType logpsi_m = values[idx];
@@ -460,7 +476,7 @@ void FiniteDifference::computeFiniteDiffRichardson(RealType delta,
   ValueType logpsi = values[0];
 
   const int pt_per_deriv = 2 * (m_RichardsonSize + 1); // number of points per derivative
-  for (int pt_i = 1; pt_i < values.size(); pt_i += pt_per_deriv * OHMMS_DIM)
+  for (int pt_i = 1; pt_i < values.size(); pt_i += pt_per_deriv * ndim)
   {
     GradType g0;
     GradType gmin;
@@ -481,7 +497,7 @@ void FiniteDifference::computeFiniteDiffRichardson(RealType delta,
       RealType twodd = 2 * dd;
       RealType ddsq  = dd * dd;
       l_base[inr]    = 0.0;
-      for (int idim = 0; idim < OHMMS_DIM; idim++)
+      for (int idim = 0; idim < ndim; idim++)
       {
         int idx            = pt_i + idim * pt_per_deriv + 2 * inr;
         ValueType logpsi_m = values[idx];
@@ -511,7 +527,7 @@ void FiniteDifference::computeFiniteDiffRichardson(RealType delta,
 
       RealType err1 = 0.0;
       RealType norm = 0.0;
-      for (int idim = 0; idim < OHMMS_DIM; idim++)
+      for (int idim = 0; idim < ndim; idim++)
       {
         err1 += std::abs(g_rich[inr][idim] - g_prev[inr - 1][idim]);
         norm += std::abs(g_prev[inr - 1][idim]);
@@ -581,7 +597,7 @@ void WaveFunctionTester::computeNumericalGrad(RealType delta,
                                               ParticleSet::ParticleGradient_t& G_fd, // finite difference
                                               ParticleSet::ParticleLaplacian_t& L_fd)
 {
-  FiniteDifference fd(FiniteDifference::FiniteDiff_LowOrder);
+  FiniteDifference fd(FiniteDifference::FiniteDiff_LowOrder, ndim=ndim);
   //FiniteDifference fd(FiniteDifference::FiniteDiff_Richardson);
   FiniteDifference::PosChangeVector positions;
 
@@ -728,7 +744,7 @@ bool WaveFunctionTester::checkGradientAtConfiguration(MCWalkerConfiguration::Wal
   {
     delta = deltaParam;
   }
-  FiniteDifference fd(FiniteDifference::FiniteDiff_LowOrder);
+  FiniteDifference fd(FiniteDifference::FiniteDiff_LowOrder, ndim=ndim);
   //RealType delta = 1.0;
   //FiniteDifference fd(FiniteDifference::FiniteDiff_Richardson);
 
@@ -1014,6 +1030,11 @@ void WaveFunctionTester::runBasicTest()
   RealType ratio_tol  = 1e-9;
   bool any_ratio_fail = false;
   makeGaussRandom(deltaR);
+  if (move_in_xy)
+  {
+    for (int iat = 0; iat < deltaR.size(); ++iat)
+      deltaR[iat][2] = 0;
+  }
   fout << "deltaR:" << std::endl;
   fout << deltaR << std::endl;
   fout << "Particle       Ratio of Ratios     Computed Ratio   Internal Ratio" << std::endl;

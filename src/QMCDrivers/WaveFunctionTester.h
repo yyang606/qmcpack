@@ -46,7 +46,8 @@ public:
   using LogValueType = WaveFunctionComponent::LogValueType;
 
   /// Constructor.
-  WaveFunctionTester(MCWalkerConfiguration& w,
+  WaveFunctionTester(xmlNodePtr cur,
+                     MCWalkerConfiguration& w,
                      TrialWaveFunction& psi,
                      QMCHamiltonian& h,
                      ParticleSetPool& ptclPool,
@@ -67,6 +68,8 @@ private:
   double toleranceParam;
   bool outputDeltaVsError;
   bool checkSlaterDet; // flag to perform determinant-resolved test of SlaterDet
+  bool move_in_xy;
+  size_t ndim;
   std::string checkSlaterDetOption;
   FiniteDiffErrData DeltaVsError;
 

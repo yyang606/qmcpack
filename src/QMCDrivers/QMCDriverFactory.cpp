@@ -323,7 +323,7 @@ std::unique_ptr<QMCDriverInterface> QMCDriverFactory::createQMCDriver(xmlNodePtr
   else if (das.new_run_type == QMCRunType::WF_TEST)
   {
     app_log() << "Testing wavefunctions." << std::endl;
-    QMCDriverInterface* temp_ptr = new WaveFunctionTester(qmc_system, *primaryPsi, *primaryH, particle_pool, comm);
+    QMCDriverInterface* temp_ptr = new WaveFunctionTester(cur, qmc_system, *primaryPsi, *primaryH, particle_pool, comm);
     new_driver.reset(temp_ptr);
   }
   else
