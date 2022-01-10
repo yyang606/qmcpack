@@ -160,7 +160,7 @@ WaveFunctionComponent* RadialJastrowBuilder::createJ2(xmlNodePtr cur)
   SpeciesSet& species(targetPtcl.getSpeciesSet());
   int taskid = is_manager() ? getGroupID() : -1;
   auto* J2   = new J2OrbitalType(j2name, targetPtcl, taskid, ndim=ndim);
-  auto* dJ2  = new DiffJ2OrbitalType(targetPtcl);
+  auto* dJ2  = new DiffJ2OrbitalType(targetPtcl, ndim=ndim);
 
   std::string init_mode("0");
   {

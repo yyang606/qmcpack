@@ -30,6 +30,7 @@ namespace qmcplusplus
 template<class FT>
 class DiffTwoBodyJastrowOrbital : public DiffWaveFunctionComponent
 {
+  size_t ndim;
   ///number of variables this object handles
   int NumVars;
   ///number of target particles
@@ -51,7 +52,7 @@ class DiffTwoBodyJastrowOrbital : public DiffWaveFunctionComponent
 
 public:
   ///constructor
-  DiffTwoBodyJastrowOrbital(ParticleSet& p) : NumVars(0), my_table_ID_(p.addTable(p))
+  DiffTwoBodyJastrowOrbital(ParticleSet& p, size_t ndim_in=3) : ndim(ndim_in), NumVars(0), my_table_ID_(p.addTable(p))
   {
     NumPtcls  = p.getTotalNum();
     NumGroups = p.groups();
@@ -250,7 +251,7 @@ public:
       std::vector<TinyVector<RealType, 3>> derivs(NumVars);
       const auto& d_table = P.getDistTable(my_table_ID_);
       constexpr RealType cone(1);
-      constexpr RealType lapfac(OHMMS_DIM - cone);
+      RealType lapfac(ndim - cone);
       const size_t n  = d_table.sources();
       const size_t ng = P.groups();
       for (size_t i = 1; i < n; ++i)
