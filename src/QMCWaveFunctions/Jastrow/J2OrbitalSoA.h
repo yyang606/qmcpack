@@ -128,6 +128,8 @@ public:
   std::vector<FT*> F;
 
 protected:
+  ///number of spatial dimensions
+  size_t ndim;
   ///number of particles
   size_t N;
   ///number of particles + padded
@@ -157,7 +159,7 @@ protected:
   J2KECorrection<RealType, FT> j2_ke_corr_helper;
 
 public:
-  J2OrbitalSoA(const std::string& obj_name, ParticleSet& p, int tid);
+  J2OrbitalSoA(const std::string& obj_name, ParticleSet& p, int tid, size_t ndim=3);
   J2OrbitalSoA(const J2OrbitalSoA& rhs) = delete;
   ~J2OrbitalSoA();
 
@@ -347,9 +349,10 @@ public:
 };
 
 template<typename FT>
-J2OrbitalSoA<FT>::J2OrbitalSoA(const std::string& obj_name, ParticleSet& p, int tid)
+J2OrbitalSoA<FT>::J2OrbitalSoA(const std::string& obj_name, ParticleSet& p, int tid, size_t ndim_in)
     : WaveFunctionComponent("J2OrbitalSoA", obj_name), my_table_ID_(p.addTable(p)), j2_ke_corr_helper(p, F)
 {
+  ndim = ndim_in;
   if (myName.empty())
     throw std::runtime_error("J2OrbitalSoA object name cannot be empty!");
   init(p);
@@ -558,7 +561,7 @@ void J2OrbitalSoA<FT>::acceptMove(ParticleSet& P, int iat, bool safe_to_delay)
   valT cur_d2Uat(0);
   const auto& new_dr    = d_table.getTempDispls();
   const auto& old_dr    = d_table.getOldDispls();
-  constexpr valT lapfac = OHMMS_DIM - RealType(1);
+  valT lapfac = ndim - RealType(1);
 #pragma omp simd reduction(+ : cur_d2Uat)
   for (int jat = 0; jat < N; jat++)
   {
@@ -610,7 +613,7 @@ void J2OrbitalSoA<FT>::recompute(const ParticleSet& P)
       const valT* restrict du  = cur_du.data();
       const valT* restrict d2u = cur_d2u.data();
       const auto& displ        = d_table.getDisplRow(iat);
-      constexpr valT lapfac    = OHMMS_DIM - RealType(1);
+      valT lapfac    = ndim - RealType(1);
 #pragma omp simd reduction(+ : lap) aligned(du, d2u: QMC_SIMD_ALIGNMENT)
       for (int jat = 0; jat < iat; ++jat)
         lap += d2u[jat] + lapfac * du[jat];

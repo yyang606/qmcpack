@@ -46,6 +46,7 @@ RadialJastrowBuilder::RadialJastrowBuilder(Communicate* comm, ParticleSet& targe
   TypeOpt      = "unknown";
   Jastfunction = "unknown";
   SpinOpt      = "no";
+  ndimOpt      = 3;
 }
 
 RadialJastrowBuilder::RadialJastrowBuilder(Communicate* comm, ParticleSet& target)
@@ -155,9 +156,10 @@ WaveFunctionComponent* RadialJastrowBuilder::createJ2(xmlNodePtr cur)
 
   XMLAttrString input_name(cur, "name");
   std::string j2name = input_name.empty() ? "J2_" + Jastfunction : input_name;
+  size_t ndim = ndimOpt;
   SpeciesSet& species(targetPtcl.getSpeciesSet());
   int taskid = is_manager() ? getGroupID() : -1;
-  auto* J2   = new J2OrbitalType(j2name, targetPtcl, taskid);
+  auto* J2   = new J2OrbitalType(j2name, targetPtcl, taskid, ndim=ndim);
   auto* dJ2  = new DiffJ2OrbitalType(targetPtcl);
 
   std::string init_mode("0");
@@ -224,10 +226,11 @@ WaveFunctionComponent* RadialJastrowBuilder::createJ2(xmlNodePtr cur)
 #if OHMMS_DIM == 1
         RealType dim_factor = 1.0 / (OHMMS_DIM + 1);
 #else
-        RealType dim_factor = (ia == ib) ? 1.0 / (OHMMS_DIM + 1) : 1.0 / (OHMMS_DIM - 1);
+        RealType dim_factor = (ia == ib) ? 1.0 / (ndim + 1) : 1.0 / (ndim - 1);
 #endif
         cusp = -2 * qq * red_mass * dim_factor;
       }
+      app_summary() << "    Radial function in ndim= " << ndim << std::endl;
       app_summary() << "    Radial function for species: " << spA << " - " << spB << std::endl;
       app_debug() << "    RadialJastrowBuilder adds a functor with cusp = " << cusp << std::endl;
 
@@ -508,6 +511,7 @@ WaveFunctionComponent* RadialJastrowBuilder::buildComponent(xmlNodePtr cur)
   aAttrib.add(TypeOpt, "type");
   aAttrib.add(Jastfunction, "function");
   aAttrib.add(SpinOpt, "spin");
+  aAttrib.add(ndimOpt, "ndim");
   aAttrib.put(cur);
   tolower(NameOpt);
   tolower(TypeOpt);
