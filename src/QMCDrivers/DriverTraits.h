@@ -19,7 +19,8 @@ enum class QMCRunType
   VMC_BATCH,
   DMC_BATCH,
   OPTIMIZE_BATCH,
-  LINEAR_OPTIMIZE_BATCH
+  LINEAR_OPTIMIZE_BATCH,
+  WF_PLOT
 };
 
 /** enum to set the bit to determine the QMC mode 

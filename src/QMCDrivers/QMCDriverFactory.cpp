@@ -40,6 +40,7 @@
 #include "QMCDrivers/WFOpt/QMCFixedSampleLinearOptimizeBatched.h"
 #include "QMCDrivers/WFOpt/QMCCorrelatedSamplingLinearOptimize.h"
 #include "QMCDrivers/WaveFunctionTester.h"
+#include "QMCDrivers/WaveFunctionPlotter.h"
 #include "OhmmsData/AttributeSet.h"
 #include "OhmmsData/ParameterSet.h"
 #include "QMCDrivers/WFOpt/QMCWFOptFactoryNew.h"
@@ -153,6 +154,10 @@ QMCDriverFactory::DriverAssemblyState QMCDriverFactory::readSection(xmlNodePtr c
     else if (qmc_mode == wf_test_name)
     {
       das.new_run_type = QMCRunType::WF_TEST;
+    }
+    else if (qmc_mode == "plot")
+    {
+      das.new_run_type = QMCRunType::WF_PLOT;
     }
     else
     {
@@ -324,6 +329,12 @@ std::unique_ptr<QMCDriverInterface> QMCDriverFactory::createQMCDriver(xmlNodePtr
   {
     app_log() << "Testing wavefunctions." << std::endl;
     QMCDriverInterface* temp_ptr = new WaveFunctionTester(cur, qmc_system, *primaryPsi, *primaryH, particle_pool, comm);
+    new_driver.reset(temp_ptr);
+  }
+  else if (das.new_run_type == QMCRunType::WF_PLOT)
+  {
+    app_log() << "Ploting wavefunction" << std::endl;
+    QMCDriverInterface* temp_ptr = new WaveFunctionPlotter(cur, qmc_system, *primaryPsi, *primaryH, comm);
     new_driver.reset(temp_ptr);
   }
   else
