@@ -25,6 +25,8 @@ public:
   bool run();
   bool put(xmlNodePtr q);
   QMCRunType getRunType() { return QMCRunType::WF_PLOT; }
+private:
+  int nstep, ipart, jpart;
 };
 
 } // namespace qmcplusplus
