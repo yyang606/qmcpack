@@ -85,8 +85,10 @@ struct LRHandlerBase
     {
       mRealType u = 0;
       for (; ki < kshell[ks + 1]; ki++, rk1++, rk2++)
-        u += ((*rk1).real() * (*rk2).real() + (*rk1).imag() * (*rk2).imag());
-      vk += Fk_symm[ks] * u;
+      {
+        u = ((*rk1).real() * (*rk2).real() + (*rk1).imag() * (*rk2).imag());
+        vk += Fk[ki] * u;
+      }
     }
     return vk;
   }
@@ -115,8 +117,10 @@ struct LRHandlerBase
     {
       mRealType u = 0;
       for (; ki < kshell[ks + 1]; ki++)
-        u += ((*rk1_r++) * (*rk2_r++) + (*rk1_i++) * (*rk2_i++));
-      vk += Fk_symm[ks] * u;
+      {
+        u = ((*rk1_r++) * (*rk2_r++) + (*rk1_i++) * (*rk2_i++));
+        vk += Fk[ki] * u;
+      }
     }
     return vk;
   }
