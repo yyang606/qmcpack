@@ -12,29 +12,40 @@ namespace qmcplusplus
 class GaussianOrbitalSet : public SPOSet
 {
 public:
-  GaussianOrbitalSet(RealType cexpo);
+  GaussianOrbitalSet(ParticleSet& target, ParticleSet& source, RealType cexpo, int ndim);
   ~GaussianOrbitalSet();
-  void evaluate_notranspose(const ParticleSet& P,
-                            int first,
-                            int last,
-                            ValueMatrix_t& logdet,
-                            GradMatrix_t& dlogdet,
-                            ValueMatrix_t& d2logdet) override;
+
+  // phi[i][j] is phi_j(r_i), i.e. electron i in orbital j
+  //  i \in [first, last]
+  void evaluate_notranspose(
+    const ParticleSet& P,
+    int first,
+    int last,
+    ValueMatrix_t& phi,
+    GradMatrix_t& dphi,
+    ValueMatrix_t& d2phi) override;
+
+  // plug electron i into all orbitals
+  void evaluateVGL(
+    const ParticleSet& P,
+    int i,
+    ValueVector_t& phi,
+    GradVector_t& dphi,
+    ValueVector_t& d2phi
+  ) override;
+
   // ---- begin required overrides
   void resetParameters(const opt_variables_type& optVariables) override {};
   void setOrbitalSetSize(int norbs) override {};
   void evaluateValue(const ParticleSet& P, int iat, ValueVector_t& psi) override {};
-  void evaluateVGL(
-    const ParticleSet& P,
-    int iat,
-    ValueVector_t& psi,
-    GradVector_t& dpsi,
-    ValueVector_t& d2psi
-  ) override {};
   // required overrides end ----
   void report(const std::string& pad) const override;
 private:
+  ParticleSet& targetPtcl;
+  ParticleSet& sourcePtcl;
   RealType cexpo;
+  const int ideitab;
+  const int ndim;
 };
 
 } // qmcplusplus

@@ -10,12 +10,15 @@ class GaussianOrbitalBuilder : public SPOSetBuilder
 {
 public:
   typedef std::map<std::string, ParticleSet*> PtclPoolType;
+
   GaussianOrbitalBuilder(ParticleSet& els, PtclPoolType& psets, Communicate* comm, xmlNodePtr cur);
   ~GaussianOrbitalBuilder();
+
   SPOSet* createSPOSetFromXML(xmlNodePtr cur);
 private:
   ParticleSet targetPtcl;
-  RealType cexpo;
+  std::string sourceName;
+  PtclPoolType& particleSets;
 };
 } // qmcplusplus
 #endif
