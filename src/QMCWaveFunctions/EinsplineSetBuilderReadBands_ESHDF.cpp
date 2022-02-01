@@ -736,6 +736,7 @@ bool EinsplineSetBuilder::ReadGvectors_ESHDF()
     MeshSize[0] = (int)std::ceil(4.0 * MeshFactor * maxIndex[0]);
     MeshSize[1] = (int)std::ceil(4.0 * MeshFactor * maxIndex[1]);
     MeshSize[2] = (int)std::ceil(4.0 * MeshFactor * maxIndex[2]);
+    if (ndim == 2) MeshSize[2] = 1;
     //only use 2^a 3^b 5^c where a>=2  up to 65536
     int* ix     = std::lower_bound(allowed, allowed + nallowed, MeshSize[0]);
     int* iy     = std::lower_bound(allowed, allowed + nallowed, MeshSize[1]);

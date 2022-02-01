@@ -47,6 +47,7 @@ EinsplineSetBuilder::EinsplineSetBuilder(ParticleSet& p, PtclPoolType& psets, Co
       NumSpins(0),
       NumTwists(0),
       NumCoreStates(0),
+      ndim(3),
       MeshFactor(1.0),
       MeshSize(0, 0, 0),
       TwistNum(0),
@@ -101,8 +102,8 @@ bool EinsplineSetBuilder::CheckLattice()
   update_token(__FILE__, __LINE__, "CheckLattice");
 
   double diff = 0.0;
-  for (int i = 0; i < OHMMS_DIM; i++)
-    for (int j = 0; j < OHMMS_DIM; j++)
+  for (int i = 0; i < ndim; i++)
+    for (int j = 0; j < ndim; j++)
     {
       double max_abs =
           std::max(std::abs(SuperLattice(i, j)), static_cast<double>(std::abs(TargetPtcl.Lattice.R(i, j))));

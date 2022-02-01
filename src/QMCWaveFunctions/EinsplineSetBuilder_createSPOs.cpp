@@ -141,6 +141,7 @@ SPOSet* EinsplineSetBuilder::createSPOSetFromXML(xmlNodePtr cur)
     a.add(givenTwist, "twist");
     a.add(sourceName, "source");
     a.add(MeshFactor, "meshfactor");
+    a.add(ndim, "ndim");
     a.add(hybrid_rep, "hybridrep");
     a.add(useGPU, "gpu");
     a.add(GPUsharing, "gpusharing"); // split spline across GPUs visible per rank
