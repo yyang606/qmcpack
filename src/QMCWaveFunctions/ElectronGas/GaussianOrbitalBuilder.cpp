@@ -14,15 +14,19 @@ GaussianOrbitalBuilder::~GaussianOrbitalBuilder(){}
 
 SPOSet* GaussianOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
 {
-  RealType cexpo;
-  int ndim;
-  std::string sourceName;
+  RealType cexpo=0.1;
+  int ndim=3;
+  std::string sourceName="ion0";
   OhmmsAttributeSet attrib;
   attrib.add(cexpo, "c");
   attrib.add(ndim, "ndim");
   attrib.add(sourceName, "source");
   attrib.put(cur);
   ParticleSet* sourcePtcl = particleSets[sourceName];
+  if (sourcePtcl == 0)
+  {
+    APP_ABORT("GaussianOrbital needs the source particleset");
+  }
   GaussianOrbitalSet* sposet = new GaussianOrbitalSet(targetPtcl, *sourcePtcl, cexpo, ndim);
   sposet->report("  ");
   return sposet;
