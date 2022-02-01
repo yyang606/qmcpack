@@ -1,4 +1,5 @@
 #include "GaussianOrbitalBuilder.h"
+#include "OhmmsData/AttributeSet.h"
 
 namespace qmcplusplus
 {
@@ -12,7 +13,11 @@ GaussianOrbitalBuilder::~GaussianOrbitalBuilder(){}
 
 SPOSet* GaussianOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
 {
-  GaussianOrbitalSet* sposet = new GaussianOrbitalSet();
+  OhmmsAttributeSet attrib;
+  attrib.add(cexpo, "c");
+  attrib.put(cur);
+  GaussianOrbitalSet* sposet = new GaussianOrbitalSet(cexpo);
+  sposet->report("  ");
   return sposet;
 }
 

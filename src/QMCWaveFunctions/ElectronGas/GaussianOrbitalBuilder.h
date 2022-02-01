@@ -15,6 +15,7 @@ public:
   SPOSet* createSPOSetFromXML(xmlNodePtr cur);
 private:
   ParticleSet targetPtcl;
+  RealType cexpo;
 };
 } // qmcplusplus
 #endif

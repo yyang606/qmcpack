@@ -12,7 +12,7 @@ namespace qmcplusplus
 class GaussianOrbitalSet : public SPOSet
 {
 public:
-  GaussianOrbitalSet();
+  GaussianOrbitalSet(RealType cexpo);
   ~GaussianOrbitalSet();
   void evaluate_notranspose(const ParticleSet& P,
                             int first,
@@ -32,6 +32,9 @@ public:
     ValueVector_t& d2psi
   ) override {};
   // required overrides end ----
+  void report(const std::string& pad) const override;
+private:
+  RealType cexpo;
 };
 
 } // qmcplusplus
