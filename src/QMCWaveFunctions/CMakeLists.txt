@@ -34,6 +34,8 @@ SET(WFBASE_SRCS
   HarmonicOscillator/SHOSetBuilder.cpp
   ExampleHeBuilder.cpp
   ExampleHeComponent.cpp
+  ElectronGas/GaussianOrbitalSet.cpp
+  ElectronGas/GaussianOrbitalBuilder.cpp
   )
 
 IF(NOT QMC_COMPLEX)

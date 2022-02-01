@@ -19,6 +19,7 @@
 #include "SPOSetBuilderFactory.h"
 #include "QMCWaveFunctions/SPOSetScanner.h"
 #include "QMCWaveFunctions/ElectronGas/ElectronGasOrbitalBuilder.h"
+#include "QMCWaveFunctions/ElectronGas/GaussianOrbitalBuilder.h"
 #include "QMCWaveFunctions/HarmonicOscillator/SHOSetBuilder.h"
 #if OHMMS_DIM == 3
 #include "QMCWaveFunctions/LCAO/LCAOrbitalBuilder.h"
@@ -152,6 +153,11 @@ SPOSetBuilder* SPOSetBuilderFactory::createSPOSetBuilder(xmlNodePtr rootNode)
   {
     app_log() << "Composite SPO set with existing SPOSets." << std::endl;
     bb = new CompositeSPOSetBuilder(myComm, *this);
+  }
+  else if (type == "gaussian")
+  {
+    app_log() << "Electron gas Gaussian SPO set" << std::endl;
+    bb = new GaussianOrbitalBuilder(targetPtcl, ptclPool, myComm, rootNode);
   }
   else if (type == "jellium" || type == "heg")
   {
