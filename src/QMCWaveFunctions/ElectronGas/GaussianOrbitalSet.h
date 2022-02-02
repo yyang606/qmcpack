@@ -33,12 +33,12 @@ public:
     GradVector_t& dpvec,
     ValueVector_t& d2pvec
   ) override;
+  void evaluateValue(const ParticleSet& P, int iat, ValueVector_t& pvec) override;
 
   SPOSet* makeClone() const;
   // ---- begin required overrides
-  void resetParameters(const opt_variables_type& optVariables) override {};
-  void setOrbitalSetSize(int norbs) override {};
-  void evaluateValue(const ParticleSet& P, int iat, ValueVector_t& psi) override {};
+  void resetParameters(const opt_variables_type& optVariables) override {APP_ABORT("not implemented")};
+  void setOrbitalSetSize(int norbs) override {APP_ABORT("not implemented")};
   // required overrides end ----
   void report(const std::string& pad) const override;
 private:
@@ -47,6 +47,7 @@ private:
   RealType cexpo;
   const int ideitab;
   const int ndim;
+  RealType operator()(RealType rij);
 };
 
 } // qmcplusplus

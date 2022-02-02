@@ -34,11 +34,11 @@ void GaussianOrbitalSet::evaluate_notranspose(
 }
 
 void GaussianOrbitalSet::evaluateVGL(
-    const ParticleSet& P,
-    int i,
-    ValueVector_t& pvec,
-    GradVector_t& dpvec,
-    ValueVector_t& d2pvec)
+  const ParticleSet& P,
+  int i,
+  ValueVector_t& pvec,
+  GradVector_t& dpvec,
+  ValueVector_t& d2pvec)
 {
   const auto& dei = P.getDistTable(ideitab);
   const auto& dist = dei.getDistRow(i);
@@ -49,10 +49,31 @@ void GaussianOrbitalSet::evaluateVGL(
   {
     rij = dist[j];
     drij = displ[j];
-    pvec[j] = std::exp(-cexpo*rij);
+    pvec[j] = (*this)(rij);
     for (int l=0;l<ndim;l++)
       dpvec[j][l] = -2.0*cexpo*drij[l];
     d2pvec[j] = 4.0*cexpo*cexpo*rij*rij-2*ndim*cexpo;
+  }
+}
+
+GaussianOrbitalSet::RealType GaussianOrbitalSet::operator()(RealType rij)
+{
+  return std::exp(-cexpo*rij);
+}
+
+void GaussianOrbitalSet::evaluateValue(
+  const ParticleSet& P,
+  int i,
+  ValueVector_t& pvec)
+{
+  const auto& dei = P.getDistTable(ideitab);
+  const auto& dist = dei.getDistRow(i);
+  const auto& displ = dei.getDisplRow(i);
+  RealType rij;
+  for (int j=0;j<OrbitalSetSize;j++)
+  {
+    rij = dist[j];
+    pvec[j] = (*this)(rij);
   }
 }
 
