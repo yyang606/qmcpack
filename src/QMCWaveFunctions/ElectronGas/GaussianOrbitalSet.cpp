@@ -11,7 +11,7 @@ GaussianOrbitalSet::GaussianOrbitalSet(ParticleSet& els, ParticleSet& ions, Real
    ideitab(els.addTable(ions)),
    ndim(ndim_in)
 {
-   OrbitalSetSize = ions.getTotalNum();
+  OrbitalSetSize = ions.getTotalNum();
 }
 
 GaussianOrbitalSet::~GaussianOrbitalSet(){}
@@ -40,9 +40,9 @@ void GaussianOrbitalSet::evaluateVGL(
   GradVector_t& dpvec,
   ValueVector_t& d2pvec)
 {
-  const auto& dei = P.getDistTable(ideitab);
-  const auto& dist = dei.getDistRow(i);
-  const auto& displ = dei.getDisplRow(i);
+  const auto& d_table = P.getDistTable(ideitab);
+  const auto& dist  = (P.activePtcl == i) ? d_table.getTempDists() : d_table.getDistRow(i);
+  const auto& displ = (P.activePtcl == i) ? d_table.getTempDispls() : d_table.getDisplRow(i);
   RealType rij;
   PosType drij;
   for (int j=0;j<OrbitalSetSize;j++)
@@ -66,9 +66,8 @@ void GaussianOrbitalSet::evaluateValue(
   int i,
   ValueVector_t& pvec)
 {
-  const auto& dei = P.getDistTable(ideitab);
-  const auto& dist = dei.getDistRow(i);
-  const auto& displ = dei.getDisplRow(i);
+  const auto& d_table = P.getDistTable(ideitab);
+  const auto& dist  = (P.activePtcl == i) ? d_table.getTempDists() : d_table.getDistRow(i);
   RealType rij;
   for (int j=0;j<OrbitalSetSize;j++)
   {
