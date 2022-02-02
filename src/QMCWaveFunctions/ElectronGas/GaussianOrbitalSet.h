@@ -16,7 +16,7 @@ public:
   ~GaussianOrbitalSet();
 
   // phi[i][j] is phi_j(r_i), i.e. electron i in orbital j
-  //  i \in [first, last]
+  //  i \in [first, last)
   void evaluate_notranspose(
     const ParticleSet& P,
     int first,
@@ -25,17 +25,20 @@ public:
     GradMatrix_t& dphi,
     ValueMatrix_t& d2phi) override;
 
-  // ---- begin required overrides
-  void resetParameters(const opt_variables_type& optVariables) override {};
-  void setOrbitalSetSize(int norbs) override {};
-  void evaluateValue(const ParticleSet& P, int iat, ValueVector_t& psi) override {};
+  // plug r_i into all orbitals
   void evaluateVGL(
     const ParticleSet& P,
     int i,
     ValueVector_t& pvec,
     GradVector_t& dpvec,
     ValueVector_t& d2pvec
-  ) override {};
+  ) override;
+
+  SPOSet* makeClone() const;
+  // ---- begin required overrides
+  void resetParameters(const opt_variables_type& optVariables) override {};
+  void setOrbitalSetSize(int norbs) override {};
+  void evaluateValue(const ParticleSet& P, int iat, ValueVector_t& psi) override {};
   // required overrides end ----
   void report(const std::string& pad) const override;
 private:
