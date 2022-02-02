@@ -16,7 +16,7 @@ public:
 
   SPOSet* createSPOSetFromXML(xmlNodePtr cur);
 private:
-  ParticleSet targetPtcl;
+  ParticleSet& targetPtcl;
   std::string sourceName;
   PtclPoolType& particleSets;
 };
