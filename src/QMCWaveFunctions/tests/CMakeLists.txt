@@ -57,6 +57,7 @@ SET(TRIALWF_SRC test_wf.cpp test_TrialWaveFunction.cpp test_wavefunction_factory
 SET(SPOSET_SRC test_spo_collection_input_spline.cpp test_spo_collection_input_LCAO_xml.cpp
                test_spo_collection_input_MSD_LCAO_h5.cpp test_einset.cpp
                test_einset_spinor.cpp test_hybridrep.cpp test_pw.cpp ${MO_SRCS})
+SET(NEW_SRC test_gaussian.cpp)
 SET(JASTROW_SRC test_bspline_jastrow.cpp test_counting_jastrow.cpp test_polynomial_eeI_jastrow.cpp
                 test_rpa_jastrow.cpp test_user_jastrow.cpp test_kspace_jastrow.cpp
                 test_short_range_cusp_jastrow.cpp test_DiffTwoBodyJastrowOrbital.cpp)
@@ -64,7 +65,7 @@ SET(DETERMINANT_SRC FakeSPO.cpp test_DiracDeterminantBatched.cpp test_dirac_det.
                     test_multi_dirac_determinant.cpp test_dirac_matrix.cpp
                     test_multi_slater_determinant.cpp)
 
-FOREACH(CATEGORY trialwf sposet jastrow determinant)
+FOREACH(CATEGORY trialwf sposet jastrow determinant new)
   SET(UTEST_EXE test_${SRC_DIR}_${CATEGORY})
   SET(UTEST_NAME deterministic-unit_${UTEST_EXE})
   STRING(TOUPPER "${CATEGORY}_SRC" SOURCE_FILE_VAR_NAME)
