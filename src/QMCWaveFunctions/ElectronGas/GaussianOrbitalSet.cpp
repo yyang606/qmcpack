@@ -58,7 +58,7 @@ void GaussianOrbitalSet::evaluateVGL(
 
 GaussianOrbitalSet::RealType GaussianOrbitalSet::operator()(RealType rij)
 {
-  return std::exp(-cexpo*rij);
+  return std::exp(-cexpo*rij*rij);
 }
 
 void GaussianOrbitalSet::evaluateValue(
