@@ -51,7 +51,7 @@ void GaussianOrbitalSet::evaluateVGL(
     drij = displ[j];
     pvec[j] = (*this)(rij);
     for (int l=0;l<ndim;l++)
-      dpvec[j][l] = -2.0*cexpo*drij[l];
+      dpvec[j][l] = 2.0*cexpo*drij[l];
     d2pvec[j] = 4.0*cexpo*cexpo*rij*rij-2*ndim*cexpo;
   }
 }
