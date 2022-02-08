@@ -11,7 +11,7 @@ public:
   MoirePotential(ParticleSet& elec, ParticleSet& ions);
   ~MoirePotential(){};
   Return_t evaluate(ParticleSet& P) override;
-  bool put(xmlNodePtr cur) override {};
+  bool put(xmlNodePtr cur) override;
   bool get(std::ostream& os) const override {};
   OperatorBase* makeClone(ParticleSet& P, TrialWaveFunction& psi) override;
   // ---- begin required overrides
@@ -21,6 +21,8 @@ private:
   ParticleSet& targetPtcl;
   ParticleSet& sourcePtcl;
   const int ideitab;
+  RealType amoire, vmoire, phi;
+  std::vector<TinyVector<RealType, 3>> gvecs;
 };
 } // qmcplusplus
 #endif
