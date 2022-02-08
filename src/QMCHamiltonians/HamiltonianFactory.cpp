@@ -36,6 +36,7 @@
 #include "QMCHamiltonians/SkEstimator.h"
 #include "QMCHamiltonians/HarmonicExternalPotential.h"
 #include "QMCHamiltonians/GridExternalPotential.h"
+#include "QMCHamiltonians/MoirePotential.h"
 #include "QMCHamiltonians/StaticStructureFactor.h"
 #include "QMCHamiltonians/SpinDensity.h"
 #include "QMCHamiltonians/OrbitalImages.h"
@@ -199,6 +200,19 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
         GridExternalPotential* hs = new GridExternalPotential(targetPtcl);
         hs->put(cur);
         targetH->addOperator(hs, "Grid", true);
+      }
+      if (potType == "moire")
+      {
+        // find source particle set
+        PtclPoolType::iterator spit(ptclPool.find(sourceInp));
+        if (spit == ptclPool.end())
+        {
+          APP_ABORT("Unknown source \"" + sourceInp + "\" for MoirePotential.");
+        }
+        ParticleSet* ions = (*spit).second;
+        MoirePotential* hs = new MoirePotential(targetPtcl, *ions);
+        hs->put(cur);
+        targetH->addOperator(hs, "moire", true);
       }
     }
     else if (cname == "estimator")
