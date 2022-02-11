@@ -14,9 +14,11 @@ MoirePotential::MoirePotential(ParticleSet& elec, ParticleSet& ions)
 MoirePotential::Return_t MoirePotential::evaluate(ParticleSet& P)
 {
   Value = 0.0;
+  double arg;
+  const size_t Nelec = P.getTotalNum();
+  /*
   Return_t arg;
   const DistanceTableData& d_table(P.getDistTable(ideitab));
-  const size_t Nelec = P.getTotalNum();
   const size_t NumIons = sourcePtcl.getTotalNum();
   for (size_t iel = 0; iel < Nelec; iel++)
   {
@@ -33,7 +35,23 @@ MoirePotential::Return_t MoirePotential::evaluate(ParticleSet& P)
     }
     Value += esum;
   }
-  return vmoire*Value;
+  */
+  app_log() << "vmoire = " << vmoire << std::endl;
+  for (size_t iel = 0; iel < Nelec; iel++)
+  {
+    const auto& r = (P.activePtcl == iel) ? P.activeR(iel) : P.R[iel];
+    //Return_t esum(0);
+    double esum = 0.0;
+    for (size_t m=0;m<gvecs.size();m++)
+    {
+      arg = dot(gvecs[m], r);
+      esum += std::cos(arg+phi);
+    }
+    Value += esum;
+  }
+  Value *= 2*vmoire;
+
+  //return vmoire*2*Value; // !!!! return value is NOT used
 }
 
 bool MoirePotential::put(xmlNodePtr cur)
@@ -57,16 +75,17 @@ bool MoirePotential::put(xmlNodePtr cur)
   vmoire *= epsmoire*epsmoire/mstar;
   app_log() << "aM = " << amoire_in_ang << " " << amoire << std::endl;
   app_log() << "vM = " << vmoire_in_mev << " " << vmoire << std::endl;
+  app_log() << "phi = " << phi << std::endl;
   // setup the one shell of gvectors
   RealType bmag = 4*PI/std::sqrt(3)/amoire;
   std::vector<TinyVector<int, 3>> gfracs;
   gfracs.resize(3);
-  gfracs[0] = {-1,  1, 0};
-  gfracs[1] = { 1,  0, 0};
-  gfracs[2] = { 0, -1, 0};
+  gfracs[0] = {-1,  0, 0};
+  gfracs[1] = { 1, -1, 0};
+  gfracs[2] = { 0,  1, 0};
   TinyVector<RealType, 3> b1, b2;
   b1 = {std::sqrt(3)/2, 1.0/2, 0.0};
-  b2 = {1.0, 0.0, 0.0};
+  b2 = {0.0, 1.0, 0.0};
   b1 = bmag*b1;
   b2 = bmag*b2;
   gvecs.resize(3);
@@ -76,6 +95,7 @@ bool MoirePotential::put(xmlNodePtr cur)
     {
       gvecs[m][l] = gfracs[m][0]*b1[l] + gfracs[m][1]*b2[l];
     }
+    app_log() << gvecs[m] << std::endl;
   }
 }
 
