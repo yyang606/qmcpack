@@ -203,16 +203,15 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
       }
       if (potType == "moire")
       {
-        // find source particle set
-        PtclPoolType::iterator spit(ptclPool.find(sourceInp));
-        if (spit == ptclPool.end())
-        {
-          APP_ABORT("Unknown source \"" + sourceInp + "\" for MoirePotential.");
-        }
-        ParticleSet* ions = (*spit).second;
-        MoirePotential* hs = new MoirePotential(targetPtcl, *ions);
+        if (potName == noname) potName = "moire";
+        bool physical = false;
+        if (estType == "physical") physical = true;
+        MoirePotential* hs = new MoirePotential();
         hs->put(cur);
-        targetH->addOperator(hs, "moire", true);
+        hs->get(app_log());
+        app_log() << "   moire potential is physical: " << physical << std::endl;
+        app_log() << std::endl;
+        targetH->addOperator(hs, potName, physical);
       }
     }
     else if (cname == "estimator")

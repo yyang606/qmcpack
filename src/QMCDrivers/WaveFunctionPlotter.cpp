@@ -45,9 +45,6 @@ bool WaveFunctionPlotter::run()
   {
     app_log() << W.R[i] << endl;
   }
-  //H.evaluate(W);
-  H.auxHevaluate(W);
-  app_log() << read_column(W, "moire") << endl;
 
   double dx=0.25, dy=0.25, x, y, v;
   int nx=32, ny=32;
@@ -59,7 +56,6 @@ bool WaveFunctionPlotter::run()
     {
       x = ix*dx;
       y = iy*dy;
-      app_log() << x << " " << y << endl;
       W.R[0] = {x, y, 0.0};
       W.update();
       H.auxHevaluate(W);
