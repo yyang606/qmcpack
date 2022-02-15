@@ -49,11 +49,12 @@ void GaussianOrbitalSet::evaluateVGL(
   {
     rij = dist[j];
     drij = displ[j];
-    //pvec[j] = (*this)(rij);
-    pvec[j] = -cexpo*rij*rij;
+    pvec[j] = (*this)(rij);
     for (int l=0;l<ndim;l++)
       dpvec[j][l] = 2.0*cexpo*drij[l];
-    d2pvec[j] = -2*ndim*cexpo;
+    d2pvec[j] = -2*ndim*cexpo*pvec[j];
+    d2pvec[j] = (dot(dpvec[j], dpvec[j])-2*ndim*cexpo)*pvec[j];
+    dpvec[j] *= pvec[j];
   }
 }
 
@@ -73,8 +74,7 @@ void GaussianOrbitalSet::evaluateValue(
   for (int j=0;j<OrbitalSetSize;j++)
   {
     rij = dist[j];
-    //pvec[j] = (*this)(rij);
-    pvec[j] = -cexpo*rij*rij;
+    pvec[j] = (*this)(rij);
   }
 }
 
