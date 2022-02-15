@@ -176,8 +176,8 @@ TEST_CASE("Gaussian orbital for 3D HEG", "[wavefunction]")
     sposet->evaluateVGL(electrons, ielec, p, dp, d2p);
     v1 = p[0].real();
     for (int l=0;l<ndim;l++)
-      g1[l] = (dp[ielec][l]*p[ielec]).real();
-    lap1 = d2p[ielec].real()*p[ielec].real();
+      g1[l] = dp[ielec][l].real();
+    lap1 = d2p[ielec].real();
     // check value
     CHECK(v1 == Approx(v0));
     // check gradient
