@@ -206,7 +206,7 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
         if (potName == noname) potName = "moire";
         bool physical = false;
         if (estType == "physical") physical = true;
-        MoirePotential* hs = new MoirePotential();
+        MoirePotential* hs = new MoirePotential(targetPtcl);
         hs->put(cur);
         hs->get(app_log());
         app_log() << "   moire potential is physical: " << physical << std::endl;

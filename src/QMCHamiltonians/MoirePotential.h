@@ -8,7 +8,11 @@ namespace qmcplusplus
 class MoirePotential : public OperatorBase
 {
 public:
-  MoirePotential(){};
+  MoirePotential(ParticleSet& P)
+  {
+    set_energy_domain(potential);
+    one_body_quantum_domain(P);
+  };
   ~MoirePotential(){};
   Return_t evaluate(ParticleSet& P) override;
   bool put(xmlNodePtr cur) override;
