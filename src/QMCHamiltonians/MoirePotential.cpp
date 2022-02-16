@@ -22,7 +22,7 @@ MoirePotential::Return_t MoirePotential::evaluate(ParticleSet& P)
     Value += esum;
   }
   Value *= 2*vmoire;
-  //return vmoire*2*Value; // !!!! return value is NOT used
+  return Value;
 }
 
 bool MoirePotential::put(xmlNodePtr cur)
