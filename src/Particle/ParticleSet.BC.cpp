@@ -105,13 +105,13 @@ void ParticleSet::createSK()
 
     if (SK)
     {
-      app_log() << "\n  Structure Factor is reset by " << Lattice.LR_kc << std::endl;
-      SK->UpdateNewCell(*this, LRBox.LR_kc);
+      app_log() << "\n  Structure Factor is reset by " << Lattice.LR_kc << " ndim = " << LRBox.ndim  << std::endl;
+      SK->UpdateNewCell(*this, LRBox.LR_kc, LRBox.ndim);
     }
     else
     {
-      app_log() << "\n  Creating Structure Factor for periodic systems " << LRBox.LR_kc << std::endl;
-      SK = std::make_unique<StructFact>(*this, LRBox.LR_kc);
+      app_log() << "\n  Creating Structure Factor for periodic systems " << LRBox.LR_kc << " ndim = " << LRBox.ndim << std::endl;
+      SK = std::make_unique<StructFact>(*this, LRBox.LR_kc, LRBox.ndim);
     }
     //Lattice.print(app_log());
     //This uses the copy constructor to avoid recomputing the data.
