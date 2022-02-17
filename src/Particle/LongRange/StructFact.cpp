@@ -23,7 +23,7 @@
 namespace qmcplusplus
 {
 //Constructor - pass arguments to KLists' constructor
-StructFact::StructFact(ParticleSet& P, RealType kc)
+StructFact::StructFact(ParticleSet& P, RealType kc, unsigned ndim)
     : DoUpdate(false), StorePerParticle(false), SuperCellEnum(SUPERCELL_BULK)
 {
   if (qmc_common.use_ewald && P.LRBox.SuperCellEnum == SUPERCELL_SLAB)
@@ -32,16 +32,16 @@ StructFact::StructFact(ParticleSet& P, RealType kc)
     SuperCellEnum = SUPERCELL_SLAB;
   }
 
-  UpdateNewCell(P, kc);
+  UpdateNewCell(P, kc, ndim);
 }
 
 //Destructor
 StructFact::~StructFact() {}
 
-void StructFact::UpdateNewCell(ParticleSet& P, RealType kc)
+void StructFact::UpdateNewCell(ParticleSet& P, RealType kc, unsigned ndim)
 {
   //Generate the lists of k-vectors
-  KLists.UpdateKLists(P.LRBox, kc);
+  KLists.UpdateKLists(P.LRBox, kc, ndim);
   //resize any array
   resize(P.getSpeciesSet().size(), P.getTotalNum(), KLists.numk);
   //Compute the entire Rhok

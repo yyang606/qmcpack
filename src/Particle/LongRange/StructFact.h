@@ -69,14 +69,14 @@ public:
    * @param P Reference particle set
    * @param kc cutoff for k
    */
-  StructFact(ParticleSet& P, RealType kc);
+  StructFact(ParticleSet& P, RealType kc, unsigned ndim=3);
   /// desructor
   ~StructFact();
 
   /** Recompute Rhok if lattice changed
    * @param kc cut-off K
    */
-  void UpdateNewCell(ParticleSet& P, RealType kc);
+  void UpdateNewCell(ParticleSet& P, RealType kc, unsigned ndim=3);
   /**  Update Rhok if all particles moved
    */
   void UpdateAllPart(ParticleSet& P);
