@@ -35,7 +35,7 @@ public:
   unsigned ndim;
 
   ///default constructor
-  LRBreakupParameters() : LR_dim_cutoff(15.0), LR_rc(1e6), LR_kc(0.0), LR_tol(3e-4), alpha(4.0), ndim(3) {}
+  LRBreakupParameters() : LR_dim_cutoff(15.0), LR_rc(1e6), LR_kc(0.0), LR_tol(3e-4), alpha(-1.0), ndim(3) {}
 
   ///Set LR_rc = radius of smallest sphere inside box and kc=dim/rc
   void SetLRCutoffs(const TinyVector<TinyVector<T, 3>, 3>& a)

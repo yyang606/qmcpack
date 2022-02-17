@@ -20,6 +20,8 @@ void TwoDEwaldHandler::initBreakup(ParticleSet& ref)
   LR_rc = ref.Lattice.LR_rc;
   LR_kc = ref.Lattice.LR_kc;
   Sigma = ref.Lattice.alpha;
+  if (Sigma < 0)
+    Sigma = std::sqrt(LR_kc/2.0/LR_rc);
   app_log() << "  Sigma=" << Sigma << std::endl;
   Volume = ref.Lattice.Volume/ref.Lattice.R(2, 2);
   app_log() << "  Area=" << Volume << std::endl;
