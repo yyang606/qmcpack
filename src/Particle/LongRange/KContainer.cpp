@@ -19,7 +19,7 @@
 
 namespace qmcplusplus
 {
-void KContainer::UpdateKLists(ParticleLayout_t& lattice, RealType kc, bool useSphere)
+void KContainer::UpdateKLists(ParticleLayout_t& lattice, RealType kc, unsigned ndim, bool useSphere)
 {
   kcutoff = kc;
   kcut2   = kc * kc;
@@ -28,7 +28,7 @@ void KContainer::UpdateKLists(ParticleLayout_t& lattice, RealType kc, bool useSp
     APP_ABORT("  Illegal cutoff for KContainer");
   }
   FindApproxMMax(lattice);
-  BuildKLists(lattice, useSphere);
+  BuildKLists(lattice, ndim, useSphere);
 
   app_log() << "  KContainer initialised with cutoff " << kcutoff << std::endl;
   app_log() << "   # of K-shell  = " << kshell.size() << std::endl;
@@ -98,7 +98,7 @@ void KContainer::FindApproxMMax(ParticleLayout_t& lattice)
     mmax[DIM] = std::max(mmax[i], mmax[DIM]);
 }
 
-void KContainer::BuildKLists(ParticleLayout_t& lattice, bool useSphere)
+void KContainer::BuildKLists(ParticleLayout_t& lattice, unsigned ndim, bool useSphere)
 {
   TinyVector<int, DIM + 1> TempActualMax;
   TinyVector<int, DIM> kvec;
@@ -117,9 +117,11 @@ void KContainer::BuildKLists(ParticleLayout_t& lattice, bool useSphere)
       kvec[0] = i;
       for (int j = -mmax[1]; j <= mmax[1]; j++)
       {
+        if ((ndim <= 1) and (j != 0)) continue;
         kvec[1] = j;
         for (int k = -mmax[2]; k <= mmax[2]; k++)
         {
+          if ((ndim <= 2) and (k != 0)) continue;
           kvec[2] = k;
           //Do not include k=0 in evaluations.
           if (i == 0 && j == 0 && k == 0)
@@ -158,11 +160,13 @@ void KContainer::BuildKLists(ParticleLayout_t& lattice, bool useSphere)
         kvec[0] -= idimsize;
       for (int j = 0; j < jdimsize; j++)
       {
+        if ((ndim <= 1) and (j != 0)) break;
         kvec[1] = j;
         if (kvec[1] > mmax[1])
           kvec[1] -= jdimsize;
         for (int k = 0; k < kdimsize; k++)
         {
+          if ((ndim <= 2) and (k != 0)) break;
           kvec[2] = k;
           if (kvec[2] > mmax[2])
             kvec[2] -= kdimsize;
