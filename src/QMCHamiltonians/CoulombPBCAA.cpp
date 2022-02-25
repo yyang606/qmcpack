@@ -332,7 +332,7 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   double dr = Rws/nr;
   double rVsr_at_image = rVs->splint(Rws-dr);
   double rVsr_at_short = rVs->splint(Rws/4);
-  bool more_screen = std::abs(rVsr_at_image) > 1e-8;
+  bool more_screen = std::abs(rVsr_at_image) > 1e-4;
   bool less_screen = std::abs(rVsr_at_short) < 1e-8;
   app_log() << "r*Vsr(Rws) = " << rVsr_at_image << " at Rws/4 " << rVsr_at_short << std::endl;
   if (more_screen or less_screen)
