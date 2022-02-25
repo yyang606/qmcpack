@@ -82,7 +82,7 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
 
 
   /** constructor */
-  CoulombPBCAA(ParticleSet& ref, bool active, Tensor<RealType, 4> e2ea_in, bool computeForces = false);
+  CoulombPBCAA(ParticleSet& ref, bool active, Tensor<RealType, 4> e2ea_in = Tensor<RealType, 4>(1), bool computeForces = false);
 
   ~CoulombPBCAA();
 
