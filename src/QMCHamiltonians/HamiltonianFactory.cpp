@@ -367,6 +367,7 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
         ChiesaCorrection* chiesa     = new ChiesaCorrection(source, psi);
         targetH->addOperator(chiesa, "KEcorr", false);
       }
+#endif
       else if (potType == "skall")
       {
         std::string SourceName = "";
@@ -389,8 +390,6 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
           app_log() << "Adding S(k) ALL estimator" << std::endl;
         }
       }
-
-#endif
       else if (potType == "Pressure")
       {
         if (estType == "coulomb")
