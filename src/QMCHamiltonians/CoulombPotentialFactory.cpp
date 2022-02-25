@@ -76,7 +76,7 @@ void HamiltonianFactory::addCoulombPotential(xmlNodePtr cur)
   std::string sourceInp(targetPtcl.getName());
   std::string title("ElecElec"), pbc("yes");
   std::string forces("no");
-  Tensor<Return_t, 4> e2ea;
+  Tensor<Return_t, 4> e2ea(1);
   bool physical = true;
   OhmmsAttributeSet hAttrib;
   hAttrib.add(title, "id");

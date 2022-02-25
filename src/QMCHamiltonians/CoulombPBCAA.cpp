@@ -282,7 +282,7 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   NumCenters       = P.getTotalNum();
   NumSpecies       = tspecies.TotalNum;
   // !!!! HACK inverse dielectric matrix for two layers
-  app_log() << "Inverse Dieletric Matrix" << std::endl;
+  app_log() << "Inverse Dieletric" << std::endl;
   app_log() << e2ea << std::endl;
   app_log() << "# i j e2ea" << std::endl;
   for (int ispec=0;ispec<NumSpecies;ispec++)
