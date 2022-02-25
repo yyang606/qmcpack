@@ -22,7 +22,7 @@
 
 namespace qmcplusplus
 {
-CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, bool computeForces, RealType e2ea1_in, RealType e2ea2_in)
+CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, Tensor<RealType, 4> e2ea_in, bool computeForces)
     : ForceBase(ref, ref),
       myGrid(0),
       rVs(0),
@@ -34,8 +34,7 @@ CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, bool computeForces, Re
       ComputeForces(computeForces),
       Ps(ref),
       d_aa_ID(ref.addTable(ref)),
-      e2ea1(e2ea1_in),
-      e2ea2(e2ea2_in)
+      e2ea(e2ea_in)
 {
   ReportEngine PRE("CoulombPBCAA", "CoulombPBCAA");
   set_energy_domain(potential);
@@ -283,20 +282,15 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   NumCenters       = P.getTotalNum();
   NumSpecies       = tspecies.TotalNum;
   // !!!! HACK inverse dielectric matrix for two layers
-  e2ea.resize(NumSpecies, NumSpecies);
-  int ilayer, jlayer;
   app_log() << "Inverse Dieletric Matrix" << std::endl;
-  for (int ispec=0; ispec<NumSpecies; ispec++)
+  app_log() << e2ea << std::endl;
+  app_log() << "# i j e2ea" << std::endl;
+  for (int ispec=0;ispec<NumSpecies;ispec++)
   {
-    ilayer = ispec/2;
-    for (int jspec=ispec; jspec<NumSpecies; jspec++)
-    {
-      jlayer = jspec/2;
-      e2ea(ispec, jspec) = (ilayer == jlayer) ? e2ea1 : e2ea2;
-      if (ispec != jspec)
-        e2ea(jspec, ispec) = e2ea(ispec, jspec);
-      app_log() << ispec << " " << jspec << " " << e2ea(ispec, jspec) << std::endl;
-    }
+  for (int jspec=0;jspec<NumSpecies;jspec++)
+  {
+    app_log() << ispec << " " << jspec << " " << e2ea(ispec, jspec) << std::endl;
+  }
   }
   // end HACK !!!!
 
@@ -464,8 +458,9 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
   for (int ipart = 0; ipart < NumCenters; ipart++)
   {
     v1 = 0.0;
+    int ispec = SpeciesID[ipart];
     for (int spec = 0; spec < NumSpecies; spec++)
-      v1 += NofSpecies[spec] * Zspec[spec];
+      v1 += NofSpecies[spec] * Zspec[spec] * e2ea(ispec, spec);
     v1 *= -.5 * Zat[ipart] * vs_k0;
 #if !defined(REMOVE_TRACEMANAGER)
     V_const(ipart) += v1;

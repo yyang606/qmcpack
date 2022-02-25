@@ -65,8 +65,6 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
   std::vector<int> NofSpecies;
   std::vector<int> SpeciesID;
 
-  RealType e2ea1, e2ea2; // inverse dielectric for intra- and inter-layer
-  Matrix<RealType> e2ea;
   Matrix<RealType> SR2;
   Vector<RealType> dSR;
   Vector<ComplexType> del_eikr;
@@ -84,7 +82,7 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
 
 
   /** constructor */
-  CoulombPBCAA(ParticleSet& ref, bool active, bool computeForces = false, RealType e2ea1=1.0, RealType e2ea2=0.0);
+  CoulombPBCAA(ParticleSet& ref, bool active, Tensor<RealType, 4> e2ea_in, bool computeForces = false);
 
   ~CoulombPBCAA();
 
@@ -144,6 +142,8 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
 private:
   // AA table ID
   const int d_aa_ID;
+  // dielectric constants among species
+  Tensor<RealType, 4> e2ea;
 };
 
 } // namespace qmcplusplus
