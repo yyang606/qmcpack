@@ -1,19 +1,19 @@
-/** @file GaussianOrbitalSet.h
+/** @file GaussianOrbital.h
  *  * @brief Definition of member functions of Gaussian basis set
  *   */
-#ifndef QMCPLUSPLUS_GAUSSIAN_ORBITAL_SET
-#define QMCPLUSPLUS_GAUSSIAN_ORBITAL_SET
+#ifndef QMCPLUSPLUS_GAUSSIAN_ORBITAL
+#define QMCPLUSPLUS_GAUSSIAN_ORBITAL
 
 #include "QMCWaveFunctions/SPOSet.h"
 
 namespace qmcplusplus
 {
 
-class GaussianOrbitalSet : public SPOSet
+class GaussianOrbital : public SPOSet
 {
 public:
-  GaussianOrbitalSet(ParticleSet& target, ParticleSet& source, RealType cexpo, int ndim);
-  ~GaussianOrbitalSet();
+  GaussianOrbital(ParticleSet& target, ParticleSet& source, RealType cexpo, int ndim);
+  ~GaussianOrbital();
 
   // phi[i][j] is phi_j(r_i), i.e. electron i in orbital j
   //  i \in [first, last)

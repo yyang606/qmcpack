@@ -34,7 +34,7 @@ SET(WFBASE_SRCS
   HarmonicOscillator/SHOSetBuilder.cpp
   ExampleHeBuilder.cpp
   ExampleHeComponent.cpp
-  ElectronGas/GaussianOrbitalSet.cpp
+  ElectronGas/GaussianOrbital.cpp
   ElectronGas/GaussianOrbitalBuilder.cpp
   )
 

@@ -2,7 +2,7 @@
 #define QMCPLUSPLUS_GAUSSIAN_ORBITAL_BUILDER_H
 
 #include "QMCWaveFunctions/SPOSetBuilder.h"
-#include "GaussianOrbitalSet.h"
+#include "GaussianOrbital.h"
 
 namespace qmcplusplus
 {

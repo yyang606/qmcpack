@@ -1,10 +1,10 @@
-#include "GaussianOrbitalSet.h"
+#include "GaussianOrbital.h"
 #include "Particle/DistanceTableData.h"
 
 namespace qmcplusplus
 {
 
-GaussianOrbitalSet::GaussianOrbitalSet(ParticleSet& els, ParticleSet& ions, RealType cexpo_in, int ndim_in)
+GaussianOrbital::GaussianOrbital(ParticleSet& els, ParticleSet& ions, RealType cexpo_in, int ndim_in)
  : targetPtcl(els),
    sourcePtcl(ions),
    cexpo(cexpo_in),
@@ -14,9 +14,9 @@ GaussianOrbitalSet::GaussianOrbitalSet(ParticleSet& els, ParticleSet& ions, Real
   OrbitalSetSize = ions.getTotalNum();
 }
 
-GaussianOrbitalSet::~GaussianOrbitalSet(){}
+GaussianOrbital::~GaussianOrbital(){}
 
-void GaussianOrbitalSet::evaluate_notranspose(
+void GaussianOrbital::evaluate_notranspose(
   const ParticleSet& P,
   int first,
   int last,
@@ -33,7 +33,7 @@ void GaussianOrbitalSet::evaluate_notranspose(
   }
 }
 
-void GaussianOrbitalSet::evaluateVGL(
+void GaussianOrbital::evaluateVGL(
   const ParticleSet& P,
   int i,
   ValueVector_t& pvec,
@@ -58,12 +58,12 @@ void GaussianOrbitalSet::evaluateVGL(
   }
 }
 
-GaussianOrbitalSet::RealType GaussianOrbitalSet::operator()(RealType rij)
+GaussianOrbital::RealType GaussianOrbital::operator()(RealType rij)
 {
   return std::exp(-cexpo*rij*rij);
 }
 
-void GaussianOrbitalSet::evaluateValue(
+void GaussianOrbital::evaluateValue(
   const ParticleSet& P,
   int i,
   ValueVector_t& pvec)
@@ -78,9 +78,9 @@ void GaussianOrbitalSet::evaluateValue(
   }
 }
 
-SPOSet* GaussianOrbitalSet::makeClone() const { return new GaussianOrbitalSet(*this); }
+SPOSet* GaussianOrbital::makeClone() const { return new GaussianOrbital(*this); }
 
-void GaussianOrbitalSet::report(const std::string& pad) const
+void GaussianOrbital::report(const std::string& pad) const
 {
   app_log() << pad << "GaussianOrbital report" << std::endl;
   app_log() << pad << "  source   = " << sourcePtcl.getName() << std::endl;

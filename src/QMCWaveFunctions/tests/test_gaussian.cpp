@@ -5,7 +5,7 @@
 #include "ParticleIO/ParticleLayoutIO.h"
 #include "Particle/ParticleSet.h"
 #include "Particle/DistanceTableData.h"
-#include "QMCWaveFunctions/ElectronGas/GaussianOrbitalSet.h"
+#include "QMCWaveFunctions/ElectronGas/GaussianOrbital.h"
 
 using std::cout;
 using std::endl;
@@ -13,22 +13,22 @@ using std::endl;
 namespace qmcplusplus
 {
 
-double value(const GaussianOrbitalSet::PosType r, GaussianOrbitalSet* sposet, ParticleSet& P)
+double value(const GaussianOrbital::PosType r, GaussianOrbital* sposet, ParticleSet& P)
 {
   const int ielec = 0;
   const int norb = sposet->getOrbitalSetSize();
-  GaussianOrbitalSet::ValueVector_t p(norb);
-  GaussianOrbitalSet::PosType dr = r-P.R[ielec];
+  GaussianOrbital::ValueVector_t p(norb);
+  GaussianOrbital::PosType dr = r-P.R[ielec];
   P.makeMove(ielec, dr);
   sposet->evaluateValue(P, ielec, p);
   return p[ielec].real();
 }
 
-GaussianOrbitalSet::PosType fd_gradient(const GaussianOrbitalSet::PosType r, const double h, GaussianOrbitalSet* sposet, ParticleSet& P)
+GaussianOrbital::PosType fd_gradient(const GaussianOrbital::PosType r, const double h, GaussianOrbital* sposet, ParticleSet& P)
 {
   const int ndim = 3;
-  GaussianOrbitalSet::PosType g(0);
-  GaussianOrbitalSet::PosType r1;
+  GaussianOrbital::PosType g(0);
+  GaussianOrbital::PosType r1;
   double fm, fp;
   for (int l=0;l<ndim;l++)
   {
@@ -42,13 +42,13 @@ GaussianOrbitalSet::PosType fd_gradient(const GaussianOrbitalSet::PosType r, con
   return g;
 }
 
-double fd_laplacian(const GaussianOrbitalSet::PosType r, const double h, GaussianOrbitalSet* sposet, ParticleSet& P)
+double fd_laplacian(const GaussianOrbital::PosType r, const double h, GaussianOrbital* sposet, ParticleSet& P)
 {
   const int ndim = 3;
   const double f0 = value(r, sposet, P);
   double lap = 0.0;
   double fm, fp;
-  GaussianOrbitalSet::PosType r1;
+  GaussianOrbital::PosType r1;
   for (int l=0;l<ndim;l++)
   {
     r1 = r;
@@ -150,20 +150,20 @@ TEST_CASE("Gaussian orbital for 3D HEG", "[wavefunction]")
   // initialize orbital set
   const int cexpo = 1.0;
   const int ndim = 3;
-  GaussianOrbitalSet* sposet = new GaussianOrbitalSet(electrons, ions, cexpo, ndim);
+  GaussianOrbital* sposet = new GaussianOrbital(electrons, ions, cexpo, ndim);
   electrons.update();
   int norb = sposet->getOrbitalSetSize();
   REQUIRE(norb==2);
-  GaussianOrbitalSet::ValueVector_t p(norb);
-  GaussianOrbitalSet::PosType dr(0);
-  GaussianOrbitalSet::GradVector_t dp(norb);
-  GaussianOrbitalSet::ValueVector_t d2p(norb);
+  GaussianOrbital::ValueVector_t p(norb);
+  GaussianOrbital::PosType dr(0);
+  GaussianOrbital::GradVector_t dp(norb);
+  GaussianOrbital::ValueVector_t d2p(norb);
   // finite difference
   const int ielec = 0;
   const double h = 0.00001;
   const double rel_tol = 1e-4;
   double v0, v1, lap0, lap1, dlap;
-  GaussianOrbitalSet::PosType g0, g1;
+  GaussianOrbital::PosType g0, g1;
   for (int ir=0;ir<10;ir++)
   {
     dr[0] = 0.1*ir;

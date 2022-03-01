@@ -27,7 +27,7 @@ SPOSet* GaussianOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
   {
     APP_ABORT("GaussianOrbital needs the source particleset");
   }
-  GaussianOrbitalSet* sposet = new GaussianOrbitalSet(targetPtcl, *sourcePtcl, cexpo, ndim);
+  GaussianOrbital* sposet = new GaussianOrbital(targetPtcl, *sourcePtcl, cexpo, ndim);
   sposet->report("  ");
   return sposet;
 }
