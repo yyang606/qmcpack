@@ -340,8 +340,8 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
     }
     app_log() << "!!!! end splint !!!!" << std::endl;
   }
-  if (more_screen) APP_ABORT("increase alpha");
-  if (less_screen) APP_ABORT("decrease alpha");
+  if (more_screen) app_log() << "screen real-space more (increase Ewald alpha)" << std::endl;
+  if (less_screen) app_log() << "screen real-space less (decrease Ewald alpha)" << std::endl;
   if (ComputeForces)
   {
     dAA = LRCoulombSingleton::getDerivHandler(P);
