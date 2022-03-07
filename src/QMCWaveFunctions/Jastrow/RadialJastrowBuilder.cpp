@@ -57,6 +57,7 @@ RadialJastrowBuilder::RadialJastrowBuilder(Communicate* comm, ParticleSet& targe
   TypeOpt      = "unknown";
   Jastfunction = "unknown";
   SpinOpt      = "no";
+  ndimOpt      = 3;
 }
 
 // helper method for dealing with functor incompatible with Open Boundaries
