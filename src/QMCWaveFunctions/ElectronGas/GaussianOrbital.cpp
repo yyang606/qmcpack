@@ -24,12 +24,12 @@ void GaussianOrbital::evaluate_notranspose(
   GradMatrix_t& dphi,
   ValueMatrix_t& d2phi)
 {
-  for (int i=first;i<last;i++)
+  for (int iat=first, i=0;iat<last;iat++,i++)
   {
     ValueVector_t p(phi[i], OrbitalSetSize);
     GradVector_t dp(dphi[i], OrbitalSetSize);
     ValueVector_t d2p(d2phi[i], OrbitalSetSize);
-    evaluateVGL(P, i, p, dp, d2p);
+    evaluateVGL(P, iat, p, dp, d2p);
   }
 }
 
