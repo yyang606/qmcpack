@@ -34,7 +34,7 @@ bool MoirePotential::put(xmlNodePtr cur)
   OhmmsAttributeSet attrib;
   attrib.add(amoire_in_ang, "amoire_in_ang");
   attrib.add(vmoire_in_mev, "vmoire_in_mev");
-  attrib.add(phi_in_deg, "phi_in_deg");
+  attrib.add(phi_in_deg, "pmoire_in_deg");
   attrib.add(epsmoire, "epsmoire");
   attrib.add(mstar, "mstar");
   attrib.put(cur);
