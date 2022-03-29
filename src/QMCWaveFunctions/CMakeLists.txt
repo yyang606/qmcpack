@@ -36,6 +36,8 @@ SET(WFBASE_SRCS
   ExampleHeComponent.cpp
   ElectronGas/GaussianOrbital.cpp
   ElectronGas/GaussianOrbitalBuilder.cpp
+  ElectronGas/PWOrbital.cpp
+  ElectronGas/PWOrbitalBuilder.cpp
   )
 
 IF(NOT QMC_COMPLEX)
