@@ -63,6 +63,8 @@ private:
   RealType DeltaInv;
   /// volume of the cell
   RealType Volume;
+  /// number of spatial dimensions
+  unsigned ndim;
   ///save pair indices
   std::vector<int> pair_ids;
   /// table indexs for other type
