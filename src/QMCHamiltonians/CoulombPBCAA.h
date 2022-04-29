@@ -70,6 +70,7 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
   Vector<ComplexType> del_eikr;
   /// Flag for whether to compute forces or not
   bool ComputeForces;
+  bool Quasi2D;
   //     madelung constant
   RealType MC0;
 

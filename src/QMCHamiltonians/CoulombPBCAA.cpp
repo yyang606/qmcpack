@@ -40,13 +40,15 @@ CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, Tensor<RealType, 4> e2
   set_energy_domain(potential);
   two_body_quantum_domain(ref);
   PtclRefName = ref.getDistTable(d_aa_ID).getName();
+
+  Quasi2D = LRCoulombSingleton::this_lr_type == LRCoulombSingleton::QUASI2D;
+  if (ComputeForces || Quasi2D)
+    ref.turnOnPerParticleSK();
+
   initBreakup(ref);
 
   if (ComputeForces)
-  {
-    ref.turnOnPerParticleSK();
     update_source(ref);
-  }
   if (!is_active)
   {
     ref.update();
@@ -169,7 +171,11 @@ CoulombPBCAA::Return_t CoulombPBCAA::evaluate(ParticleSet& P)
       Value = evaluate_sp(P);
     else
 #endif
-      Value = evalLR(P) + evalSR(P) + myConst;
+    {
+      mRealType elr = evalLR(P);
+      mRealType esr = evalSR(P);
+      Value = myConst + elr + esr;
+    }
   }
   return Value;
 }
@@ -432,12 +438,47 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSRwithForces(ParticleSet& P)
 CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
 {
   mRealType Consts = 0.0; // constant term
-  mRealType v1;           //single particle energy
+  mRealType v1 = 0.0;           //single particle energy
 #if !defined(REMOVE_TRACEMANAGER)
   V_const = 0.0;
 #endif
-  //v_l(r=0) including correction due to the non-periodic direction
   mRealType vl_r0 = AA->evaluateLR_r0();
+  mRealType vs_k0 = AA->evaluateSR_k0();
+  if (Quasi2D) // background term has z dependence
+  { // just evaluate the Madelung term
+    for (int ispec=1; ispec<NumSpecies; ispec++)
+      if (Zspec[ispec] != Zspec[0])
+        throw std::runtime_error("Quasi2D assumes same charge");
+    if (report)
+    {
+      app_log() << "    vlr(r->0) = " << vl_r0 << std::endl;
+      app_log() << "   1/V vsr_k0 = " << vs_k0 << std::endl;
+    }
+    // make sure we can ignore the short-range Madelung sum
+    mRealType Rws = Ps.Lattice.WignerSeitzRadius;
+    mRealType rvsr_at_image = Rws*AA->evaluate(Rws, 1.0/Rws);
+    if (rvsr_at_image > 1e-6)
+    {
+      app_log() << rvsr_at_image << std::endl;
+      throw std::runtime_error("Ewald alpha is too small");
+    }
+    // perform long-range Madelung sum
+    const StructFact& PtclRhoK(*(Ps.SK));
+#if !defined(USE_REAL_STRUCT_FACTOR)
+    v1 += AA->evaluate_slab(0,
+                            PtclRhoK.KLists.kshell, PtclRhoK.eikr[0], PtclRhoK.eikr[0]);
+#else
+    v1 += AA->evaluate_slab(0,
+                            PtclRhoK.KLists.kshell, PtclRhoK.eikr_r[0],
+                            PtclRhoK.eikr_i[0], PtclRhoK.eikr_r[0], PtclRhoK.eikr_i[0]);
+#endif
+    if (report)
+      app_log() << "   LR Madelung = " << v1 << std::endl;
+    MC0 = 0.5*(v1 - vl_r0);
+    Consts = NumCenters*MC0;
+  }
+  else // group background term together with Madelung vsr_k0 part
+  {
   for (int ipart = 0; ipart < NumCenters; ipart++)
   {
     v1 = -.5 * Zat[ipart] * Zat[ipart] * vl_r0;
@@ -452,8 +493,6 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
   MC0 = 0.0;
   for (int i = 0; i < AA->Fk.size(); i++)
     MC0 += AA->Fk[i];
-  //Neutraling background term
-  mRealType vs_k0 = AA->evaluateSR_k0(); //v_s(k=0)
   MC0 = 0.5 * (MC0 - vl_r0 - vs_k0);
   for (int ipart = 0; ipart < NumCenters; ipart++)
   {
@@ -467,9 +506,9 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
 #endif
     Consts += v1;
   }
+  }
   if (report)
     app_log() << "   PBCAA total constant " << Consts << std::endl;
-  //app_log() << "   MC0 of PBCAA " << MC0 << std::endl;
   return Consts;
 }
 
@@ -513,22 +552,30 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalLR(ParticleSet& P)
 {
   mRealType res = 0.0;
   const StructFact& PtclRhoK(*(P.SK));
-  if (PtclRhoK.SuperCellEnum == SUPERCELL_SLAB)
+  if (Quasi2D)
   {
+    const int slab_dir = OHMMS_DIM - 1;
     const DistanceTableData& d_aa(P.getDistTable(d_aa_ID));
     //distance table handles jat<iat
     for (int iat = 1; iat < NumCenters; ++iat)
     {
       mRealType u = 0;
-#if !defined(USE_REAL_STRUCT_FACTOR)
-      const int slab_dir              = OHMMS_DIM - 1;
-      const RealType* restrict d_slab = d_aa.Displacements[iat].data(slab_dir);
+      const auto& d_slab = d_aa.getDisplRow(iat);
       for (int jat = 0; jat < iat; ++jat)
+      {
+        const RealType z = std::abs(d_slab[jat][slab_dir]);
+#if !defined(USE_REAL_STRUCT_FACTOR)
         u += Zat[jat] *
-            AA->evaluate_slab(-d_slab[jat], //JK: Could be wrong. Check the SIGN
-                              PtclRhoK.KLists.kshell, PtclRhoK.eikr[iat], PtclRhoK.eikr[jat]);
+             AA->evaluate_slab(z,
+                               PtclRhoK.KLists.kshell, PtclRhoK.eikr[iat], PtclRhoK.eikr[jat]);
+#else
+        u += Zat[jat] *
+             AA->evaluate_slab(z,
+                               PtclRhoK.KLists.kshell, PtclRhoK.eikr_r[iat],
+                               PtclRhoK.eikr_i[iat], PtclRhoK.eikr_r[jat], PtclRhoK.eikr_i[jat]);
 #endif
-      res += Zat[iat] * u;
+        res += Zat[iat] * u;
+      }
     }
   }
   else
