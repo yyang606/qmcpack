@@ -35,6 +35,7 @@ SET(PARTICLE
   LongRange/EwaldHandler3D.cpp
   LongRange/LRCoulombSingleton.cpp
   LongRange/TwoDEwaldHandler.cpp
+  LongRange/EwaldHandlerQuasi2D.cpp
   )
 
 IF(ENABLE_OFFLOAD)
