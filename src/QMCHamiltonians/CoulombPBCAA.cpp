@@ -574,8 +574,8 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalLR(ParticleSet& P)
                                PtclRhoK.KLists.kshell, PtclRhoK.eikr_r[iat],
                                PtclRhoK.eikr_i[iat], PtclRhoK.eikr_r[jat], PtclRhoK.eikr_i[jat]);
 #endif
-        res += Zat[iat] * u;
       }
+      res += Zat[iat] * u;
     }
   }
   else
