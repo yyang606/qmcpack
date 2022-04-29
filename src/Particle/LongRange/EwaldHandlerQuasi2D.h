@@ -40,6 +40,12 @@ public:
                           const std::vector<int>& kshell,
                           const pComplexType* restrict eikr_i,
                           const pComplexType* restrict eikr_j) override;
+  mRealType evaluate_slab(pRealType z,
+                          const std::vector<int>& kshell,
+                          const pRealType* restrict rk1_r,
+                          const pRealType* restrict rk1_i,
+                          const pRealType* restrict rk2_r,
+                          const pRealType* restrict rk2_i) const override;
 
   // begin required overrides
   inline mRealType srDf(mRealType r, mRealType rinv) override

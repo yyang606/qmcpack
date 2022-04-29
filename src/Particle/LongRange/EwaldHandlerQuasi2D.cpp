@@ -66,6 +66,25 @@ EwaldHandlerQuasi2D::mRealType EwaldHandlerQuasi2D::evaluate_slab(
   return vk;
 }
 
+EwaldHandlerQuasi2D::mRealType EwaldHandlerQuasi2D::evaluate_slab(
+  pRealType z, const std::vector<int>& kshell,
+  const pRealType* restrict rk1_r,
+  const pRealType* restrict rk1_i,
+  const pRealType* restrict rk2_r,
+  const pRealType* restrict rk2_i) const
+{
+  mRealType zmag = std::abs(z);
+  mRealType vk = -slab_vsr_k0(zmag)/area;
+  for (int ks = 0, ki = 0; ks < MaxKshell; ks++)
+  {
+    mRealType u = 0;
+    for (; ki < kshell[ks + 1]; ki++)
+      u += (*rk1_r++) * (*rk2_r++) + (*rk1_i++) * (*rk2_i++);
+    vk += u * Fk_symm[ks] * slab_func(zmag, kMag[ks]);
+  }
+  return vk;
+}
+
 EwaldHandlerQuasi2D::mRealType EwaldHandlerQuasi2D::slab_func(mRealType z, mRealType k) const
 {
   mRealType term1, term2;

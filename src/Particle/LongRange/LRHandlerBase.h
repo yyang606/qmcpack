@@ -134,6 +134,16 @@ struct LRHandlerBase
     return 0.0;
   }
 
+  virtual mRealType evaluate_slab(pRealType z,
+                                  const std::vector<int>& kshell,
+                                  const pRealType* restrict rk1_r,
+                                  const pRealType* restrict rk1_i,
+                                  const pRealType* restrict rk2_r,
+                                  const pRealType* restrict rk2_i) const
+  {
+    return 0.0;
+  }
+
   inline mRealType evaluate(const std::vector<int>& kshell, int iat, const pComplexType* restrict rk2, ParticleSet& P)
   {
     mRealType vk = 0.0;
