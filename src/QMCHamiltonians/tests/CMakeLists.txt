@@ -23,7 +23,7 @@ EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E make_directory "${UTEST_DIR}")
 MAYBE_SYMLINK(${UTEST_HDF_INPUT} ${UTEST_DIR}/pwscf.pwscf.h5)
 
 
-SET(SRCS test_bare_kinetic.cpp
+SET(HAM_SRCS test_bare_kinetic.cpp
          test_coulomb_pbcAB.cpp
          test_coulomb_pbcAB_ewald.cpp
          test_coulomb_pbcAA.cpp
@@ -39,6 +39,9 @@ SET(SRCS test_bare_kinetic.cpp
          test_SkAllEstimator.cpp
          test_QMCHamiltonian.cpp
          )
+SET(EWALD2D_SRCS
+  test_ewald2d.cpp
+)
          
 IF(QMC_CUDA)
   SET(SRCS ${SRCS}
@@ -58,16 +61,17 @@ EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy "${qmcpack_SOURCE_DIR}/tests/ps
 EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy "${qmcpack_SOURCE_DIR}/tests/pseudopotentials_for_tests/Na.BFD.xml" ${UTEST_DIR})
 EXECUTE_PROCESS(COMMAND ${CMAKE_COMMAND} -E copy "${qmcpack_SOURCE_DIR}/tests/pseudopotentials_for_tests/so_ecp_test.xml" ${UTEST_DIR})
 
+foreach(CATEGORY ham ewald2d)
+  set(UTEST_EXE test_${SRC_DIR}_${CATEGORY})
+  set(UTEST_NAME deterministic-unit_${UTEST_EXE})
+  string(TOUPPER "${CATEGORY}_SRCS" SOURCE_FILE_VAR_NAME)
+  add_executable(${UTEST_EXE} ${${SOURCE_FILE_VAR_NAME}})
 
-ADD_EXECUTABLE(${UTEST_EXE} ${SRCS})
-TARGET_LINK_LIBRARIES(${UTEST_EXE} catch_main qmcham)
-IF(USE_OBJECT_TARGET)
-TARGET_LINK_LIBRARIES(${UTEST_EXE} qmcwfs qmcparticle qmcutil containers platform_omptarget)
-ENDIF()
+  target_link_libraries(${UTEST_EXE} catch_main qmcham)
+  if(USE_OBJECT_TARGET)
+    target_link_libraries(${UTEST_EXE} qmcwfs qmcparticle qmcutil containers platform_omptarget)
+  endif()
 
-ADD_UNIT_TEST(${UTEST_NAME} 1 1 "${QMCPACK_UNIT_TEST_DIR}/${UTEST_EXE}")
-SET_TESTS_PROPERTIES(${UTEST_NAME} PROPERTIES WORKING_DIRECTORY ${UTEST_DIR})
-
-IF( "${ENABLE_SANITIZER}" STREQUAL "asan" ) 
-  SET_TESTS_PROPERTIES(${UTEST_NAME} PROPERTIES LABELS noasan)
-ENDIF()
+  add_unit_test(${UTEST_NAME} 1 1 $<TARGET_FILE:${UTEST_EXE}>)
+  set_tests_properties(${UTEST_NAME} PROPERTIES WORKING_DIRECTORY ${UTEST_DIR})
+endforeach()
