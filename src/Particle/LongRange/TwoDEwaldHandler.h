@@ -14,8 +14,8 @@
 /** @file LRHandlerTemp.h
  * @brief Define a LRHandler with two template parameters
  */
-#ifndef QMCPLUSPLUS_EWALD2D_HANDLER_H
-#define QMCPLUSPLUS_EWALD2D_HANDLER_H
+#ifndef QMCPLUSPLUS_OLD2D_HANDLER_H
+#define QMCPLUSPLUS_OLD2D_HANDLER_H
 
 #include "LongRange/LRHandlerBase.h"
 

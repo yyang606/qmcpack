@@ -44,6 +44,7 @@ struct LRCoulombSingleton
     EWALD,
     NATOLI,
     EWALD2D,
+    STRICT2D,
     QUASI2D
   };
   static lr_type this_lr_type;

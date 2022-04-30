@@ -22,6 +22,7 @@
 #include "LongRange/EwaldHandler3D.h"
 #include "LongRange/TwoDEwaldHandler.h"
 #include "LongRange/EwaldHandlerQuasi2D.h"
+#include "LongRange/EwaldHandler2D.h"
 #include <numeric>
 namespace qmcplusplus
 {
@@ -137,9 +138,14 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getHandle
         app_log() << "\n   Creating CoulombHandler using 2D Ewald method. " << std::endl;
         CoulombHandler = std::make_unique<TwoDEwaldHandler>(ref);
       }
+      else if (this_lr_type == STRICT2D)
+      {
+        app_log() << "\n   Creating CoulombHandler using strict 2D Ewald method. " << std::endl;
+        CoulombHandler = std::make_unique<EwaldHandler2D>(ref);
+      }
       else if (this_lr_type == QUASI2D)
       {
-        app_log() << "\n   Creating CoulombHandler using Quasi 2D Ewald method. " << std::endl;
+        app_log() << "\n   Creating CoulombHandler using quasi 2D Ewald method. " << std::endl;
         CoulombHandler = std::make_unique<EwaldHandlerQuasi2D>(ref);
       }
       else
