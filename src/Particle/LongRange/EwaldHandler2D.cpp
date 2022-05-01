@@ -31,7 +31,7 @@ EwaldHandler2D::EwaldHandler2D(ParticleSet& ref, mRealType kc_in)
 
 void EwaldHandler2D::fillFk(const KContainer& KList)
 {
-  const mRealType knorm = 2.0*M_PI / area;
+  const mRealType knorm = M_PI / area;
   const mRealType kalpha = 1.0 / (2.0*alpha);
   mRealType kmag, uk;
 
@@ -44,7 +44,7 @@ void EwaldHandler2D::fillFk(const KContainer& KList)
   {
     kmag = std::sqrt(KList.ksq[ki]);
     kmags[ks] = kmag;
-    uk = knorm * erfc(kalpha*kmag)/kmag;
+    uk = knorm/kmag;
     Fk_symm[ks] = uk;
     while (ki < KList.kshell[ks + 1] && ki < Fk.size())
       Fk[ki++] = uk;
@@ -119,7 +119,7 @@ EwaldHandler2D::mRealType EwaldHandler2D::evaluateLayers(
     for (; ki < kshell[ks + 1]; ki++)
     {
       u = ((*rk1_r++) * (*rk2_r++) + (*rk1_i++) * (*rk2_i++));
-      vk += Fk[ki] * u * 0.5*slab_func(z, kmags[ks]);
+      vk += Fk[ki] * u * slab_func(z, kmags[ks]);
     }
   }
   return vk;
