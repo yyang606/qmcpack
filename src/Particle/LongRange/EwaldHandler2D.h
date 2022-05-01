@@ -38,6 +38,19 @@ public:
   inline mRealType evaluateSR_k0() override { return 2.0 * std::sqrt(M_PI) / (alpha*area); }
   void fillFk(const KContainer& KList);
 
+  // layer specialization
+  mRealType evaluate_layers(
+    const std::vector<int>& kshell,
+    const pRealType* restrict rk1_r,
+    const pRealType* restrict rk1_i,
+    const pRealType* restrict rk2_r,
+    const pRealType* restrict rk2_i,
+    const int ispec, const int jspec
+  ) const override
+  {
+    return 0.0;
+  }
+
   // begin required overrides
   inline mRealType srDf(mRealType r, mRealType rinv) override
   {
@@ -60,6 +73,9 @@ private:
   mRealType area;
   Tensor<mRealType, 4> zheights;
   void fillZheights(const ParticleSet& P);
+  mRealType slab_func(mRealType z, mRealType k) const;
+  mRealType slab_logf(mRealType z, mRealType k) const;
+  mRealType slab_vsr_k0(mRealType z) const;
 };
 } // qmcplusplus
 #endif
