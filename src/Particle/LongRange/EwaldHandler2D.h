@@ -46,10 +46,7 @@ public:
     const pRealType* restrict rk2_r,
     const pRealType* restrict rk2_i,
     const int ispec, const int jspec
-  ) const override
-  {
-    return 0.0;
-  }
+  ) const override;
 
   // begin required overrides
   inline mRealType srDf(mRealType r, mRealType rinv) override
@@ -76,6 +73,8 @@ private:
   mRealType slab_func(mRealType z, mRealType k) const;
   mRealType slab_logf(mRealType z, mRealType k) const;
   mRealType slab_vsr_k0(mRealType z) const;
+  // store |k|
+  std::vector<mRealType> kmags;
 };
 } // qmcplusplus
 #endif

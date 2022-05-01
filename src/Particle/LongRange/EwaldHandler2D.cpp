@@ -38,10 +38,12 @@ void EwaldHandler2D::fillFk(const KContainer& KList)
   Fk.resize(KList.kpts_cart.size());
   MaxKshell = KList.kshell.size() - 1;
   Fk_symm.resize(MaxKshell);
+  kmags.resize(MaxKshell);
 
   for (int ks = 0, ki = 0; ks < Fk_symm.size(); ks++)
   {
     kmag = std::sqrt(KList.ksq[ki]);
+    kmags[ks] = kmag;
     uk = knorm * erfc(kalpha*kmag)/kmag;
     Fk_symm[ks] = uk;
     while (ki < KList.kshell[ks + 1] && ki < Fk.size())
@@ -99,5 +101,28 @@ EwaldHandler2D::mRealType EwaldHandler2D::slab_vsr_k0(mRealType z) const
   return term1-term2;
 }
 
+
+EwaldHandler2D::mRealType EwaldHandler2D::evaluate_layers(
+  const std::vector<int>& kshell,
+  const pRealType* restrict rk1_r,
+  const pRealType* restrict rk1_i,
+  const pRealType* restrict rk2_r,
+  const pRealType* restrict rk2_i,
+  const int ispec, const int jspec
+) const
+{
+  mRealType z = zheights[ispec, jspec];
+  mRealType vk = 0.0;
+  for (int ks = 0, ki = 0; ks < MaxKshell; ks++)
+  {
+    mRealType u = 0;
+    for (; ki < kshell[ks + 1]; ki++)
+    {
+      u = ((*rk1_r++) * (*rk2_r++) + (*rk1_i++) * (*rk2_i++));
+      vk += Fk[ki] * u * 0.5*slab_func(z, kmags[ks]);
+    }
+  }
+  return vk;
+}
 
 } // qmcplusplus
