@@ -61,7 +61,7 @@ TEST_CASE("Coulomb PBC A-A Ewald2D body center", "[hamiltonian]")
   const int npart = 2;
   elec.create({npart});
   elec.R[0] = {0.0, 0.0, 0.0};
-  elec.R[1] = {0.5, 0.5, 0.5};
+  elec.R[1] = {0.5, 0.5, 0.0};
 
   SpeciesSet& tspecies       = elec.getSpeciesSet();
   int upIdx                  = tspecies.addSpecies("u");
