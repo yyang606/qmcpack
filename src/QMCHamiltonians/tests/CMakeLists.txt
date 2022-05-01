@@ -41,6 +41,7 @@ SET(HAM_SRCS test_bare_kinetic.cpp
          )
 SET(EWALD2D_SRCS
   test_ewald2d.cpp
+  test_ewaldq2d.cpp
 )
          
 IF(QMC_CUDA)
