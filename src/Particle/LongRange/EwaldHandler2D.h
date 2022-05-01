@@ -58,6 +58,8 @@ public:
 private:
   mRealType alpha;
   mRealType area;
+  Tensor<mRealType, 4> zheights;
+  void fillZheights(const ParticleSet& P);
 };
 } // qmcplusplus
 #endif

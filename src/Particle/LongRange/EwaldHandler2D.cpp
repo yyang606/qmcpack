@@ -26,6 +26,7 @@ EwaldHandler2D::EwaldHandler2D(ParticleSet& ref, mRealType kc_in)
   // report
   app_log() << "    alpha = " << alpha << " area = " << area << std::endl;
   fillFk(ref.SK->KLists);
+  fillZheights(ref);
 }
 
 void EwaldHandler2D::fillFk(const KContainer& KList)
@@ -45,6 +46,32 @@ void EwaldHandler2D::fillFk(const KContainer& KList)
     Fk_symm[ks] = uk;
     while (ki < KList.kshell[ks + 1] && ki < Fk.size())
       Fk[ki++] = uk;
+  }
+}
+
+void EwaldHandler2D::fillZheights(const ParticleSet& P)
+{
+  const SpeciesSet& tspecies(P.getSpeciesSet());
+  const int nspec = tspecies.TotalNum;
+  if (nspec > 4)
+    throw std::runtime_error("too many species");
+  mRealType zij0, zij;
+  for (int ispec=0; ispec<nspec; ispec++)
+  {
+    for (int jspec=0; jspec<nspec; jspec++)
+    {
+      zij0 = std::abs(P.R[P.first(ispec)][2]-P.R[P.first(jspec)][2]);
+      for (int i=P.first(ispec); i<P.last(ispec); i++)
+      {
+        for (int j=P.first(jspec); j<P.last(jspec); j++)
+        {
+          zij = std::abs(P.R[i][2]-P.R[j][2]);
+          if (std::abs(zij-zij0)>1e-12)
+            throw std::runtime_error("species not in xy plane");
+        }
+      }
+      zheights[ispec, jspec] = zij0;
+    }
   }
 }
 
