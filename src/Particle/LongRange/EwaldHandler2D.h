@@ -39,7 +39,7 @@ public:
   void fillFk(const KContainer& KList);
 
   // layer specialization
-  mRealType evaluate_layers(
+  mRealType evaluateLayers(
     const std::vector<int>& kshell,
     const pRealType* restrict rk1_r,
     const pRealType* restrict rk1_i,
@@ -47,6 +47,11 @@ public:
     const pRealType* restrict rk2_i,
     const int ispec, const int jspec
   ) const override;
+  mRealType evaluateBackground(
+    const ParticleSet& P,
+    const int ispec,
+    const int jspec
+  ) const;
 
   // begin required overrides
   inline mRealType srDf(mRealType r, mRealType rinv) override

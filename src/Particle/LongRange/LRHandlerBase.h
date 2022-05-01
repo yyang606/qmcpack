@@ -125,12 +125,19 @@ struct LRHandlerBase
     return vk;
   }
 
-  virtual mRealType evaluate_layers(
+  virtual mRealType evaluateLayers(
     const std::vector<int>& kshell,
     const pRealType* restrict rk1_r,
     const pRealType* restrict rk1_i,
     const pRealType* restrict rk2_r,
     const pRealType* restrict rk2_i,
+    const int ispec, const int jspec) const
+  {
+    return 0.0;
+  }
+
+  virtual mRealType evaluateBackground(
+    const ParticleSet& P,
     const int ispec, const int jspec) const
   {
     return 0.0;

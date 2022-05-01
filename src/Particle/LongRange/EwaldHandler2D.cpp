@@ -102,7 +102,7 @@ EwaldHandler2D::mRealType EwaldHandler2D::slab_vsr_k0(mRealType z) const
 }
 
 
-EwaldHandler2D::mRealType EwaldHandler2D::evaluate_layers(
+EwaldHandler2D::mRealType EwaldHandler2D::evaluateLayers(
   const std::vector<int>& kshell,
   const pRealType* restrict rk1_r,
   const pRealType* restrict rk1_i,
@@ -123,6 +123,15 @@ EwaldHandler2D::mRealType EwaldHandler2D::evaluate_layers(
     }
   }
   return vk;
+}
+
+EwaldHandler2D::mRealType EwaldHandler2D::evaluateBackground(
+  const ParticleSet& P,
+  const int ispec,
+  const int jspec) const
+{
+  mRealType z = zheights[ispec, jspec];
+  return slab_vsr_k0(z)/area;
 }
 
 } // qmcplusplus
