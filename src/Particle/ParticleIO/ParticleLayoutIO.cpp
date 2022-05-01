@@ -124,6 +124,8 @@ bool LatticeParser::put(xmlNodePtr cur)
           LRCoulombSingleton::this_lr_type = LRCoulombSingleton::EWALD;
         else if (handler_type == "ewald2d")
           LRCoulombSingleton::this_lr_type = LRCoulombSingleton::EWALD2D;
+        else if (handler_type == "ewald_strict2d")
+          LRCoulombSingleton::this_lr_type = LRCoulombSingleton::STRICT2D;
         else if (handler_type == "ewald_quasi2d")
           LRCoulombSingleton::this_lr_type = LRCoulombSingleton::QUASI2D;
         else if (handler_type == "opt_breakup")
