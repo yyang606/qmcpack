@@ -71,6 +71,7 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
   /// Flag for whether to compute forces or not
   bool ComputeForces;
   bool Quasi2D;
+  bool strict2d;
   //     madelung constant
   RealType MC0;
 

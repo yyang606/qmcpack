@@ -42,6 +42,7 @@ CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, Tensor<RealType, 4> e2
   PtclRefName = ref.getDistTable(d_aa_ID).getName();
 
   Quasi2D = LRCoulombSingleton::this_lr_type == LRCoulombSingleton::QUASI2D;
+  strict2d = LRCoulombSingleton::this_lr_type == LRCoulombSingleton::STRICT2D;
   if (ComputeForces || Quasi2D)
     ref.turnOnPerParticleSK();
 
@@ -477,6 +478,33 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
     MC0 = 0.5*(v1 - vl_r0);
     Consts = NumCenters*MC0;
   }
+  else if (strict2d)
+  {
+    for (int ipart = 0; ipart < NumCenters; ipart++)
+    {
+      v1 = -.5 * Zat[ipart] * Zat[ipart] * vl_r0;
+      Consts += v1;
+    }
+    if (report)
+      app_log() << "   PBCAA self-interaction term " << Consts << std::endl;
+    //Compute Madelung constant: this is not correct for general cases
+    MC0 = 0.0;
+    for (int i = 0; i < AA->Fk.size(); i++)
+      MC0 += AA->Fk[i];
+    MC0 = 0.5 * (MC0 - vl_r0 - vs_k0);
+    mRealType vs_k1;
+    for (int ipart = 0; ipart < NumCenters; ipart++)
+    {
+      int ispec = SpeciesID[ipart];
+      for (int spec = 0; spec < NumSpecies; spec++)
+      {
+        v1 = -.5 * Zat[ipart] * NofSpecies[spec] * Zspec[spec] * e2ea(ispec, spec);
+        vs_k1 = AA->evaluateBackground(Ps, ispec, spec);
+        v1 *= vs_k1;
+        Consts += v1;
+      }
+    }
+  }
   else // group background term together with Madelung vsr_k0 part
   {
   for (int ipart = 0; ipart < NumCenters; ipart++)
@@ -577,6 +605,30 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalLR(ParticleSet& P)
       }
       res += Zat[iat] * u;
     }
+  }
+  else if (strict2d)
+  {
+    for (int spec1 = 0; spec1 < NumSpecies; spec1++)
+    {
+      mRealType Z1 = Zspec[spec1];
+      for (int spec2 = spec1; spec2 < NumSpecies; spec2++)
+      {
+#if defined(USE_REAL_STRUCT_FACTOR)
+        mRealType temp = AA->evaluateLayers(
+          PtclRhoK.KLists.kshell,
+          PtclRhoK.rhok_r[spec1],
+          PtclRhoK.rhok_i[spec1],
+          PtclRhoK.rhok_r[spec2],
+          PtclRhoK.rhok_i[spec2],
+          spec1, spec2);
+#else
+        throw runtime_error("complex S(k) not implemented");
+#endif
+        if (spec2 == spec1)
+          temp *= 0.5;
+        res += e2ea(spec1, spec2) * Z1 * Zspec[spec2] * temp;
+      } //spec2
+    } //spec1
   }
   else
   {
