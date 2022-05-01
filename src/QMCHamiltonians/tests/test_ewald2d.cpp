@@ -80,4 +80,46 @@ TEST_CASE("Coulomb PBC A-A Ewald2D body center", "[hamiltonian]")
   CHECK(val/npart == Approx(vmad_bc));
 }
 
+TEST_CASE("Coulomb PBC A-A Ewald2D triangle", "[hamiltonian]")
+{
+  LRCoulombSingleton::CoulombHandler = 0; // !!!! crucial if not first test
+  LRCoulombSingleton::this_lr_type = LRCoulombSingleton::STRICT2D;
+  const double vmad_tri = -1.106102587;
+  const double alat = std::sqrt(2.0*M_PI/std::sqrt(3));
+  CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> lattice;
+  lattice.BoxBConds = true;
+  lattice.BoxBConds[2] = false; // ppn
+  lattice.ndim = 2;
+  lattice.R = 0.0;
+  lattice.R(0, 0) = alat;
+  lattice.R(1, 0) = -1.0/2*alat;
+  lattice.R(1, 1) = std::sqrt(3)/2*alat;
+  lattice.R(2, 2) = 2*alat;
+  lattice.LR_dim_cutoff = 30.0;
+  lattice.reset();
+
+  ParticleSet elec;
+  elec.Lattice = lattice;
+  elec.setName("e");
+  const int npart = 1;
+  elec.create({npart});
+  elec.R[0] = {0.0, 0.0, 0.0};
+
+  SpeciesSet& tspecies       = elec.getSpeciesSet();
+  int upIdx                  = tspecies.addSpecies("u");
+  int chargeIdx              = tspecies.addAttribute("charge");
+  int massIdx                = tspecies.addAttribute("mass");
+  tspecies(chargeIdx, upIdx) = -1;
+  tspecies(massIdx, upIdx)   = 1.0;
+
+  elec.createSK();
+  elec.addTable(elec);
+  elec.update();
+
+  CoulombPBCAA caa = CoulombPBCAA(elec, true);
+
+  double val = caa.evaluate(elec);
+  CHECK(val/npart == Approx(vmad_tri));
+}
+
 } // qmcplusplus
