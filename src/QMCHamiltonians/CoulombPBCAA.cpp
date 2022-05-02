@@ -480,6 +480,10 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
   }
   else if (strict2d)
   {
+    //Compute Madelung constant
+    const StructFact& PtclRhoK(*(Ps.SK));
+    MC0 = AA->sumMadelung(PtclRhoK.KLists.kshell);
+    MC0 = 0.5 * (MC0 - vl_r0 - vs_k0);
     for (int ipart = 0; ipart < NumCenters; ipart++)
     {
       v1 = -.5 * Zat[ipart] * Zat[ipart] * vl_r0;
@@ -487,11 +491,6 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
     }
     if (report)
       app_log() << "   PBCAA self-interaction term " << Consts << std::endl;
-    //Compute Madelung constant: this is not correct for general cases
-    MC0 = 0.0;
-    for (int i = 0; i < AA->Fk.size(); i++)
-      MC0 += AA->Fk[i];
-    MC0 = 0.5 * (MC0 - vl_r0 - vs_k0);
     mRealType vs_k1;
     for (int ipart = 0; ipart < NumCenters; ipart++)
     {
