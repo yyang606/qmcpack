@@ -52,6 +52,9 @@ public:
     const int ispec,
     const int jspec
   ) const;
+  mRealType sumMadelung(
+    const std::vector<int>& kshell
+  ) const;
 
   // begin required overrides
   inline mRealType srDf(mRealType r, mRealType rinv) override

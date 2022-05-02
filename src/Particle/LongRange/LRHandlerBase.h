@@ -143,6 +143,13 @@ struct LRHandlerBase
     return 0.0;
   }
 
+  virtual mRealType sumMadelung(
+    const std::vector<int>& kshell
+  ) const
+  {
+    return 0.0;
+  }
+
   /** Evaluate the long-range potential with the open BC for the D-1 direction */
   virtual mRealType evaluate_slab(pRealType z,
                                   const std::vector<int>& kshell,

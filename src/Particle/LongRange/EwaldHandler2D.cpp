@@ -113,14 +113,30 @@ EwaldHandler2D::mRealType EwaldHandler2D::evaluateLayers(
 {
   mRealType z = zheights[ispec, jspec];
   mRealType vk = 0.0;
+  mRealType uk = 0.0;
   for (int ks = 0, ki = 0; ks < MaxKshell; ks++)
   {
     mRealType u = 0;
     for (; ki < kshell[ks + 1]; ki++)
     {
       u = ((*rk1_r++) * (*rk2_r++) + (*rk1_i++) * (*rk2_i++));
-      vk += Fk[ki] * u * slab_func(z, kmags[ks]);
+      uk = Fk[ki]*slab_func(z, kmags[ks]);
+      vk += u * uk;
     }
+  }
+  return vk;
+}
+
+EwaldHandler2D::mRealType EwaldHandler2D::sumMadelung(
+  const std::vector<int>& kshell
+) const
+{
+  mRealType vk = 0.0, uk;
+  for (int ks = 0; ks < MaxKshell; ks++)
+  {
+    const int nterm = kshell[ks + 1] - kshell[ks];
+    uk = Fk_symm[ks]*slab_func(0, kmags[ks]);
+    vk += nterm*uk;
   }
   return vk;
 }
