@@ -72,7 +72,7 @@ void EwaldHandler2D::fillZheights(const ParticleSet& P)
             throw std::runtime_error("species not in xy plane");
         }
       }
-      zheights[ispec, jspec] = zij0;
+      zheights(ispec, jspec) = zij0;
     }
   }
 }
@@ -111,7 +111,7 @@ EwaldHandler2D::mRealType EwaldHandler2D::evaluateLayers(
   const int ispec, const int jspec
 ) const
 {
-  mRealType z = zheights[ispec, jspec];
+  mRealType z = zheights(ispec, jspec);
   mRealType vk = 0.0;
   mRealType uk = 0.0;
   for (int ks = 0, ki = 0; ks < MaxKshell; ks++)
@@ -146,7 +146,7 @@ EwaldHandler2D::mRealType EwaldHandler2D::evaluateBackground(
   const int ispec,
   const int jspec) const
 {
-  mRealType z = zheights[ispec, jspec];
+  mRealType z = zheights(ispec, jspec);
   return slab_vsr_k0(z)/area;
 }
 
