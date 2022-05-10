@@ -30,8 +30,12 @@ LatticeDeviationEstimator::LatticeDeviationEstimator(ParticleSet& P,
 {
   // calculate number of source particles to use as lattice sites
   int src_species_id = sspecies.findSpecies(sgroup);
+  if (src_species_id == sspecies.size())
+    throw std::runtime_error("source group not found");
   num_sites          = spset.last(src_species_id) - spset.first(src_species_id);
   int tar_species_id = tspecies.findSpecies(tgroup);
+  if (tar_species_id == tspecies.size())
+    throw std::runtime_error("target group not found");
   int num_tars       = tpset.last(tar_species_id) - tpset.first(tar_species_id);
   if (num_tars != num_sites)
   {
