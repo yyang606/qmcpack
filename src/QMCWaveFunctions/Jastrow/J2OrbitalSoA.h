@@ -329,7 +329,7 @@ public:
   inline posT accumulateG(const valT* restrict du, const DisplRow& displ) const
   {
     posT grad;
-    for (int idim = 0; idim < OHMMS_DIM; ++idim)
+    for (int idim = 0; idim < ndim; ++idim)
     {
       const valT* restrict dX = displ.data(idim);
       valT s                  = valT();
@@ -573,7 +573,7 @@ void J2OrbitalSoA<FT>::acceptMove(ParticleSet& P, int iat, bool safe_to_delay)
     cur_d2Uat -= newl;
   }
   posT cur_dUat;
-  for (int idim = 0; idim < OHMMS_DIM; ++idim)
+  for (int idim = 0; idim < ndim; ++idim)
   {
     const valT* restrict new_dX    = new_dr.data(idim);
     const valT* restrict old_dX    = old_dr.data(idim);
@@ -617,7 +617,7 @@ void J2OrbitalSoA<FT>::recompute(const ParticleSet& P)
 #pragma omp simd reduction(+ : lap) aligned(du, d2u: QMC_SIMD_ALIGNMENT)
       for (int jat = 0; jat < iat; ++jat)
         lap += d2u[jat] + lapfac * du[jat];
-      for (int idim = 0; idim < OHMMS_DIM; ++idim)
+      for (int idim = 0; idim < ndim; ++idim)
       {
         const valT* restrict dX = displ.data(idim);
         valT s                  = valT();
@@ -635,7 +635,7 @@ void J2OrbitalSoA<FT>::recompute(const ParticleSet& P)
         Uat[jat] += u[jat];
         d2Uat[jat] -= d2u[jat] + lapfac * du[jat];
       }
-      for (int idim = 0; idim < OHMMS_DIM; ++idim)
+      for (int idim = 0; idim < ndim; ++idim)
       {
         valT* restrict save_g   = dUat.data(idim);
         const valT* restrict dX = displ.data(idim);

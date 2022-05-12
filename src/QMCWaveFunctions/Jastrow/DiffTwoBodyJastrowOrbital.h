@@ -269,6 +269,7 @@ public:
               continue;
             RealType rinv(cone / dist[j]);
             PosType dr(displ[j]);
+            if (ndim < 3) dr[2] = 0;
             for (int p = OffSet[ptype].first, ip = 0; p < OffSet[ptype].second; ++p, ++ip)
             {
               RealType dudr(rinv * derivs[ip][1]);
