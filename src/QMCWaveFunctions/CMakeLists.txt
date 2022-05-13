@@ -36,8 +36,6 @@ SET(WFBASE_SRCS
   ExampleHeComponent.cpp
   ElectronGas/GaussianOrbital.cpp
   ElectronGas/GaussianOrbitalBuilder.cpp
-  ElectronGas/PWOrbital.cpp
-  ElectronGas/PWOrbitalBuilder.cpp
   )
 
 IF(NOT QMC_COMPLEX)
@@ -71,6 +69,8 @@ SET(JASTROW_SRCS
 IF(QMC_COMPLEX)
   SET(FERMION_SRCS ${FERMION_SRCS}
     ElectronGas/ElectronGasComplexOrbitalBuilder.cpp
+    ElectronGas/PWOrbital.cpp
+    ElectronGas/PWOrbitalBuilder.cpp
     )
 ELSE(QMC_COMPLEX)
   SET(FERMION_SRCS ${FERMION_SRCS}

@@ -20,12 +20,12 @@
 #include "QMCWaveFunctions/SPOSetScanner.h"
 #include "QMCWaveFunctions/ElectronGas/ElectronGasOrbitalBuilder.h"
 #include "QMCWaveFunctions/ElectronGas/GaussianOrbitalBuilder.h"
-#include "QMCWaveFunctions/ElectronGas/PWOrbitalBuilder.h"
 #include "QMCWaveFunctions/HarmonicOscillator/SHOSetBuilder.h"
 #if OHMMS_DIM == 3
 #include "QMCWaveFunctions/LCAO/LCAOrbitalBuilder.h"
 
 #if defined(QMC_COMPLEX)
+#include "QMCWaveFunctions/ElectronGas/PWOrbitalBuilder.h"
 #include "QMCWaveFunctions/EinsplineSpinorSetBuilder.h"
 #include "QMCWaveFunctions/LCAO/LCAOSpinorBuilder.h"
 #endif
@@ -162,8 +162,12 @@ SPOSetBuilder* SPOSetBuilderFactory::createSPOSetBuilder(xmlNodePtr rootNode)
   }
   else if (type == "pw")
   {
+#ifdef QMC_COMPLEX
     app_log() << "Electron gas PW SPO set" << std::endl;
     bb = new PWOrbitalBuilder(targetPtcl, myComm, rootNode);
+#else
+    PRE.error("Use of PW SPO set requires QMC_COMPLEX=1.  Rebuild with this option");
+#endif
   }
   else if (type == "jellium" || type == "heg")
   {
