@@ -175,6 +175,9 @@ CoulombPBCAA::Return_t CoulombPBCAA::evaluate(ParticleSet& P)
     {
       mRealType elr = evalLR(P);
       mRealType esr = evalSR(P);
+      //app_log() << "Short-range: " << esr << std::endl;
+      //app_log() << "Long-range:  " << elr << std::endl;
+      //app_log() << "Constant:    " << myConst << std::endl;
       Value = myConst + elr + esr;
     }
   }
@@ -484,6 +487,7 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
     const StructFact& PtclRhoK(*(Ps.SK));
     MC0 = AA->sumMadelung(PtclRhoK.KLists.kshell);
     MC0 = 0.5 * (MC0 - vl_r0 - vs_k0);
+    //Compute PBCAA constant
     for (int ipart = 0; ipart < NumCenters; ipart++)
     {
       v1 = -.5 * Zat[ipart] * Zat[ipart] * vl_r0;
@@ -551,10 +555,14 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
     ispec = SpeciesID[ipart];
     mRealType esum   = 0.0;
     const auto& dist = d_aa.getDistRow(ipart);
+    const auto& disp = d_aa.getDisplRow(ipart);
     for (size_t j = 0; j < ipart; ++j)
     {
       jspec = SpeciesID[j];
-      esum += e2ea(ispec, jspec) * Zat[j] * rVs->splint(dist[j]) / dist[j];
+      const mRealType z = disp[j][2];
+      const mRealType r = std::sqrt(dist[j]*dist[j]+z*z);
+      //esum += e2ea(ispec, jspec) * Zat[j] * AA->evaluate(r, 1.0/r);
+      esum += e2ea(ispec, jspec) * Zat[j] * rVs->splint(r)/r;
     }
     SR += Zat[ipart] * esum;
 
@@ -565,10 +573,14 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
     ispec = SpeciesID[ipart_reverse];
     esum              = 0.0;
     const auto& dist2 = d_aa.getDistRow(ipart_reverse);
+    const auto& disp2 = d_aa.getDisplRow(ipart_reverse);
     for (size_t j = 0; j < ipart_reverse; ++j)
     {
       jspec = SpeciesID[j];
-      esum += e2ea(ispec, jspec) * Zat[j] * rVs->splint(dist2[j]) / dist2[j];
+      const mRealType z = disp2[j][2];
+      const mRealType r = std::sqrt(dist2[j]*dist2[j]+z*z);
+      //esum += e2ea(ispec, jspec) * Zat[j] * AA->evaluate(r, 1.0/r);
+      esum += e2ea(ispec, jspec) * Zat[j] * rVs->splint(r)/r;
     }
     SR += Zat[ipart_reverse] * esum;
   }
