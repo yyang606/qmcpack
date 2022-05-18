@@ -109,10 +109,11 @@ void PWOrbital::evaluate_notranspose(
   ValueType phi_of_r;
   for (int iat=first,i=0;iat<last;iat++,i++)
   {
-    const PosType& r = P.activeR(iat);
     ValueVector_t p(phi[i], OrbitalSetSize);
     GradVector_t dp(dphi[i], OrbitalSetSize);
     HessVector_t hess(d2phi_mat[i], OrbitalSetSize);
+
+    const PosType& r = P.activeR(iat);
     for (int ik=mink;ik<maxk;ik++)
     {
       sincos(dot(K[ik], r), &sinkr, &coskr);
@@ -152,6 +153,11 @@ void PWOrbital::evaluate_notranspose(
       }
 #endif
     }
+#ifndef QMC_COMPLEX
+    p[0] = 1.0;
+    dp[0] = 0.0;
+    hess[0] = 0.0;
+#endif
   }
 }
 
