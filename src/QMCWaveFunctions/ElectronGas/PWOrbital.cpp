@@ -4,14 +4,18 @@ namespace qmcplusplus
 {
 
 PWOrbital::PWOrbital(const std::vector<PosType>& kpts_cart)
- : K(kpts_cart), maxk(kpts_cart.size())
+ : K(kpts_cart), 
+#ifdef QMC_COMPLEX
+  mink(0), // first k at twist may not be 0
+#else
+  mink(1), // treat k=0 as special case
+#endif
+  maxk(kpts_cart.size())
 {
 #ifdef QMC_COMPLEX
   OrbitalSetSize = maxk;
-  mink = 0; // first k at twist may not be 0
 #else
   OrbitalSetSize = 2*maxk-1; // k=0 has no (cos, sin) split
-  mink = 1;  // treat k=0 as special case
 #endif
   mK2.resize(maxk);
   for (int ik=0; ik<maxk; ik++)
@@ -185,11 +189,9 @@ void PWOrbital::evaluate_notranspose(
       sincos(dot(K[ik], r), &sinkr, &coskr);
 #ifdef QMC_COMPLEX
       const ValueType compi(0, 1);
-      // phi(r) = cos(kr)+i*sin(kr)
       phi_of_r = ValueType(coskr, sinkr);
       p[ik] = phi_of_r;
-      // i*phi(r) = -sin(kr) + i*cos(kr)
-      dp[ik] = ValueType(-sinkr, coskr) * K[ik];
+      dp[ik] = compi*phi_of_r * K[ik];
       for (int la = 0; la < OHMMS_DIM; la++)
       {
         (hess[ik])(la, la) = -phi_of_r * (K[ik])[la] * (K[ik])[la];

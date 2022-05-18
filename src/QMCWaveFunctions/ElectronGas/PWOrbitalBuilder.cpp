@@ -1,6 +1,7 @@
 #include "PWOrbitalBuilder.h"
 #include "OhmmsData/AttributeSet.h"
 #include "LongRange/StructFact.h"
+#include "PWOrbital.h"
 
 namespace qmcplusplus
 {

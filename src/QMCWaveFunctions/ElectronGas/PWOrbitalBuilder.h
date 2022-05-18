@@ -2,7 +2,6 @@
 #define QMCPLUSPLUS_PW_ORBITAL_BUILDER_H
 
 #include "QMCWaveFunctions/SPOSetBuilder.h"
-#include "PWOrbital.h"
 
 namespace qmcplusplus
 {
