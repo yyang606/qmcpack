@@ -184,7 +184,25 @@ void PWOrbital::evaluate_notranspose(
     { 
       sincos(dot(K[ik], r), &sinkr, &coskr);
 #ifdef QMC_COMPLEX
-      throw std::runtime_error("not implemented");
+      const ValueType compi(0, 1);
+      // phi(r) = cos(kr)+i*sin(kr)
+      phi_of_r = ValueType(coskr, sinkr);
+      p[ik] = phi_of_r;
+      // i*phi(r) = -sin(kr) + i*cos(kr)
+      dp[ik] = ValueType(-sinkr, coskr) * K[ik];
+      for (int la = 0; la < OHMMS_DIM; la++)
+      {
+        (hess[ik])(la, la) = -phi_of_r * (K[ik])[la] * (K[ik])[la];
+        for (int lb = la + 1; lb < OHMMS_DIM; lb++)
+        {
+          (hess[ik])(la, lb) = -phi_of_r * (K[ik])[la] * (K[ik])[lb];
+          (hess[ik])(lb, la) = (hess[ik])(la, lb);
+        }
+      }
+      for (int la = 0; la < OHMMS_DIM; la++)
+      {
+        ggg[ik][la] = compi*(K[ik])[la]*hess[ik];
+      }
 #else
       const int j2 = 2*ik;
       const int j1 = j2-1;
