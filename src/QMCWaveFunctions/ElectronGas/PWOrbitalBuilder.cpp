@@ -13,10 +13,16 @@ PWOrbitalBuilder::PWOrbitalBuilder(ParticleSet& els, Communicate* comm, xmlNodeP
 
 SPOSet* PWOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
 {
-  int npw;
+  int npw, norb;
   OhmmsAttributeSet attrib;
-  attrib.add(npw, "size");
+  attrib.add(norb, "size");
   attrib.put(cur);
+
+#ifdef QMC_COMPLEX
+  npw = norb;
+#else
+  npw = std::ceil((norb+1.0)/2);
+#endif
 
   // extract npw k-points from container
   // kpts_cart is sorted by magnitude
