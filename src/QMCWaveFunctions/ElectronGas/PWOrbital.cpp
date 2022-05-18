@@ -4,11 +4,15 @@ namespace qmcplusplus
 {
 
 PWOrbital::PWOrbital(const std::vector<PosType>& kpts_cart)
- : K(kpts_cart)
+ : K(kpts_cart), mxk(kpts_cart.size())
 {
-  OrbitalSetSize = kpts_cart.size();
-  mK2.resize(OrbitalSetSize);
-  for (int ik=0; ik<OrbitalSetSize; ik++)
+#ifdef QMC_COMPLEX
+  OrbitalSetSize = mxk;
+#else
+  OrbitalSetSize = 2*mxk-1; // k=0 has no (cos, sin) split
+#endif
+  mK2.resize(mxk);
+  for (int ik=0; ik<mxk; ik++)
   {
     mK2[ik] = -dot(K[ik], K[ik]);
   }
@@ -25,13 +29,27 @@ void PWOrbital::evaluateVGL(
 {
   const PosType& r = P.activeR(iat);
   RealType sinkr, coskr;
-  for (int ik = 0; ik < OrbitalSetSize; ik++)
+  for (int ik = 1; ik<mxk; ik++)
   {
     sincos(dot(K[ik], r), &sinkr, &coskr);
+#ifdef QMC_COMPLEX
     pvec[ik]   = ValueType(coskr, sinkr);
     dpvec[ik]  = ValueType(-sinkr, coskr) * K[ik];
     d2pvec[ik] = ValueType(mK2[ik] * coskr, mK2[ik] * sinkr);
+#else
+    const int j2 = 2*ik;
+    const int j1 = j2-1;
+    pvec[j1]  = coskr;
+    pvec[j2]  = sinkr;
+    dpvec[j1]  = -sinkr * K[ik];
+    dpvec[j2]  = coskr * K[ik];
+    d2pvec[j1] = mK2[ik] * coskr;
+    d2pvec[j2] = mK2[ik] * sinkr;
+#endif
   }
+  pvec[0]   = 1.0;
+  dpvec[0]  = 0.0;
+  d2pvec[0] = 0.0;
 }
 
 void PWOrbital::evaluateValue(
@@ -41,11 +59,19 @@ void PWOrbital::evaluateValue(
 {
   const PosType& r = P.activeR(iat);
   RealType sinkr, coskr;
-  for (int ik=0; ik<OrbitalSetSize; ik++)
+  for (int ik=0; ik<mxk; ik++)
   {
     sincos(dot(K[ik], r), &sinkr, &coskr);
+#ifdef QMC_COMPLEX
     pvec[ik] = ValueType(coskr, sinkr);
+#else
+    const int j2 = 2*ik;
+    const int j1 = j2-1;
+    pvec[j1] = coskr;
+    pvec[j2] = sinkr;
+#endif
   }
+  pvec[0] = 1.0;
 }
 
 void PWOrbital::evaluate_notranspose(
@@ -82,6 +108,7 @@ void PWOrbital::evaluate_notranspose(
     ValueVector_t p(phi[ik], OrbitalSetSize);
     GradVector_t dp(dphi[ik], OrbitalSetSize);
     HessVector_t hess(d2phi_mat[ik], OrbitalSetSize);
+#ifdef QMC_COMPLEX
     // phi(r) = cos(kr)+i*sin(kr)
     phi_of_r = ValueType(coskr, sinkr);
     p[ik] = phi_of_r;
@@ -96,6 +123,26 @@ void PWOrbital::evaluate_notranspose(
         (hess[ik])(lb, la) = (hess[ik])(la, lb);
       }
     }
+#else
+    const int j2 = 2*ik;
+    const int j1 = j2-1;
+    p[j1]  = coskr;
+    p[j2]  = sinkr;
+    dp[j1] = -sinkr * K[ik];
+    dp[j2] = coskr * K[ik];
+    for (int la = 0; la < OHMMS_DIM; la++)
+    {
+      (hess[j1])(la, la) = -coskr * (K[ik])[la] * (K[ik])[la];
+      (hess[j2])(la, la) = -sinkr * (K[ik])[la] * (K[ik])[la];
+      for (int lb = la + 1; lb < OHMMS_DIM; lb++)
+      {
+        (hess[j1])(la, lb) = -coskr * (K[ik])[la] * (K[ik])[lb];
+        (hess[j2])(la, lb) = -sinkr * (K[ik])[la] * (K[ik])[lb];
+        (hess[j1])(lb, la) = (hess[j1])(la, lb);
+        (hess[j2])(lb, la) = (hess[j2])(la, lb);
+      }
+    }
+#endif
   }
 }
 

@@ -53,6 +53,7 @@ public:
 private:
   std::vector<PosType> K; // K vectors
   std::vector<RealType> mK2; // minus K^2
+  const int mxk; // maximum number of K vectors
 };
 
 } // qmcplusplus
