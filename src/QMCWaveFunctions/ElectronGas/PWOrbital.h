@@ -44,6 +44,16 @@ public:
     GradMatrix_t& dphi,
     HessMatrix_t& d2phi_mat) override;
 
+  // derivative of hessian is needed to optimize backflow
+  void evaluate_notranspose(
+    const ParticleSet& P,
+    int first,
+    int last,
+    ValueMatrix_t& phi,
+    GradMatrix_t& dphi,
+    HessMatrix_t& d2phi_mat,
+    GGGMatrix_t& d3phi_mat) override;
+
   // ---- begin required overrides
   SPOSet* makeClone() const {return new PWOrbital(*this);}
   void resetParameters(const opt_variables_type& optVariables) override {} //called by BFTrans}

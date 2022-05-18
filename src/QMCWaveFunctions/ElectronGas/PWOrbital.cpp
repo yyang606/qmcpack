@@ -8,7 +8,7 @@ PWOrbital::PWOrbital(const std::vector<PosType>& kpts_cart)
 {
 #ifdef QMC_COMPLEX
   OrbitalSetSize = maxk;
-  mink = 0;
+  mink = 0; // first k at twist may not be 0
 #else
   OrbitalSetSize = 2*maxk-1; // k=0 has no (cos, sin) split
   mink = 1;  // treat k=0 as special case
@@ -157,6 +157,89 @@ void PWOrbital::evaluate_notranspose(
     p[0] = 1.0;
     dp[0] = 0.0;
     hess[0] = 0.0;
+#endif
+  }
+}
+
+void PWOrbital::evaluate_notranspose(
+  const ParticleSet& P,
+  int first,
+  int last,
+  ValueMatrix_t& phi,
+  GradMatrix_t& dphi,
+  HessMatrix_t& d2phi_mat,
+  GGGMatrix_t& d3phi_mat)
+{
+  RealType sinkr, coskr;
+  ValueType phi_of_r;
+  for (int iat=first,i=0;iat<last;iat++,i++)
+  {
+    ValueVector_t p(phi[i], OrbitalSetSize);
+    GradVector_t dp(dphi[i], OrbitalSetSize);
+    HessVector_t hess(d2phi_mat[i], OrbitalSetSize);
+    GGGVector_t ggg(d3phi_mat[i], OrbitalSetSize);
+
+    const PosType& r = P.activeR(iat);
+    for (int ik=mink;ik<maxk;ik++)
+    { 
+      sincos(dot(K[ik], r), &sinkr, &coskr);
+#ifdef QMC_COMPLEX
+      throw std::runtime_error("not implemented");
+#else
+      const int j2 = 2*ik;
+      const int j1 = j2-1;
+      p[j1]  = coskr; 
+      p[j2]  = sinkr; 
+      dp[j1] = -sinkr * K[ik];
+      dp[j2] = coskr * K[ik];
+      for (int la = 0; la < OHMMS_DIM; la++)
+      {
+        (hess[j1])(la, la)      = -coskr * (K[ik])[la] * (K[ik])[la]; 
+        (hess[j2])(la, la)      = -sinkr * (K[ik])[la] * (K[ik])[la]; 
+        ((ggg[j1])[la])(la, la) = sinkr * (K[ik])[la] * (K[ik])[la] * (K[ik])[la];
+        ((ggg[j2])[la])(la, la) = -coskr * (K[ik])[la] * (K[ik])[la] * (K[ik])[la];
+        for (int lb = la + 1; lb < OHMMS_DIM; lb++)
+        {
+          (hess[j1])(la, lb)      = -coskr * (K[ik])[la] * (K[ik])[lb];
+          (hess[j2])(la, lb)      = -sinkr * (K[ik])[la] * (K[ik])[lb];
+          (hess[j1])(lb, la)      = (hess[j1])(la, lb); 
+          (hess[j2])(lb, la)      = (hess[j2])(la, lb); 
+          ((ggg[j1])[la])(lb, la) = sinkr * (K[ik])[la] * (K[ik])[lb] * (K[ik])[la];
+          ((ggg[j2])[la])(lb, la) = -coskr * (K[ik])[la] * (K[ik])[lb] * (K[ik])[la];
+          ((ggg[j1])[la])(la, lb) = ((ggg[j1])[la])(lb, la);
+          ((ggg[j2])[la])(la, lb) = ((ggg[j2])[la])(lb, la);
+          ((ggg[j1])[lb])(la, la) = ((ggg[j1])[la])(lb, la);
+          ((ggg[j2])[lb])(la, la) = ((ggg[j2])[la])(lb, la);
+          ((ggg[j1])[la])(lb, lb) = sinkr * (K[ik])[la] * (K[ik])[lb] * (K[ik])[lb];
+          ((ggg[j2])[la])(lb, lb) = -coskr * (K[ik])[la] * (K[ik])[lb] * (K[ik])[lb];
+          ((ggg[j1])[lb])(la, lb) = ((ggg[j1])[la])(lb, lb);
+          ((ggg[j2])[lb])(la, lb) = ((ggg[j2])[la])(lb, lb);
+          ((ggg[j1])[lb])(lb, la) = ((ggg[j1])[la])(lb, lb);
+          ((ggg[j2])[lb])(lb, la) = ((ggg[j2])[la])(lb, lb);
+          for (int lc = lb + 1; lc < OHMMS_DIM; lc++)
+          {
+            ((ggg[j1])[la])(lb, lc) = sinkr * (K[ik])[la] * (K[ik])[lb] * (K[ik])[lc];
+            ((ggg[j2])[la])(lb, lc) = -coskr * (K[ik])[la] * (K[ik])[lb] * (K[ik])[lc];
+            ((ggg[j1])[la])(lc, lb) = ((ggg[j1])[la])(lb, lc);
+            ((ggg[j2])[la])(lc, lb) = ((ggg[j2])[la])(lb, lc);
+            ((ggg[j1])[lb])(la, lc) = ((ggg[j1])[la])(lb, lc);
+            ((ggg[j2])[lb])(la, lc) = ((ggg[j2])[la])(lb, lc);
+            ((ggg[j1])[lb])(lc, la) = ((ggg[j1])[la])(lb, lc);
+            ((ggg[j2])[lb])(lc, la) = ((ggg[j2])[la])(lb, lc);
+            ((ggg[j1])[lc])(la, lb) = ((ggg[j1])[la])(lb, lc);
+            ((ggg[j2])[lc])(la, lb) = ((ggg[j2])[la])(lb, lc);
+            ((ggg[j1])[lc])(lb, la) = ((ggg[j1])[la])(lb, lc);
+            ((ggg[j2])[lc])(lb, la) = ((ggg[j2])[la])(lb, lc);
+          }
+        }
+      }
+#endif
+    }
+#ifndef QMC_COMPLEX
+    p[0] = 1.0;
+    dp[0] = 0.0;
+    hess[0] = 0.0;
+    ggg[0] = 0.0;
 #endif
   }
 }
