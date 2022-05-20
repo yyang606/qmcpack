@@ -74,6 +74,10 @@ private:
   xmlNodePtr input_xml;       // original xml
   // distance table ID
   const int myTableID_;
+  int iat_first, iat_last;
+  int iel_first, iel_last;
+  std::vector<std::vector<RealType>> rij;
+  std::vector<long> icols;
 };                            // LatticeDeviationEstimator
 
 } // namespace qmcplusplus
