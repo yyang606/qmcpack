@@ -17,6 +17,7 @@
 #include "QMCHamiltonians/OperatorBase.h"
 #include "ParticleBase/ParticleAttribOps.h"
 #include "Particle/DistanceTableData.h"
+#include "Numerics/asp.h"
 
 namespace qmcplusplus
 {
@@ -41,7 +42,7 @@ class LatticeDeviationEstimator : public OperatorBase
 {
 public:
   LatticeDeviationEstimator(ParticleSet& P, ParticleSet& sP, const std::string& tgroup, const std::string& sgroup);
-  ~LatticeDeviationEstimator() {}
+  ~LatticeDeviationEstimator() {destroy_matrix(temp_rij, iel_last-iel_first);}
 
   bool put(xmlNodePtr cur);         // read input xml node, required
   bool get(std::ostream& os) const; // class description, required
@@ -78,6 +79,7 @@ private:
   int iel_first, iel_last;
   std::vector<std::vector<RealType>> rij;
   std::vector<long> icols;
+  RealType **temp_rij;
 };                            // LatticeDeviationEstimator
 
 } // namespace qmcplusplus

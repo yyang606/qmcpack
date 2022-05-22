@@ -57,6 +57,7 @@ LatticeDeviationEstimator::LatticeDeviationEstimator(ParticleSet& P,
     rij[i].resize(num_sites);
   }
   icols.resize(num_sites);
+  temp_rij = create_matrix(num_tars, num_sites);
 }
 
 bool LatticeDeviationEstimator::put(xmlNodePtr cur)
@@ -129,12 +130,14 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
       {
           r = d_table.getDistRow(jat)[iat];
           rij[i][j] = r;
+          temp_rij[i][j] = r;
       }
   }
   // linear sum assignment
   for (int i=0;i<icols.size();i++)
   {
-    icols[i] = i; // !!!! place holder
+    //icols[i] = i; // !!!! place holder
+    asp(icols.size(), temp_rij, icols.data());
   }
   // fill output
   for (int iat = iat_first; iat < iat_last; iat++)
