@@ -142,6 +142,7 @@ INCLUDE_DIRECTORIES("${qmcpack_SOURCE_DIR}/external_codes/boost_multi")
     Numerics/OptimizableFunctorBase.cpp
     Numerics/SmoothFunctions.cpp
     Numerics/OneDimGridFactory.cpp
+    Numerics/asp.cpp
     Optimize/VariableSet.cpp
     )
 IF (IS_GIT_PROJECT)
