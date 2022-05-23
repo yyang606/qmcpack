@@ -142,7 +142,8 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
   // fill output
   for (int iat = iat_first; iat < iat_last; iat++)
   {
-    r = rij[iat][icols[iat]];
+    const int jat = icols[iat];
+    r = rij[iat][jat];
     r2 = r * r;
     Value += r2;
 
@@ -153,7 +154,7 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
 
     if (per_xyz)
     {
-      //dr = d_table.getDisplRow(jat)[iat]; // !!!! need fix
+      dr = d_table.getDisplRow(jat)[iat];
       for (int idir = 0; idir < OHMMS_DIM; idir++)
       {
         RealType dir2 = dr[idir] * dr[idir];
