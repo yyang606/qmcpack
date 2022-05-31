@@ -37,9 +37,11 @@ public:
   int NumGroups;
   Matrix<int> PairID;
   bool first;
+  int ndim;
 
   Backflow_ee(ParticleSet& ions, ParticleSet& els)
-      : BackflowFunctionBase(ions, els), myTableIndex_(els.addTable(els)), first(true)
+      : BackflowFunctionBase(ions, els), myTableIndex_(els.addTable(els)), first(true),
+        ndim(els.Lattice.ndim)
   {
     resize(NumTargets, NumTargets);
     NumGroups = els.groups();
@@ -315,21 +317,16 @@ public:
             QP.R[jat] += u;
             HessType& hess = AIJ(iat, jat);
             hess           = du * outerProduct(displ[jat], displ[jat]);
-#if OHMMS_DIM == 3
             hess[0] += uij;
             hess[4] += uij;
-            hess[8] += uij;
-#elif OHMMS_DIM == 2
-            hess[0] += uij;
-            hess[3] += uij;
-#endif
+            hess[8] += uij ? ndim > 2 : 0;
             AIJ(jat, iat) = hess;
             Amat(iat, iat) += hess;
             Amat(jat, jat) += hess;
             Amat(iat, jat) -= hess;
             Amat(jat, iat) -= hess;
             GradType& grad = BIJ(jat, iat); // dr = r_j - r_i
-            grad           = (d2u + (OHMMS_DIM + 1) * du) * displ[jat];
+            grad           = (d2u + (ndim + 1) * du) * displ[jat];
             BIJ(iat, jat)  = -1.0 * grad;
             Bmat_full(iat, iat) -= grad;
             Bmat_full(jat, jat) += grad;
@@ -437,14 +434,9 @@ public:
         newQP[j] -= u;
         HessType& hess = AIJ_temp[j];
         hess = (du / myTable.getTempDists()[j]) * outerProduct(myTable.getTempDispls()[j], myTable.getTempDispls()[j]);
-#if OHMMS_DIM == 3
         hess[0] += uij;
         hess[4] += uij;
-        hess[8] += uij;
-#elif OHMMS_DIM == 2
-        hess[0] += uij;
-        hess[3] += uij;
-#endif
+        hess[8] += uij ? ndim > 2 : 0;
         HessType dA = hess - AIJ(iat, j);
         Amat(iat, iat) += dA;
         Amat(j, j) += dA;
@@ -462,14 +454,9 @@ public:
         newQP[j] -= u;
         HessType& hess = AIJ_temp[j];
         hess = (du / myTable.getTempDists()[j]) * outerProduct(myTable.getTempDispls()[j], myTable.getTempDispls()[j]);
-#if OHMMS_DIM == 3
         hess[0] += uij;
         hess[4] += uij;
-        hess[8] += uij;
-#elif OHMMS_DIM == 2
-        hess[0] += uij;
-        hess[3] += uij;
-#endif
+        hess[8] += uij ? ndim > 2 : 0;
         HessType dA = hess - AIJ(iat, j);
         Amat(iat, iat) += dA;
         Amat(j, j) += dA;
@@ -661,14 +648,9 @@ public:
             HessType op    = outerProduct(displ[jat], displ[jat]);
             HessType& hess = AIJ(iat, jat);
             hess           = du * op;
-#if OHMMS_DIM == 3
             hess[0] += uij;
             hess[4] += uij;
-            hess[8] += uij;
-#elif OHMMS_DIM == 2
-            hess[0] += uij;
-            hess[3] += uij;
-#endif
+            hess[8] += uij ? ndim>2 : 0;
             Amat(iat, iat) += hess;
             Amat(jat, jat) += hess;
             Amat(iat, jat) -= hess;
@@ -676,7 +658,7 @@ public:
             // this will create problems with QMC_COMPLEX, because Bmat is ValueType and dr is RealType
             // d2u + (ndim+1)*du
             GradType& grad = BIJ(jat, iat); // dr = r_j - r_i
-            grad           = (d2u + (OHMMS_DIM + 1) * du) * displ[jat];
+            grad           = (d2u + (ndim + 1) * du) * displ[jat];
             BIJ(iat, jat)  = -1.0 * grad;
             Bmat_full(iat, iat) -= grad;
             Bmat_full(jat, jat) += grad;
@@ -688,18 +670,13 @@ public:
               Cmat(la, iat) -= uk;
               Cmat(la, jat) += uk;
               Xmat(la, iat, jat) -= (derivsju[prm][1] / dist[jat]) * op;
-#if OHMMS_DIM == 3
               Xmat(la, iat, jat)[0] -= derivsju[prm][0];
               Xmat(la, iat, jat)[4] -= derivsju[prm][0];
-              Xmat(la, iat, jat)[8] -= derivsju[prm][0];
-#elif OHMMS_DIM == 2
-              Xmat(la, iat, jat)[0] -= derivsju[prm][0];
-              Xmat(la, iat, jat)[3] -= derivsju[prm][0];
-#endif
+              Xmat(la, iat, jat)[8] -= derivsju[prm][0] ? ndim>2 : 0;
               Xmat(la, jat, iat) += Xmat(la, iat, jat);
               Xmat(la, iat, iat) -= Xmat(la, iat, jat);
               Xmat(la, jat, jat) -= Xmat(la, iat, jat);
-              uk = 2.0 * (derivsju[prm][2] + (OHMMS_DIM + 1) * derivsju[prm][1] / dist[jat]) * displ[jat];
+              uk = 2.0 * (derivsju[prm][2] + (ndim + 1) * derivsju[prm][1] / dist[jat]) * displ[jat];
               Ymat(la, iat) -= uk;
               Ymat(la, jat) += uk;
             }
