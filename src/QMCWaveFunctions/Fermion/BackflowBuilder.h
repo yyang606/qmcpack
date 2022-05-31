@@ -36,7 +36,7 @@
 
 namespace qmcplusplus
 {
-class BackflowBuilder
+class BackflowBuilder : public MPIObjectBase
 {
   using RealType = BackflowFunctionBase::RealType;
   using HandlerType = LRHandlerBase;
@@ -44,7 +44,7 @@ class BackflowBuilder
   using PtclPoolType = std::map<std::string, ParticleSet*>;
 
 public:
-  BackflowBuilder(ParticleSet& p, PtclPoolType& pool);
+  BackflowBuilder(Communicate* comm, ParticleSet& p, PtclPoolType& pool);
 
   BackflowTransformation* buildBackflowTransformation(xmlNodePtr cur);
 

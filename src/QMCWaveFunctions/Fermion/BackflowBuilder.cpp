@@ -37,8 +37,8 @@
 
 namespace qmcplusplus
 {
-BackflowBuilder::BackflowBuilder(ParticleSet& els, PtclPoolType& pool)
-    : cutOff(1.0), targetPtcl(els), ptclPool(pool), BFTrans(0)
+BackflowBuilder::BackflowBuilder(Communicate* comm, ParticleSet& els, PtclPoolType& pool)
+    : MPIObjectBase(comm), cutOff(1.0), targetPtcl(els), ptclPool(pool), BFTrans(0)
 {
 }
 
@@ -339,16 +339,13 @@ void BackflowBuilder::addTwoBody(xmlNodePtr cur)
         tbf->addFunc(ia, ib, bsp);
         offsets.push_back(tbf->numParams);
         tbf->numParams += bsp->NumParams;
-        //            if(OHMMS::Controller->rank()==0)
-        //            {
-        //              char fname[64];
-        //              sprintf(fname,"BFe-e.%s.dat",(spA+spB).c_str());
-        //              std::ofstream fout(fname);
-        //              fout.setf(std::ios::scientific, std::ios::floatfield);
-        //              fout << "# Backflow radial function \n";
-        //              bsp->print(fout);
-        //              fout.close();
-        //            }
+        if (is_manager())
+        {
+          char fname[32];
+          sprintf(fname, "BF.%s.g%03d.dat", (spA+spB).c_str(), getGroupID());
+          std::ofstream os(fname);
+          print(*bsp, os);
+        }
       }
       cur = cur->next;
     }
