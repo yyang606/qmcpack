@@ -330,7 +330,7 @@ WaveFunctionComponent* SlaterDetBuilder::buildComponent(xmlNodePtr cur)
   // change DistanceTables if using backflow
   if (UseBackflow)
   {
-    BackflowBuilder bfbuilder(targetPtcl, ptclPool);
+    BackflowBuilder bfbuilder(getCommunicator(), targetPtcl, ptclPool);
     BFTrans = bfbuilder.buildBackflowTransformation(BFnode);
     if (multiDet)
     {
