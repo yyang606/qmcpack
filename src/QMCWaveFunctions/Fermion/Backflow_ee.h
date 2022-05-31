@@ -37,7 +37,7 @@ public:
   int NumGroups;
   Matrix<int> PairID;
   bool first;
-  int ndim;
+  const int ndim;
 
   Backflow_ee(ParticleSet& ions, ParticleSet& els)
       : BackflowFunctionBase(ions, els), myTableIndex_(els.addTable(els)), first(true),
