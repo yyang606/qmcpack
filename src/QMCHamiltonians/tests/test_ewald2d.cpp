@@ -169,65 +169,65 @@ TEST_CASE("Coulomb PBC A-A Ewald2D honeycomb", "[hamiltonian]")
   CHECK(val/npart == Approx(vmad_hon));
 }
 
-TEST_CASE("Coulomb PBC A-A Ewald staggered triangle", "[hamiltonian]")
-{
-  LRCoulombSingleton::CoulombHandler = 0; // !!!! crucial if not first test
-  LRCoulombSingleton::this_lr_type = LRCoulombSingleton::STRICT2D;
-  const double rs = 20.0;
-  const double alat = rs*std::sqrt(2.0*M_PI/std::sqrt(3));
-  CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> lattice;
-  lattice.BoxBConds = true;
-  lattice.BoxBConds[2] = false; // ppn
-  lattice.ndim = 2;
-  lattice.R = 0.0;
-  lattice.R(0, 0) = alat;
-  lattice.R(1, 0) = -1.0/2*alat;
-  lattice.R(1, 1) = std::sqrt(3)/2*alat;
-  lattice.R(2, 2) = 2*alat;
-  lattice.LR_dim_cutoff = 30.0;
-  lattice.reset();
-
-  ParticleSet elec;
-  elec.Lattice = lattice;
-  elec.setName("e");
-  const int npart = 2;
-  elec.create({npart});
-  // initialize fractional coordinates
-  elec.R[0] = {0.0, 0.0, 0.0};
-  elec.R[1] = {2./3, 1./3, 0.0};
-  // convert to Cartesian coordinates
-  for (int i=0;i<npart;i++)
-    elec.R[i] = dot(elec.R[i], lattice.R);
-
-  SpeciesSet& tspecies       = elec.getSpeciesSet();
-  int upIdx                  = tspecies.addSpecies("u");
-  int chargeIdx              = tspecies.addAttribute("charge");
-  int massIdx                = tspecies.addAttribute("mass");
-  tspecies(chargeIdx, upIdx) = -1;
-  tspecies(massIdx, upIdx)   = 1.0;
-
-  elec.createSK();
-  elec.addTable(elec);
-  elec.update();
-
-  CoulombPBCAA caa = CoulombPBCAA(elec, true);
-
-  const int ntest = 4;
-  TinyVector<double, ntest> zheight = {0, 0.1, 0.5, 3.0};
-  zheight *= rs;
-  const double vmad_hon = -1.510964233;
-  const double vmad_tri = -1.106102587;
-  TinyVector<double, ntest> vmad_ref = {vmad_hon, -1.4193042644, -1.2005504968, vmad_tri};
-  vmad_ref /= rs;
-  double val;
-  for (int itest=0; itest<ntest; itest++)
-  {
-    for (int i=npart/2;i<npart;i++)
-      elec.R[i][2] = zheight[itest];
-    elec.update();
-    val = caa.evaluate(elec);
-    CHECK(val/npart == Approx(vmad_ref[itest]));
-  }
-}
+//TEST_CASE("Coulomb PBC A-A Ewald strict2d staggered triangle", "[hamiltonian]")
+//{
+//  LRCoulombSingleton::CoulombHandler = 0; // !!!! crucial if not first test
+//  LRCoulombSingleton::this_lr_type = LRCoulombSingleton::STRICT2D;
+//  const double rs = 20.0;
+//  const double alat = rs*std::sqrt(2.0*M_PI/std::sqrt(3));
+//  CrystalLattice<OHMMS_PRECISION, OHMMS_DIM> lattice;
+//  lattice.BoxBConds = true;
+//  lattice.BoxBConds[2] = false; // ppn
+//  lattice.ndim = 2;
+//  lattice.R = 0.0;
+//  lattice.R(0, 0) = alat;
+//  lattice.R(1, 0) = -1.0/2*alat;
+//  lattice.R(1, 1) = std::sqrt(3)/2*alat;
+//  lattice.R(2, 2) = 2*alat;
+//  lattice.LR_dim_cutoff = 30.0;
+//  lattice.reset();
+//
+//  ParticleSet elec;
+//  elec.Lattice = lattice;
+//  elec.setName("e");
+//  const int npart = 2;
+//  elec.create({npart});
+//  // initialize fractional coordinates
+//  elec.R[0] = {0.0, 0.0, 0.0};
+//  elec.R[1] = {2./3, 1./3, 0.0};
+//  // convert to Cartesian coordinates
+//  for (int i=0;i<npart;i++)
+//    elec.R[i] = dot(elec.R[i], lattice.R);
+//
+//  SpeciesSet& tspecies       = elec.getSpeciesSet();
+//  int upIdx                  = tspecies.addSpecies("u");
+//  int chargeIdx              = tspecies.addAttribute("charge");
+//  int massIdx                = tspecies.addAttribute("mass");
+//  tspecies(chargeIdx, upIdx) = -1;
+//  tspecies(massIdx, upIdx)   = 1.0;
+//
+//  elec.createSK();
+//  elec.addTable(elec);
+//  elec.update();
+//
+//  CoulombPBCAA caa = CoulombPBCAA(elec, true);
+//
+//  const int ntest = 4;
+//  TinyVector<double, ntest> zheight = {0, 0.1, 0.5, 3.0};
+//  zheight *= rs;
+//  const double vmad_hon = -1.510964233;
+//  const double vmad_tri = -1.106102587;
+//  TinyVector<double, ntest> vmad_ref = {vmad_hon, -1.4193042644, -1.2005504968, vmad_tri};
+//  vmad_ref /= rs;
+//  double val;
+//  for (int itest=0; itest<ntest; itest++)
+//  {
+//    for (int i=npart/2;i<npart;i++)
+//      elec.R[i][2] = zheight[itest];
+//    elec.update();
+//    val = caa.evaluate(elec);
+//    CHECK(val/npart == Approx(vmad_ref[itest]));
+//  }
+//}
 
 } // qmcplusplus
