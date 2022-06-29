@@ -42,7 +42,7 @@ SPOSet* PWOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
   kpts[0] = tvec;
   for (int ik=1;ik<npw;ik++)
   {
-    kpts[ik] = tvec+klists.kpts_cart[ik-1];
+    kpts[ik] = klists.kpts_cart[ik-1];
   }
   PWOrbital* sposet = new PWOrbital(kpts);
   sposet->report("  ");
