@@ -19,7 +19,7 @@
 
 namespace qmcplusplus
 {
-void KContainer::UpdateKLists(ParticleLayout_t& lattice, RealType kc, unsigned ndim, bool useSphere)
+void KContainer::UpdateKLists(ParticleLayout_t& lattice, RealType kc, PosType twist, unsigned ndim, bool useSphere)
 {
   kcutoff = kc;
   kcut2   = kc * kc;
@@ -28,7 +28,7 @@ void KContainer::UpdateKLists(ParticleLayout_t& lattice, RealType kc, unsigned n
     APP_ABORT("  Illegal cutoff for KContainer");
   }
   FindApproxMMax(lattice);
-  BuildKLists(lattice, ndim, useSphere);
+  BuildKLists(lattice, twist, ndim, useSphere);
 
   app_log() << "  KContainer initialised with cutoff " << kcutoff << std::endl;
   app_log() << "   # of K-shell  = " << kshell.size() << std::endl;
@@ -98,7 +98,7 @@ void KContainer::FindApproxMMax(ParticleLayout_t& lattice)
     mmax[DIM] = std::max(mmax[i], mmax[DIM]);
 }
 
-void KContainer::BuildKLists(ParticleLayout_t& lattice, unsigned ndim, bool useSphere)
+void KContainer::BuildKLists(ParticleLayout_t& lattice, PosType twist, unsigned ndim, bool useSphere)
 {
   TinyVector<int, DIM + 1> TempActualMax;
   TinyVector<int, DIM> kvec;

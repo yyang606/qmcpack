@@ -336,7 +336,8 @@ int LRBreakup<BreakupBasis>::SetupKVecs(mRealType kc, mRealType kcont, mRealType
 {
   //Add low |k| ( < kcont) k-points with exact degeneracy
   KContainer kexact;
-  kexact.UpdateKLists(Basis.get_Lattice(), kcont);
+  PosType twist(0);
+  kexact.UpdateKLists(Basis.get_Lattice(), kcont, twist);
   bool findK    = true;
   mRealType kc2 = kc * kc;
   //use at least one shell

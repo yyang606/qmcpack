@@ -41,7 +41,8 @@ StructFact::~StructFact() {}
 void StructFact::UpdateNewCell(ParticleSet& P, RealType kc, unsigned ndim)
 {
   //Generate the lists of k-vectors
-  KLists.UpdateKLists(P.LRBox, kc, ndim);
+  PosType twist(0);
+  KLists.UpdateKLists(P.LRBox, kc, twist, ndim);
   //resize any array
   resize(P.getSpeciesSet().size(), P.getTotalNum(), KLists.numk);
   //Compute the entire Rhok

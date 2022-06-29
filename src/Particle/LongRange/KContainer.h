@@ -77,7 +77,7 @@ public:
    * @param kc cutoff radius in the K
    * @param useSphere if true, use the |K|
    */
-  void UpdateKLists(ParticleLayout_t& lattice, RealType kc, unsigned ndim=3, bool useSphere = true);
+  void UpdateKLists(ParticleLayout_t& lattice, RealType kc, PosType twist, unsigned ndim=3, bool useSphere = true);
 
 private:
   /** compute approximate parallelpiped that surrounds kc
@@ -85,7 +85,7 @@ private:
    */
   void FindApproxMMax(ParticleLayout_t& lattice);
   /** construct the container for k-vectors */
-  void BuildKLists(ParticleLayout_t& lattice, unsigned ndim, bool useSphere);
+  void BuildKLists(ParticleLayout_t& lattice, PosType twist, unsigned ndim, bool useSphere);
 };
 
 } // namespace qmcplusplus
