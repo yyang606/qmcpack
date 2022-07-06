@@ -46,6 +46,7 @@ CoulombPBCAA::CoulombPBCAA(ParticleSet& ref, bool active, Tensor<RealType, 4> e2
   if (ComputeForces || Quasi2D)
     ref.turnOnPerParticleSK();
 
+  fillZheights(ref);
   initBreakup(ref);
 
   if (ComputeForces)
@@ -555,11 +556,10 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
     ispec = SpeciesID[ipart];
     mRealType esum   = 0.0;
     const auto& dist = d_aa.getDistRow(ipart);
-    const auto& disp = d_aa.getDisplRow(ipart);
     for (size_t j = 0; j < ipart; ++j)
     {
       jspec = SpeciesID[j];
-      const mRealType z = disp[j][2];
+      const mRealType z = zheights(ispec, jspec);
       const mRealType r = std::sqrt(dist[j]*dist[j]+z*z);
       //esum += e2ea(ispec, jspec) * Zat[j] * AA->evaluate(r, 1.0/r);
       esum += e2ea(ispec, jspec) * Zat[j] * rVs->splint(r)/r;
@@ -573,11 +573,10 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
     ispec = SpeciesID[ipart_reverse];
     esum              = 0.0;
     const auto& dist2 = d_aa.getDistRow(ipart_reverse);
-    const auto& disp2 = d_aa.getDisplRow(ipart_reverse);
     for (size_t j = 0; j < ipart_reverse; ++j)
     {
       jspec = SpeciesID[j];
-      const mRealType z = disp2[j][2];
+      const mRealType z = zheights(ispec, jspec);
       const mRealType r = std::sqrt(dist2[j]*dist2[j]+z*z);
       //esum += e2ea(ispec, jspec) * Zat[j] * AA->evaluate(r, 1.0/r);
       esum += e2ea(ispec, jspec) * Zat[j] * rVs->splint(r)/r;
@@ -585,6 +584,32 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
     SR += Zat[ipart_reverse] * esum;
   }
   return SR;
+}
+
+void CoulombPBCAA::fillZheights(const ParticleSet& P)
+{
+  const SpeciesSet& tspecies(P.getSpeciesSet());
+  const int nspec = tspecies.TotalNum;
+  if (nspec > 4)
+    throw std::runtime_error("too many species");
+  mRealType zij0, zij;
+  for (int ispec=0; ispec<nspec; ispec++)
+  {
+    for (int jspec=0; jspec<nspec; jspec++)
+    {
+      zij0 = std::abs(P.R[P.first(ispec)][2]-P.R[P.first(jspec)][2]);
+      for (int i=P.first(ispec); i<P.last(ispec); i++)
+      {
+        for (int j=P.first(jspec); j<P.last(jspec); j++)
+        {
+          zij = std::abs(P.R[i][2]-P.R[j][2]);
+          if (std::abs(zij-zij0)>1e-12)
+            throw std::runtime_error("species not in xy plane");
+        }
+      }
+      zheights(ispec, jspec) = zij0;
+    }
+  }
 }
 
 CoulombPBCAA::Return_t CoulombPBCAA::evalLR(ParticleSet& P)

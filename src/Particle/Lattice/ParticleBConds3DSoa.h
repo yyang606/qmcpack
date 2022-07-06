@@ -656,7 +656,8 @@ struct DTD_BConds<T, 3, PPNO + SOA_OFFSET>
       dx[iat]     = L0 * (x - round(x));
       T y         = (py[iat] - y0) * Linv1;
       dy[iat]     = L1 * (y - round(y));
-      dz[iat]     = pz[iat] - z0;
+      //dz[iat]     = pz[iat] - z0;
+      dz[iat] = 0;
       temp_r[iat] = std::sqrt(dx[iat] * dx[iat] + dy[iat] * dy[iat]);
     }
   }

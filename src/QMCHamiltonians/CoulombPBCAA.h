@@ -146,6 +146,9 @@ private:
   const int d_aa_ID;
   // dielectric constants among species
   Tensor<RealType, 4> e2ea;
+  // z separation between layers
+  Tensor<mRealType, 4> zheights;
+  void fillZheights(const ParticleSet& P);
 };
 
 } // namespace qmcplusplus
