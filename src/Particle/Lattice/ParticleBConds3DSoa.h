@@ -746,7 +746,8 @@ struct DTD_BConds<T, 3, PPNS + SOA_OFFSET>
       //unit2cart
       dx[iat] = ar_0 * r00 + ar_1 * r10;
       dy[iat] = ar_0 * r01 + ar_1 * r11;
-      dz[iat] = pz[iat] - z0;
+      //dz[iat] = pz[iat] - z0;
+      dz[iat] = 0;
 
       temp_r[iat] = std::sqrt(dx[iat] * dx[iat] + dy[iat] * dy[iat]);
     }
