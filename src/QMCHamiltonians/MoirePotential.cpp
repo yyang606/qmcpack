@@ -31,6 +31,13 @@ bool MoirePotential::put(xmlNodePtr cur)
   const RealType AUTOEV = 27.211386245988034;
   const RealType PI = 4. * std::atan(1);
   RealType amoire_in_ang, vmoire_in_mev, phi_in_deg, epsmoire, mstar;
+  // set defaults
+  epsmoire = 1.0;
+  mstar = 1.0;
+  amoire_in_ang = -1.0;
+  vmoire_in_mev = 0.0;
+  phi_in_deg = 0.0;
+  // read inputs
   OhmmsAttributeSet attrib;
   attrib.add(amoire_in_ang, "amoire_in_ang");
   attrib.add(vmoire_in_mev, "vmoire_in_mev");
@@ -39,6 +46,9 @@ bool MoirePotential::put(xmlNodePtr cur)
   attrib.add(mstar, "mstar");
   attrib.put(cur);
   phi = phi_in_deg/180.0*PI;
+  // check inputs
+  if (amoire_in_ang < 0)
+    throw std::runtime_error("need amoire_in_ang input");
   // use a_B^* and E_h^* units
   amoire = amoire_in_ang/BOHR_RADIUS_ANGS*mstar/epsmoire;
   vmoire = vmoire_in_mev*1e-3/AUTOEV;
