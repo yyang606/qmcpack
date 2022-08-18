@@ -159,9 +159,57 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
       }
       hess[j] *= p[j];
       // third derivative
+      ggg[j] = outerProduct(dp[j], dp[j]);
       for (int la=0;la<ndim;la++)
       {
-        ggg[j][la] = dp[j][la]*hess[j];
+        ggg[j][la] *= dp[j][la];
+      }
+      // how to generalize the following?
+      const ValueType g3pre=0.0; //-2.0*cexpo*p[j];
+      if (ndim == 2) {
+        // x
+        ggg[j][0](0, 0) += g3pre*dp[j][0]*3.0;
+        ggg[j][0](0, 1) += g3pre*dp[j][1];
+        ggg[j][0](1, 0) += g3pre*dp[j][1];
+        ggg[j][0](1, 1) += g3pre*dp[j][0];
+        // y
+        ggg[j][1](0, 0) += g3pre*dp[j][1];
+        ggg[j][1](0, 1) += g3pre*dp[j][0];
+        ggg[j][1](1, 0) += g3pre*dp[j][0];
+        ggg[j][1](1, 1) += g3pre*dp[j][1]*3.0;
+      } else if (ndim == 3) {
+        // x
+        ggg[j][0](0, 0) += g3pre*dp[j][0]*3.0;
+        ggg[j][0](0, 1) += g3pre*dp[j][1];
+        ggg[j][0](0, 2) += g3pre*dp[j][2];
+        ggg[j][0](1, 0) += g3pre*dp[j][1];
+        ggg[j][0](1, 1) += g3pre*dp[j][0];
+        ggg[j][0](1, 2) += 0;
+        ggg[j][0](2, 0) += g3pre*dp[j][2];
+        ggg[j][0](2, 1) += 0;
+        ggg[j][0](2, 2) += g3pre*dp[j][0];
+        // y
+        ggg[j][1](0, 0) += g3pre*dp[j][1];
+        ggg[j][1](0, 1) += g3pre*dp[j][0];
+        ggg[j][1](0, 2) += 0;
+        ggg[j][1](1, 0) += g3pre*dp[j][0];
+        ggg[j][1](1, 1) += g3pre*dp[j][1];
+        ggg[j][1](1, 2) += g3pre*dp[j][2];
+        ggg[j][1](2, 0) += 0;
+        ggg[j][1](2, 1) += g3pre*dp[j][2];
+        ggg[j][1](2, 2) += g3pre*dp[j][1];
+        // z
+        ggg[j][2](0, 0) += 0;
+        ggg[j][2](0, 1) += g3pre*dp[j][2];
+        ggg[j][2](0, 2) += g3pre*dp[j][1];
+        ggg[j][2](1, 0) += g3pre*dp[j][2];
+        ggg[j][2](1, 1) += 0;
+        ggg[j][2](1, 2) += g3pre*dp[j][0];
+        ggg[j][2](1, 0) += g3pre*dp[j][0];
+        ggg[j][2](1, 1) += g3pre*dp[j][1];
+        ggg[j][2](1, 2) += g3pre*dp[j][2]*3.0;
+      } else {
+        throw std::runtime_error("GaussianOrbital ndim not implemented");
       }
       // finish first derivative
       dp[j] *= p[j];
