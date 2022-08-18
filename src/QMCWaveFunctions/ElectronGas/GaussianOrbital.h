@@ -35,10 +35,27 @@ public:
   ) override;
   void evaluateValue(const ParticleSet& P, int iat, ValueVector_t& pvec) override;
 
+  // hessian matrix is needed by backflow
+  void evaluate_notranspose(const ParticleSet& P,
+                            int first,
+                            int last,
+                            ValueMatrix_t& phi,
+                            GradMatrix_t& dphi,
+                            HessMatrix_t& d2phi_mat) override;
+
+  // derivative of hessian is needed to optimize backflow
+  void evaluate_notranspose(const ParticleSet& P,
+                            int first,
+                            int last,
+                            ValueMatrix_t& phi,
+                            GradMatrix_t& dphi,
+                            HessMatrix_t& d2phi_mat,
+                            GGGMatrix_t& d3phi_mat) override;
+
   SPOSet* makeClone() const;
   // ---- begin required overrides
-  void resetParameters(const opt_variables_type& optVariables) override {APP_ABORT("not implemented")};
-  void setOrbitalSetSize(int norbs) override {APP_ABORT("not implemented")};
+  void resetParameters(const opt_variables_type& optVariables) override {};
+  void setOrbitalSetSize(int norbs) override {};
   // required overrides end ----
   void report(const std::string& pad) const override;
 private:
