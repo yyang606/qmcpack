@@ -76,6 +76,7 @@ private:
   void hessian_log(HessType& h, const GradType& dp);
   //  d^3/dx/dy/dx log( phi(r) ), etc.
   void gradHess_log(GGGType& g3, const GradType& dp);
+  bool checkDerivatives;
 };
 
 } // qmcplusplus
