@@ -64,10 +64,14 @@ private:
   RealType cexpo;
   const int ideitab;
   const int ndim;
-  RealType operator()(RealType rij);
   // debug functions
-  void gradient_log(GradType& dp, RealType rij, PosType drij);
-  void hessian(HessType& h, RealType rij, PosType drij);
+  //  phi(r=|{x, y, z}|)
+  RealType operator()(const RealType rij);
+  //  d/dx log( phi(r) ), etc.
+  void gradient_log(GradType& dp, const RealType rij, const PosType drij);
+  //  d^2/dx/dy log( phi(r) ), etc.
+  void hessian_log(HessType& h, const GradType dp);
+  //  d^3/dx/dy/dx log( phi(r) ), etc.
   void gradHess(GGGType& g3, RealType rij, PosType drij);
 };
 

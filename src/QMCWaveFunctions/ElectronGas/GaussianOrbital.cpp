@@ -16,67 +16,23 @@ GaussianOrbital::GaussianOrbital(ParticleSet& els, ParticleSet& ions, RealType c
 
 GaussianOrbital::~GaussianOrbital(){}
 
-void GaussianOrbital::evaluate_notranspose(
-  const ParticleSet& P,
-  int first,
-  int last,
-  ValueMatrix_t& phi,
-  GradMatrix_t& dphi,
-  ValueMatrix_t& d2phi)
-{
-  for (int iat=first, i=0;iat<last;iat++,i++)
-  {
-    ValueVector_t p(phi[i], OrbitalSetSize);
-    GradVector_t dp(dphi[i], OrbitalSetSize);
-    ValueVector_t d2p(d2phi[i], OrbitalSetSize);
-    evaluateVGL(P, iat, p, dp, d2p);
-  }
-}
-
-void GaussianOrbital::evaluateVGL(
-  const ParticleSet& P,
-  int i,
-  ValueVector_t& pvec,
-  GradVector_t& dpvec,
-  ValueVector_t& d2pvec)
-{
-  const auto& d_table = P.getDistTable(ideitab);
-  const auto& dist  = (P.activePtcl == i) ? d_table.getTempDists() : d_table.getDistRow(i);
-  const auto& displ = (P.activePtcl == i) ? d_table.getTempDispls() : d_table.getDisplRow(i);
-  RealType rij;
-  PosType drij;
-  for (int j=0;j<OrbitalSetSize;j++)
-  {
-    rij = dist[j];
-    drij = -displ[j];
-    pvec[j] = (*this)(rij);
-    gradient_log(dpvec[j], rij, drij);
-    d2pvec[j] = (dot(dpvec[j], dpvec[j])-2*ndim*cexpo)*pvec[j];
-    dpvec[j] *= pvec[j];
-  }
-}
-
-GaussianOrbital::RealType GaussianOrbital::operator()(RealType rij)
+GaussianOrbital::RealType GaussianOrbital::operator()(const RealType rij)
 {
   return std::exp(-cexpo*rij*rij);
 }
 
-void GaussianOrbital::gradient_log(GradType& dp, RealType rij, PosType drij)
+void GaussianOrbital::gradient_log(GradType& dp, const RealType rij, const PosType drij)
 {
   ValueType p = (*this)(rij);
   for (int l=0;l<ndim;l++)
     dp[l] = -2.0*cexpo*drij[l];
 }
 
-void GaussianOrbital::hessian(HessType& h, RealType rij, PosType drij)
+void GaussianOrbital::hessian_log(HessType& h, const GradType dp)
 {
-  ValueType p = (*this)(rij);
-  GradType dp;
-  gradient_log(dp, rij, drij);
   h = outerProduct(dp, dp);
   for (int la=0;la<ndim;la++)
     h(la, la) -= 2*cexpo;
-  h *= p;
 }
 
 void GaussianOrbital::gradHess(GGGType& g3, RealType rij, PosType drij)
@@ -151,6 +107,51 @@ void GaussianOrbital::evaluateValue(
   }
 }
 
+// three variants of evaluate_notranspose follow:
+//   1. value, gradient, laplacian (diagonal of hessian)
+//   2. value, gradient, hessian
+//   3. value, gradient, hessian, grad(hessian)
+
+void GaussianOrbital::evaluate_notranspose(
+  const ParticleSet& P,
+  int first,
+  int last,
+  ValueMatrix_t& phi,
+  GradMatrix_t& dphi,
+  ValueMatrix_t& d2phi)
+{
+  for (int iat=first, i=0;iat<last;iat++,i++)
+  {
+    ValueVector_t p(phi[i], OrbitalSetSize);
+    GradVector_t dp(dphi[i], OrbitalSetSize);
+    ValueVector_t d2p(d2phi[i], OrbitalSetSize);
+    evaluateVGL(P, iat, p, dp, d2p);
+  }
+}
+
+void GaussianOrbital::evaluateVGL(
+  const ParticleSet& P,
+  int i,
+  ValueVector_t& pvec,
+  GradVector_t& dpvec,
+  ValueVector_t& d2pvec)
+{
+  const auto& d_table = P.getDistTable(ideitab);
+  const auto& dist  = (P.activePtcl == i) ? d_table.getTempDists() : d_table.getDistRow(i);
+  const auto& displ = (P.activePtcl == i) ? d_table.getTempDispls() : d_table.getDisplRow(i);
+  RealType rij;
+  PosType drij;
+  for (int j=0;j<OrbitalSetSize;j++)
+  {
+    rij = dist[j];
+    drij = -displ[j];
+    pvec[j] = (*this)(rij);
+    gradient_log(dpvec[j], rij, drij);
+    d2pvec[j] = (dot(dpvec[j], dpvec[j])-2*ndim*cexpo)*pvec[j];
+    dpvec[j] *= pvec[j];
+  }
+}
+
 void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
                                            int first,
                                            int last,
@@ -177,7 +178,8 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
       p[j] = (*this)(rij);
       gradient_log(dp[j], rij, drij);
       // second derivative
-      hessian(hess[j], rij, drij);
+      hessian_log(hess[j], dp[j]);
+      hess[j] *= p[j];
       // finish first derivative
       dp[j] *= p[j];
     }
@@ -211,7 +213,8 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
       p[j] = (*this)(rij);
       gradient_log(dp[j], rij, drij);
       // second derivative
-      hessian(hess[j], rij, drij);
+      hessian_log(hess[j], dp[j]);
+      hess[j] *= p[j];
       // third derivative
       gradHess(ggg[j], rij, drij);
       // finish first derivative
@@ -219,7 +222,6 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
     }
   }
 }
-
 
 SPOSet* GaussianOrbital::makeClone() const { return new GaussianOrbital(*this); }
 
