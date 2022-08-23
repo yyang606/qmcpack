@@ -65,6 +65,10 @@ private:
   const int ideitab;
   const int ndim;
   RealType operator()(RealType rij);
+  // debug functions
+  void gradient_log(GradType& dp, RealType rij, PosType drij);
+  void hessian(HessType& h, RealType rij, PosType drij);
+  void gradHess(GGGType& g3, RealType rij, PosType drij);
 };
 
 } // qmcplusplus

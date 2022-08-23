@@ -48,10 +48,9 @@ void GaussianOrbital::evaluateVGL(
   for (int j=0;j<OrbitalSetSize;j++)
   {
     rij = dist[j];
-    drij = displ[j];
+    drij = -displ[j];
     pvec[j] = (*this)(rij);
-    for (int l=0;l<ndim;l++)
-      dpvec[j][l] = 2.0*cexpo*drij[l];
+    gradient_log(dpvec[j], rij, drij);
     d2pvec[j] = (dot(dpvec[j], dpvec[j])-2*ndim*cexpo)*pvec[j];
     dpvec[j] *= pvec[j];
   }
@@ -60,6 +59,81 @@ void GaussianOrbital::evaluateVGL(
 GaussianOrbital::RealType GaussianOrbital::operator()(RealType rij)
 {
   return std::exp(-cexpo*rij*rij);
+}
+
+void GaussianOrbital::gradient_log(GradType& dp, RealType rij, PosType drij)
+{
+  ValueType p = (*this)(rij);
+  for (int l=0;l<ndim;l++)
+    dp[l] = -2.0*cexpo*drij[l];
+}
+
+void GaussianOrbital::hessian(HessType& h, RealType rij, PosType drij)
+{
+  ValueType p = (*this)(rij);
+  GradType dp;
+  gradient_log(dp, rij, drij);
+  h = outerProduct(dp, dp);
+  for (int la=0;la<ndim;la++)
+    h(la, la) -= 2*cexpo;
+  h *= p;
+}
+
+void GaussianOrbital::gradHess(GGGType& g3, RealType rij, PosType drij)
+{
+  ValueType p = (*this)(rij);
+  GradType dp;
+  gradient_log(dp, rij, drij);
+  g3 = outerProduct(dp, dp);
+  for (int l=0;l<ndim;l++)
+    g3[l] *= dp[l];
+  const ValueType g3pre=-2.0*cexpo;
+  if (ndim == 2) {
+    // x
+    g3[0](0, 0) += g3pre*dp[0]*3.0;
+    g3[0](0, 1) += g3pre*dp[1];
+    g3[0](1, 0) += g3pre*dp[1];
+    g3[0](1, 1) += g3pre*dp[0];
+    // y
+    g3[1](0, 0) += g3pre*dp[1];
+    g3[1](0, 1) += g3pre*dp[0];
+    g3[1](1, 0) += g3pre*dp[0];
+    g3[1](1, 1) += g3pre*dp[1]*3.0;
+  } else if (ndim == 3) {
+    // x
+    g3[0](0, 0) += g3pre*dp[0]*3.0;
+    g3[0](0, 1) += g3pre*dp[1];
+    g3[0](0, 2) += g3pre*dp[2];
+    g3[0](1, 0) += g3pre*dp[1];
+    g3[0](1, 1) += g3pre*dp[0];
+    g3[0](1, 2) += 0;
+    g3[0](2, 0) += g3pre*dp[2];
+    g3[0](2, 1) += 0;
+    g3[0](2, 2) += g3pre*dp[0];
+    // y
+    g3[1](0, 0) += g3pre*dp[1];
+    g3[1](0, 1) += g3pre*dp[0];
+    g3[1](0, 2) += 0;
+    g3[1](1, 0) += g3pre*dp[0];
+    g3[1](1, 1) += g3pre*dp[1];
+    g3[1](1, 2) += g3pre*dp[2];
+    g3[1](2, 0) += 0;
+    g3[1](2, 1) += g3pre*dp[2];
+    g3[1](2, 2) += g3pre*dp[1];
+    // z
+    g3[2](0, 0) += 0;
+    g3[2](0, 1) += g3pre*dp[2];
+    g3[2](0, 2) += g3pre*dp[1];
+    g3[2](1, 0) += g3pre*dp[2];
+    g3[2](1, 1) += 0;
+    g3[2](1, 2) += g3pre*dp[0];
+    g3[2](1, 0) += g3pre*dp[0];
+    g3[2](1, 1) += g3pre*dp[1];
+    g3[2](1, 2) += g3pre*dp[2]*3.0;
+  } else {
+    throw std::runtime_error("GaussianOrbital ndim not implemented");
+  }
+  g3 *= p;
 }
 
 void GaussianOrbital::evaluateValue(
@@ -99,21 +173,11 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
     for (int j=0;j<OrbitalSetSize;j++)
     {
       rij = dist[j];
-      drij = displ[j];
+      drij = -displ[j];
       p[j] = (*this)(rij);
-      for (int l=0;l<ndim;l++)
-        dp[j][l] = 2.0*cexpo*drij[l];
+      gradient_log(dp[j], rij, drij);
       // second derivative
-      for (int la=0;la<ndim;la++)
-      {
-        hess[j](la, la) = (dp[j][la]*dp[j][la]-2*cexpo);
-        for (int lb=la+1;lb<ndim;lb++)
-        {
-          hess[j](la, lb) = dp[j][la]*dp[j][lb];
-          hess[j](lb, la) = hess[j](la, lb);
-        }
-      }
-      hess[j] *= p[j];
+      hessian(hess[j], rij, drij);
       // finish first derivative
       dp[j] *= p[j];
     }
@@ -143,74 +207,13 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
     for (int j=0;j<OrbitalSetSize;j++)
     {
       rij = dist[j];
-      drij = displ[j];
+      drij = -displ[j];
       p[j] = (*this)(rij);
-      for (int l=0;l<ndim;l++)
-        dp[j][l] = 2.0*cexpo*drij[l];
+      gradient_log(dp[j], rij, drij);
       // second derivative
-      for (int la=0;la<ndim;la++)
-      {
-        hess[j](la, la) = (dp[j][la]*dp[j][la]-2*cexpo);
-        for (int lb=la+1;lb<ndim;lb++)
-        {
-          hess[j](la, lb) = dp[j][la]*dp[j][lb];
-          hess[j](lb, la) = hess[j](la, lb);
-        }
-      }
-      hess[j] *= p[j];
+      hessian(hess[j], rij, drij);
       // third derivative
-      ggg[j] = outerProduct(dp[j], dp[j]);
-      for (int la=0;la<ndim;la++)
-      {
-        ggg[j][la] *= dp[j][la];
-      }
-      // how to generalize the following?
-      const ValueType g3pre=0.0; //-2.0*cexpo*p[j];
-      if (ndim == 2) {
-        // x
-        ggg[j][0](0, 0) += g3pre*dp[j][0]*3.0;
-        ggg[j][0](0, 1) += g3pre*dp[j][1];
-        ggg[j][0](1, 0) += g3pre*dp[j][1];
-        ggg[j][0](1, 1) += g3pre*dp[j][0];
-        // y
-        ggg[j][1](0, 0) += g3pre*dp[j][1];
-        ggg[j][1](0, 1) += g3pre*dp[j][0];
-        ggg[j][1](1, 0) += g3pre*dp[j][0];
-        ggg[j][1](1, 1) += g3pre*dp[j][1]*3.0;
-      } else if (ndim == 3) {
-        // x
-        ggg[j][0](0, 0) += g3pre*dp[j][0]*3.0;
-        ggg[j][0](0, 1) += g3pre*dp[j][1];
-        ggg[j][0](0, 2) += g3pre*dp[j][2];
-        ggg[j][0](1, 0) += g3pre*dp[j][1];
-        ggg[j][0](1, 1) += g3pre*dp[j][0];
-        ggg[j][0](1, 2) += 0;
-        ggg[j][0](2, 0) += g3pre*dp[j][2];
-        ggg[j][0](2, 1) += 0;
-        ggg[j][0](2, 2) += g3pre*dp[j][0];
-        // y
-        ggg[j][1](0, 0) += g3pre*dp[j][1];
-        ggg[j][1](0, 1) += g3pre*dp[j][0];
-        ggg[j][1](0, 2) += 0;
-        ggg[j][1](1, 0) += g3pre*dp[j][0];
-        ggg[j][1](1, 1) += g3pre*dp[j][1];
-        ggg[j][1](1, 2) += g3pre*dp[j][2];
-        ggg[j][1](2, 0) += 0;
-        ggg[j][1](2, 1) += g3pre*dp[j][2];
-        ggg[j][1](2, 2) += g3pre*dp[j][1];
-        // z
-        ggg[j][2](0, 0) += 0;
-        ggg[j][2](0, 1) += g3pre*dp[j][2];
-        ggg[j][2](0, 2) += g3pre*dp[j][1];
-        ggg[j][2](1, 0) += g3pre*dp[j][2];
-        ggg[j][2](1, 1) += 0;
-        ggg[j][2](1, 2) += g3pre*dp[j][0];
-        ggg[j][2](1, 0) += g3pre*dp[j][0];
-        ggg[j][2](1, 1) += g3pre*dp[j][1];
-        ggg[j][2](1, 2) += g3pre*dp[j][2]*3.0;
-      } else {
-        throw std::runtime_error("GaussianOrbital ndim not implemented");
-      }
+      gradHess(ggg[j], rij, drij);
       // finish first derivative
       dp[j] *= p[j];
     }
