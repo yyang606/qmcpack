@@ -1,5 +1,4 @@
 #include "GaussianOrbital.h"
-#include "Particle/DistanceTableData.h"
 
 namespace qmcplusplus
 {
@@ -15,6 +14,20 @@ GaussianOrbital::GaussianOrbital(ParticleSet& els, ParticleSet& ions, RealType c
 }
 
 GaussianOrbital::~GaussianOrbital(){}
+
+const DistanceTableData::DistRow& GaussianOrbital::getDistanceRow(const ParticleSet& P, const int i)
+{
+  const auto& d_table = P.getDistTable(ideitab);
+  const DistanceTableData::DistRow& dist  = (P.activePtcl == i) ? d_table.getTempDists() : d_table.getDistRow(i);
+  return dist;
+}
+
+const DistanceTableData::DisplRow& GaussianOrbital::getDisplacementRow(const ParticleSet& P, const int i)
+{
+  const auto& d_table = P.getDistTable(ideitab);
+  const DistanceTableData::DisplRow& displ = (P.activePtcl == i) ? d_table.getTempDispls() : d_table.getDisplRow(i);
+  return displ;
+}
 
 GaussianOrbital::RealType GaussianOrbital::operator()(const RealType rij)
 {
@@ -93,8 +106,7 @@ void GaussianOrbital::evaluateValue(
   int i,
   ValueVector_t& pvec)
 {
-  const auto& d_table = P.getDistTable(ideitab);
-  const auto& dist  = (P.activePtcl == i) ? d_table.getTempDists() : d_table.getDistRow(i);
+  const auto& dist = getDistanceRow(P, i);
   RealType rij;
   for (int j=0;j<OrbitalSetSize;j++)
   {
@@ -132,15 +144,14 @@ void GaussianOrbital::evaluateVGL(
   GradVector_t& dpvec,
   ValueVector_t& d2pvec)
 {
-  const auto& d_table = P.getDistTable(ideitab);
-  const auto& dist  = (P.activePtcl == i) ? d_table.getTempDists() : d_table.getDistRow(i);
-  const auto& displ = (P.activePtcl == i) ? d_table.getTempDispls() : d_table.getDisplRow(i);
+  const auto& dist = getDistanceRow(P, i);
+  const auto& displ = getDisplacementRow(P, i);
   RealType rij;
   PosType drij;
   for (int j=0;j<OrbitalSetSize;j++)
   {
     rij = dist[j];
-    drij = -displ[j];
+    drij = -displ[j];  // need ri - rj
     pvec[j] = (*this)(rij);
     gradient_log(dpvec[j], rij, drij);
     d2pvec[j] = (dot(dpvec[j], dpvec[j])-2*ndim*cexpo)*pvec[j];
@@ -161,16 +172,15 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
     GradVector_t dp(dphi[i], OrbitalSetSize);
     HessVector_t hess(d2phi_mat[i], OrbitalSetSize);
 
-    const auto& d_table = P.getDistTable(ideitab);
-    const auto& dist  = (P.activePtcl == i) ? d_table.getTempDists() : d_table.getDistRow(i);
-    const auto& displ = (P.activePtcl == i) ? d_table.getTempDispls() : d_table.getDisplRow(i);
+    const auto& dist = getDistanceRow(P, i);
+    const auto& displ = getDisplacementRow(P, i);
 
     RealType rij;
     PosType drij;
     for (int j=0;j<OrbitalSetSize;j++)
     {
       rij = dist[j];
-      drij = -displ[j];
+      drij = -displ[j];  // need ri - rj
       p[j] = (*this)(rij);
       gradient_log(dp[j], rij, drij);
       // second derivative
@@ -196,16 +206,16 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
     GradVector_t dp(dphi[i], OrbitalSetSize);
     HessVector_t hess(d2phi_mat[i], OrbitalSetSize);
     GGGVector_t ggg(d3phi_mat[i], OrbitalSetSize);
-    const auto& d_table = P.getDistTable(ideitab);
-    const auto& dist  = (P.activePtcl == i) ? d_table.getTempDists() : d_table.getDistRow(i);
-    const auto& displ = (P.activePtcl == i) ? d_table.getTempDispls() : d_table.getDisplRow(i);
+
+    const auto& dist = getDistanceRow(P, i);
+    const auto& displ = getDisplacementRow(P, i);
 
     RealType rij;
     PosType drij;
     for (int j=0;j<OrbitalSetSize;j++)
     {
       rij = dist[j];
-      drij = -displ[j];
+      drij = -displ[j];  // need ri - rj
       p[j] = (*this)(rij);
       gradient_log(dp[j], rij, drij);
       // second derivative

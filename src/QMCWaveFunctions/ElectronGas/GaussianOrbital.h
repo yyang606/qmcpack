@@ -5,6 +5,7 @@
 #define QMCPLUSPLUS_GAUSSIAN_ORBITAL
 
 #include "QMCWaveFunctions/SPOSet.h"
+#include "Particle/DistanceTableData.h"
 
 namespace qmcplusplus
 {
@@ -64,7 +65,9 @@ private:
   RealType cexpo;
   const int ideitab;
   const int ndim;
-  // debug functions
+  // helper functions
+  const DistanceTableData::DistRow& getDistanceRow(const ParticleSet& P, const int i);
+  const DistanceTableData::DisplRow& getDisplacementRow(const ParticleSet& P, const int i);
   //  phi(r=|{x, y, z}|)
   RealType operator()(const RealType rij);
   //  d/dx log( phi(r) ), etc.
