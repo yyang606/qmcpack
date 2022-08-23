@@ -72,7 +72,7 @@ private:
   //  d^2/dx/dy log( phi(r) ), etc.
   void hessian_log(HessType& h, const GradType dp);
   //  d^3/dx/dy/dx log( phi(r) ), etc.
-  void gradHess(GGGType& g3, RealType rij, PosType drij);
+  void gradHess_log(GGGType& g3, const GradType dp);
 };
 
 } // qmcplusplus

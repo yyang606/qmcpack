@@ -35,11 +35,8 @@ void GaussianOrbital::hessian_log(HessType& h, const GradType dp)
     h(la, la) -= 2*cexpo;
 }
 
-void GaussianOrbital::gradHess(GGGType& g3, RealType rij, PosType drij)
+void GaussianOrbital::gradHess_log(GGGType& g3, const GradType dp)
 {
-  ValueType p = (*this)(rij);
-  GradType dp;
-  gradient_log(dp, rij, drij);
   g3 = outerProduct(dp, dp);
   for (int l=0;l<ndim;l++)
     g3[l] *= dp[l];
@@ -89,7 +86,6 @@ void GaussianOrbital::gradHess(GGGType& g3, RealType rij, PosType drij)
   } else {
     throw std::runtime_error("GaussianOrbital ndim not implemented");
   }
-  g3 *= p;
 }
 
 void GaussianOrbital::evaluateValue(
@@ -216,7 +212,8 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
       hessian_log(hess[j], dp[j]);
       hess[j] *= p[j];
       // third derivative
-      gradHess(ggg[j], rij, drij);
+      gradHess_log(ggg[j], dp[j]);
+      ggg[j] *= p[j];
       // finish first derivative
       dp[j] *= p[j];
     }
