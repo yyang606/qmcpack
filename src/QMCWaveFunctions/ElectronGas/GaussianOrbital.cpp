@@ -21,21 +21,21 @@ GaussianOrbital::RealType GaussianOrbital::operator()(const RealType rij)
   return std::exp(-cexpo*rij*rij);
 }
 
-void GaussianOrbital::gradient_log(GradType& dp, const RealType rij, const PosType drij)
+void GaussianOrbital::gradient_log(GradType& dp, const RealType& rij, const PosType& drij)
 {
   ValueType p = (*this)(rij);
   for (int l=0;l<ndim;l++)
     dp[l] = -2.0*cexpo*drij[l];
 }
 
-void GaussianOrbital::hessian_log(HessType& h, const GradType dp)
+void GaussianOrbital::hessian_log(HessType& h, const GradType& dp)
 {
   h = outerProduct(dp, dp);
   for (int la=0;la<ndim;la++)
     h(la, la) -= 2*cexpo;
 }
 
-void GaussianOrbital::gradHess_log(GGGType& g3, const GradType dp)
+void GaussianOrbital::gradHess_log(GGGType& g3, const GradType& dp)
 {
   g3 = outerProduct(dp, dp);
   for (int l=0;l<ndim;l++)
