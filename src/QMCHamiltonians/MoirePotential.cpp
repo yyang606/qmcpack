@@ -73,6 +73,7 @@ bool MoirePotential::put(xmlNodePtr cur)
       gvecs[m][l] = gfracs[m][0]*b1[l] + gfracs[m][1]*b2[l];
     }
   }
+  return true;
 }
 
 bool MoirePotential::get(std::ostream& os) const
@@ -86,6 +87,7 @@ bool MoirePotential::get(std::ostream& os) const
   {
     app_log() << gvecs[m] << std::endl;
   }
+  return true;
 }
 
 OperatorBase* MoirePotential::makeClone(ParticleSet& P, TrialWaveFunction& psi)
