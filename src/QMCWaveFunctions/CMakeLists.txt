@@ -38,6 +38,8 @@ SET(WFBASE_SRCS
   ElectronGas/GaussianOrbitalBuilder.cpp
   ElectronGas/PWOrbital.cpp
   ElectronGas/PWOrbitalBuilder.cpp
+  ElectronGas/FreeOrbital.cpp
+  ElectronGas/FreeOrbitalBuilder.cpp
   )
 
 IF(NOT QMC_COMPLEX)

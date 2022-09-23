@@ -3,8 +3,7 @@
 namespace qmcplusplus
 {
 FreeOrbital::FreeOrbital(const std::string& my_name, const std::vector<PosType>& kpts_cart)
-    : SPOSet(my_name),
-      kvecs(kpts_cart),
+    : kvecs(kpts_cart),
 #ifdef QMC_COMPLEX
       mink(0), // first k at twist may not be 0
 #else
@@ -24,7 +23,7 @@ FreeOrbital::FreeOrbital(const std::string& my_name, const std::vector<PosType>&
 
 FreeOrbital::~FreeOrbital() {}
 
-void FreeOrbital::evaluateVGL(const ParticleSet& P, int iat, ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec)
+void FreeOrbital::evaluateVGL(const ParticleSet& P, int iat, ValueVector_t& pvec, GradVector_t& dpvec, ValueVector_t& d2pvec)
 {
   const PosType& r = P.activeR(iat);
   RealType sinkr, coskr;
@@ -53,7 +52,7 @@ void FreeOrbital::evaluateVGL(const ParticleSet& P, int iat, ValueVector& pvec, 
 #endif
 }
 
-void FreeOrbital::evaluateValue(const ParticleSet& P, int iat, ValueVector& pvec)
+void FreeOrbital::evaluateValue(const ParticleSet& P, int iat, ValueVector_t& pvec)
 {
   const PosType& r = P.activeR(iat);
   RealType sinkr, coskr;
@@ -77,15 +76,15 @@ void FreeOrbital::evaluateValue(const ParticleSet& P, int iat, ValueVector& pvec
 void FreeOrbital::evaluate_notranspose(const ParticleSet& P,
                                        int first,
                                        int last,
-                                       ValueMatrix& phi,
-                                       GradMatrix& dphi,
-                                       ValueMatrix& d2phi)
+                                       ValueMatrix_t& phi,
+                                       GradMatrix_t& dphi,
+                                       ValueMatrix_t& d2phi)
 {
   for (int iat = first, i = 0; iat < last; iat++, i++)
   {
-    ValueVector p(phi[i], OrbitalSetSize);
-    GradVector dp(dphi[i], OrbitalSetSize);
-    ValueVector d2p(d2phi[i], OrbitalSetSize);
+    ValueVector_t p(phi[i], OrbitalSetSize);
+    GradVector_t dp(dphi[i], OrbitalSetSize);
+    ValueVector_t d2p(d2phi[i], OrbitalSetSize);
     evaluateVGL(P, iat, p, dp, d2p);
   }
 }
@@ -93,17 +92,17 @@ void FreeOrbital::evaluate_notranspose(const ParticleSet& P,
 void FreeOrbital::evaluate_notranspose(const ParticleSet& P,
                                        int first,
                                        int last,
-                                       ValueMatrix& phi,
-                                       GradMatrix& dphi,
-                                       HessMatrix& d2phi_mat)
+                                       ValueMatrix_t& phi,
+                                       GradMatrix_t& dphi,
+                                       HessMatrix_t& d2phi_mat)
 {
   RealType sinkr, coskr;
   ValueType phi_of_r;
   for (int iat = first, i = 0; iat < last; iat++, i++)
   {
-    ValueVector p(phi[i], OrbitalSetSize);
-    GradVector dp(dphi[i], OrbitalSetSize);
-    HessVector hess(d2phi_mat[i], OrbitalSetSize);
+    ValueVector_t p(phi[i], OrbitalSetSize);
+    GradVector_t dp(dphi[i], OrbitalSetSize);
+    HessVector_t hess(d2phi_mat[i], OrbitalSetSize);
 
     const PosType& r = P.activeR(iat);
     for (int ik = mink; ik < maxk; ik++)
@@ -156,19 +155,19 @@ void FreeOrbital::evaluate_notranspose(const ParticleSet& P,
 void FreeOrbital::evaluate_notranspose(const ParticleSet& P,
                                        int first,
                                        int last,
-                                       ValueMatrix& phi,
-                                       GradMatrix& dphi,
-                                       HessMatrix& d2phi_mat,
-                                       GGGMatrix& d3phi_mat)
+                                       ValueMatrix_t& phi,
+                                       GradMatrix_t& dphi,
+                                       HessMatrix_t& d2phi_mat,
+                                       GGGMatrix_t& d3phi_mat)
 {
   RealType sinkr, coskr;
   ValueType phi_of_r;
   for (int iat = first, i = 0; iat < last; iat++, i++)
   {
-    ValueVector p(phi[i], OrbitalSetSize);
-    GradVector dp(dphi[i], OrbitalSetSize);
-    HessVector hess(d2phi_mat[i], OrbitalSetSize);
-    GGGVector ggg(d3phi_mat[i], OrbitalSetSize);
+    ValueVector_t p(phi[i], OrbitalSetSize);
+    GradVector_t dp(dphi[i], OrbitalSetSize);
+    HessVector_t hess(d2phi_mat[i], OrbitalSetSize);
+    GGGVector_t ggg(d3phi_mat[i], OrbitalSetSize);
 
     const PosType& r = P.activeR(iat);
     for (int ik = mink; ik < maxk; ik++)

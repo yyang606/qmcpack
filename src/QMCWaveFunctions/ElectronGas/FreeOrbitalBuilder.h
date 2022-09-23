@@ -11,7 +11,7 @@ public:
   FreeOrbitalBuilder(ParticleSet& els, Communicate* comm, xmlNodePtr cur);
   ~FreeOrbitalBuilder() {}
 
-  std::unique_ptr<SPOSet> createSPOSetFromXML(xmlNodePtr cur) override;
+  SPOSet* createSPOSetFromXML(xmlNodePtr cur) override;
 
 private:
   ParticleSet& targetPtcl;

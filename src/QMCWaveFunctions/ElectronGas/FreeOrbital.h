@@ -27,41 +27,40 @@ public:
   FreeOrbital(const std::string& my_name, const std::vector<PosType>& kpts_cart);
   ~FreeOrbital();
 
-  std::string getClassName() const override { return "FreeOrbital"; }
-
   // phi[i][j] is phi_j(r_i), i.e. electron i in orbital j
   //  i \in [first, last)
   void evaluate_notranspose(const ParticleSet& P,
                             int first,
                             int last,
-                            ValueMatrix& phi,
-                            GradMatrix& dphi,
-                            ValueMatrix& d2phi) override;
+                            ValueMatrix_t& phi,
+                            GradMatrix_t& dphi,
+                            ValueMatrix_t& d2phi) override;
 
   // plug r_i into all orbitals
-  void evaluateVGL(const ParticleSet& P, int i, ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec) override;
-  void evaluateValue(const ParticleSet& P, int iat, ValueVector& pvec) override;
+  void evaluateVGL(const ParticleSet& P, int i, ValueVector_t& pvec, GradVector_t& dpvec, ValueVector_t& d2pvec) override;
+  void evaluateValue(const ParticleSet& P, int iat, ValueVector_t& pvec) override;
 
   // hessian matrix is needed by backflow
   void evaluate_notranspose(const ParticleSet& P,
                             int first,
                             int last,
-                            ValueMatrix& phi,
-                            GradMatrix& dphi,
-                            HessMatrix& d2phi_mat) override;
+                            ValueMatrix_t& phi,
+                            GradMatrix_t& dphi,
+                            HessMatrix_t& d2phi_mat) override;
 
   // derivative of hessian is needed to optimize backflow
   void evaluate_notranspose(const ParticleSet& P,
                             int first,
                             int last,
-                            ValueMatrix& phi,
-                            GradMatrix& dphi,
-                            HessMatrix& d2phi_mat,
-                            GGGMatrix& d3phi_mat) override;
+                            ValueMatrix_t& phi,
+                            GradMatrix_t& dphi,
+                            HessMatrix_t& d2phi_mat,
+                            GGGMatrix_t& d3phi_mat) override;
 
   void report(const std::string& pad) const override;
   // ---- begin required overrides
-  std::unique_ptr<SPOSet> makeClone() const override { return std::make_unique<FreeOrbital>(*this); }
+  void resetParameters(const opt_variables_type& optVariables) override {};
+  SPOSet* makeClone() const override { return new FreeOrbital(*this); }
   void setOrbitalSetSize(int norbs) override { throw std::runtime_error("not implemented"); }
   // required overrides end ----
 private:

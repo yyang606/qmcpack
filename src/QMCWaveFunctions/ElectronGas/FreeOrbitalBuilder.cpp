@@ -10,7 +10,7 @@ FreeOrbitalBuilder::FreeOrbitalBuilder(ParticleSet& els, Communicate* comm, xmlN
     : SPOSetBuilder("PW", comm), targetPtcl(els)
 {}
 
-std::unique_ptr<SPOSet> FreeOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
+SPOSet* FreeOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
 {
   int npw, norb;
   std::string spo_object_name;
@@ -21,7 +21,7 @@ std::unique_ptr<SPOSet> FreeOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
   attrib.add(spo_object_name, "name");
   attrib.put(cur);
 
-  auto lattice = targetPtcl.getLattice();
+  auto lattice = targetPtcl.Lattice;
 
   PosType tvec = lattice.k_cart(twist);
 #ifdef QMC_COMPLEX
@@ -43,7 +43,7 @@ std::unique_ptr<SPOSet> FreeOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
   std::vector<PosType> kpts(npw);
   KContainer klists;
   RealType kcut = lattice.LR_kc; // to-do: reduce kcut to >~ kf
-  klists.updateKLists(lattice, kcut, lattice.ndim, twist);
+  klists.UpdateKLists(lattice, kcut, twist, lattice.ndim);
 
   // k0 is not in kpts_cart
   kpts[0] = tvec;
@@ -70,7 +70,7 @@ std::unique_ptr<SPOSet> FreeOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
       break;
   }
 #endif
-  auto sposet = std::make_unique<FreeOrbital>(spo_object_name, kpts);
+  auto sposet = new FreeOrbital(spo_object_name, kpts);
   sposet->report("  ");
   return sposet;
 }
