@@ -371,7 +371,7 @@ void FiniteDifference::finiteDifferencePoints(RealType delta, MCWalkerConfigurat
     p.index    = iat;
     PosType r0 = W.R[iat];
 
-    for (int idim = 0; idim < OHMMS_DIM; idim++)
+    for (int idim = 0; idim < ndim; idim++)
     {
       p.r       = r0;
       p.r[idim] = r0[idim] - delta;
