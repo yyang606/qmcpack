@@ -36,6 +36,7 @@
 #include "QMCHamiltonians/SkEstimator.h"
 #include "QMCHamiltonians/HarmonicExternalPotential.h"
 #include "QMCHamiltonians/GridExternalPotential.h"
+#include "QMCHamiltonians/MoirePotential.h"
 #include "QMCHamiltonians/StaticStructureFactor.h"
 #include "QMCHamiltonians/SpinDensity.h"
 #include "QMCHamiltonians/OrbitalImages.h"
@@ -201,6 +202,17 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
         std::unique_ptr<GridExternalPotential> hs = std::make_unique<GridExternalPotential>(targetPtcl);
         hs->put(cur);
         targetH->addOperator(std::move(hs), "Grid", true);
+      }
+      if (potType == "moire")
+      {
+        bool physical = false;
+        if (estType == "physical") physical = true;
+        std::unique_ptr<MoirePotential> hs = std::make_unique<MoirePotential>(targetPtcl);
+        hs->put(cur);
+        hs->get(app_log());
+        app_log() << "   moire potential is physical: " << physical << std::endl;
+        app_log() << std::endl;
+        targetH->addOperator(std::move(hs), potName, physical);
       }
     }
     else if (cname == "estimator")
