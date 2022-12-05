@@ -21,6 +21,7 @@
 #include "QMCWaveFunctions/HarmonicOscillator/SHOSetBuilder.h"
 #include "ModernStringUtils.hpp"
 #include "QMCWaveFunctions/ElectronGas/FreeOrbitalBuilder.h"
+#include "QMCWaveFunctions/ElectronGas/GaussianOrbitalBuilder.h"
 #if OHMMS_DIM == 3
 #include "QMCWaveFunctions/LCAO/LCAOrbitalBuilder.h"
 
@@ -99,6 +100,11 @@ std::unique_ptr<SPOSetBuilder> SPOSetBuilderFactory::createSPOSetBuilder(xmlNode
   {
     app_log() << "Free-particle SPO set" << std::endl;
     bb = std::make_unique<FreeOrbitalBuilder>(targetPtcl, myComm, rootNode);
+  }
+  else if (type == "gaussian" || type == "wc")
+  {
+    app_log() << "Gaussian SPO set" << std::endl;
+    bb = std::make_unique<GaussianOrbitalBuilder>(targetPtcl, ptclPool, myComm, rootNode);
   }
   else if (type == "sho")
   {
