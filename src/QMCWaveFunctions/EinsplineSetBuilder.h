@@ -296,6 +296,7 @@ public:
   std::string occ_format;
   int particle_hole_pairs;
   bool makeRotations;
+  const size_t ndim;
 
 protected:
   /** broadcast SortBands

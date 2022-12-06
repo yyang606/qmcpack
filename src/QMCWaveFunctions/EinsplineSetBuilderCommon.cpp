@@ -53,7 +53,8 @@ EinsplineSetBuilder::EinsplineSetBuilder(ParticleSet& p, const PSetMap& psets, C
       NumMuffinTins(0),
       LastSpinSet(-1),
       NumOrbitalsRead(-1),
-      makeRotations(false)
+      makeRotations(false),
+      ndim(p.getLattice().ndim)
 {
   ClassName = "EinsplineSetBuilder";
 
@@ -92,8 +93,8 @@ EinsplineSetBuilder::~EinsplineSetBuilder()
 bool EinsplineSetBuilder::CheckLattice()
 {
   double diff = 0.0;
-  for (int i = 0; i < OHMMS_DIM; i++)
-    for (int j = 0; j < OHMMS_DIM; j++)
+  for (int i = 0; i < ndim; i++)
+    for (int j = 0; j < ndim; j++)
     {
       double max_abs =
           std::max(std::abs(SuperLattice(i, j)), static_cast<double>(std::abs(TargetPtcl.getLattice().R(i, j))));
