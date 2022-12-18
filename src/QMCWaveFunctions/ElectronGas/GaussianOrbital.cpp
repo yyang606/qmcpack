@@ -158,18 +158,36 @@ void GaussianOrbital::evaluateVGL(
   GradVector& dpvec,
   ValueVector& d2pvec)
 {
+  const auto& lattice = P.getLattice();
   const auto& dist = getDistanceRow(P, i);
   const auto& displ = getDisplacementRow(P, i);
-  RealType rij;
-  PosType drij;
+  RealType rij, rij_pbc;
+  PosType drij, drij_pbc;
   for (int j=0;j<OrbitalSetSize;j++)
   {
     rij = dist[j];
     drij = -displ[j];  // need ri - rj
-    pvec[j] = (*this)(rij);
-    gradient_log(dpvec[j], rij, drij);
-    d2pvec[j] = (dot(dpvec[j], dpvec[j])-2*ndim*cexpo)*pvec[j];
-    dpvec[j] *= pvec[j];
+    for (int ix=0; ix<=PBCImages[0]; ix++)
+    {
+      const int nx = indexPBCImage(ix);
+      for (int iy=0; iy<=PBCImages[1]; iy++)
+      {
+        const int ny = indexPBCImage(iy);
+        for (int iz=0; iz<=PBCImages[2]; iz++)
+        {
+          const int nz = indexPBCImage(iz);
+          const TinyVector<int, 3> nvec = {nx, ny, nz};
+          //drij_pbc = drij + nvec*lattice.R;
+          //rij_pbc = std::sqrt(dot(drij_pbc, drij_pbc));
+          drij_pbc = drij;
+          rij_pbc = rij;
+          pvec[j] = (*this)(rij_pbc);
+          gradient_log(dpvec[j], rij_pbc, drij_pbc);
+          d2pvec[j] = (dot(dpvec[j], dpvec[j])-2*ndim*cexpo)*pvec[j];
+          dpvec[j] *= pvec[j];
+        }
+      }
+    }
   }
 }
 

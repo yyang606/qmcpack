@@ -87,6 +87,7 @@ private:
   bool checkDerivatives;
   // Number of Cell images for the evaluation of the orbital with PBC. If No PBC, should be 0;
   const TinyVector<int, OHMMS_DIM> PBCImages;
+  inline int indexPBCImage(const int i) const {return ((i%2)*2-1)*((i+1)/2);};
 };
 
 } // qmcplusplus
