@@ -50,7 +50,6 @@ GaussianOrbital::RealType GaussianOrbital::operator()(const RealType rij)
 
 void GaussianOrbital::gradient_log(GradType& dp, const RealType& rij, const PosType& drij)
 {
-  ValueType p = (*this)(rij);
   for (int l=0;l<ndim;l++)
     dp[l] = -2.0*cexpo*drij[l];
 }
