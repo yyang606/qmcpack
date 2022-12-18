@@ -14,14 +14,15 @@
 namespace qmcplusplus
 {
 
-GaussianOrbital::GaussianOrbital(const std::string& my_name, ParticleSet& els, ParticleSet& ions, RealType cexpo_in)
+GaussianOrbital::GaussianOrbital(const std::string& my_name, ParticleSet& els, ParticleSet& ions, RealType cexpo_in, const TinyVector<int, OHMMS_DIM>& pbc_images)
  : SPOSet(my_name),
    targetPtcl(els),
    sourcePtcl(ions),
    cexpo(cexpo_in),
    ideitab(els.addTable(ions)),
    ndim(els.getLattice().ndim),
-   checkDerivatives(false)
+   checkDerivatives(false),
+   PBCImages(pbc_images)
 {
   OrbitalSetSize = ions.getTotalNum();
 }
@@ -343,6 +344,7 @@ void GaussianOrbital::report(const std::string& pad) const
   app_log() << pad << "  source   = " << sourcePtcl.getName() << std::endl;
   app_log() << pad << "  cexpo    = " << cexpo << std::endl;
   app_log() << pad << "  ndim     = " << ndim << std::endl;
+  app_log() << pad << "  nimages  = " << PBCImages << std::endl;
   app_log() << pad << "end GaussianOrbital report" << std::endl;
   app_log().flush();
 }

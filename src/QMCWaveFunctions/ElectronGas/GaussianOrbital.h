@@ -21,7 +21,7 @@ namespace qmcplusplus
 class GaussianOrbital : public SPOSet
 {
 public:
-  GaussianOrbital(const std::string& my_name, ParticleSet& target, ParticleSet& source, RealType cexpo);
+  GaussianOrbital(const std::string& my_name, ParticleSet& target, ParticleSet& source, RealType cexpo, const TinyVector<int, OHMMS_DIM>& pbc_images);
   ~GaussianOrbital();
 
   // phi[i][j] is phi_j(r_i), i.e. electron i in orbital j
@@ -85,6 +85,8 @@ private:
   //  d^3/dx/dy/dx log( phi(r) ), etc.
   void gradHess_log(GGGType& g3, const GradType& dp);
   bool checkDerivatives;
+  // Number of Cell images for the evaluation of the orbital with PBC. If No PBC, should be 0;
+  const TinyVector<int, OHMMS_DIM> PBCImages;
 };
 
 } // qmcplusplus

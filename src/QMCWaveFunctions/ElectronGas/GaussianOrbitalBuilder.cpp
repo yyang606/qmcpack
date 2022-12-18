@@ -29,10 +29,13 @@ std::unique_ptr<SPOSet> GaussianOrbitalBuilder::createSPOSetFromXML(xmlNodePtr c
   std::string spo_object_name="Gaussian";
   RealType cexpo=0.1;
   std::string sourceName="ion0";
+  TinyVector<int, OHMMS_DIM> pbc_images=0;
+
   OhmmsAttributeSet attrib;
   attrib.add(cexpo, "c");
   attrib.add(sourceName, "source");
   attrib.add(spo_object_name, "name");
+  attrib.add(pbc_images, "PBCimages");
   attrib.put(cur);
 
   ParticleSet* sourcePtcl;
@@ -42,7 +45,7 @@ std::unique_ptr<SPOSet> GaussianOrbitalBuilder::createSPOSetFromXML(xmlNodePtr c
   else
     sourcePtcl = pit->second.get();
 
-  auto sposet = std::make_unique<GaussianOrbital>(spo_object_name, targetPtcl, *sourcePtcl, cexpo);
+  auto sposet = std::make_unique<GaussianOrbital>(spo_object_name, targetPtcl, *sourcePtcl, cexpo, pbc_images);
   sposet->report("  ");
   return sposet;
 }
