@@ -17,7 +17,6 @@
 
 namespace qmcplusplus
 {
-
 class GaussianOrbital : public SPOSet
 {
 public:
@@ -87,8 +86,20 @@ private:
   bool checkDerivatives;
   // Number of Cell images for the evaluation of the orbital with PBC. If No PBC, should be 0;
   const TinyVector<int, OHMMS_DIM> PBCImages;
-  inline int indexPBCImage(const int i) const {return ((i%2)*2-1)*((i+1)/2);};
-};
+  inline int indexPBCImage(const int i) const {return ((i%2)*2-1)*((i+1)/2);}
+  // vector matrix multiplication for same type and same dimensions
+  template <typename T, unsigned D>
+  TinyVector<T,D> vecmat(const TinyVector<T,D> v, Tensor<T,D> A)
+  {
+    TinyVector<T,D> b = 0;
+    for (unsigned int i=0; i<D; i++)
+    {
+      const auto& a = A.getRow(i);
+      b += v[i]*a;
+    }
+    return b;
+  }
 
+};
 } // qmcplusplus
 #endif

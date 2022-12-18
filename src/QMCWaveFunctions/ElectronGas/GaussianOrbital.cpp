@@ -162,10 +162,15 @@ void GaussianOrbital::evaluateVGL(
   const auto& displ = getDisplacementRow(P, i);
   RealType rij, rij_pbc;
   PosType drij, drij_pbc;
+  GradType gtmp;
+  ValueType vtmp;
   for (int j=0;j<OrbitalSetSize;j++)
   {
     rij = dist[j];
     drij = -displ[j];  // need ri - rj
+    // accumulate over PBC images
+    GradType grad(0.0);
+    ValueType val(0.0), lap(0.0);
     for (int ix=0; ix<=PBCImages[0]; ix++)
     {
       const int nx = indexPBCImage(ix);
@@ -175,18 +180,21 @@ void GaussianOrbital::evaluateVGL(
         for (int iz=0; iz<=PBCImages[2]; iz++)
         {
           const int nz = indexPBCImage(iz);
-          const TinyVector<int, 3> nvec = {nx, ny, nz};
-          //drij_pbc = drij + nvec*lattice.R;
-          //rij_pbc = std::sqrt(dot(drij_pbc, drij_pbc));
-          drij_pbc = drij;
-          rij_pbc = rij;
-          pvec[j] = (*this)(rij_pbc);
-          gradient_log(dpvec[j], rij_pbc, drij_pbc);
-          d2pvec[j] = (dot(dpvec[j], dpvec[j])-2*ndim*cexpo)*pvec[j];
-          dpvec[j] *= pvec[j];
+          const TinyVector<RealType, 3> nvec = {(float)nx, (float)ny, (float)nz};
+          drij_pbc = drij + vecmat(nvec, lattice.R);
+          rij_pbc = std::sqrt(dot(drij_pbc, drij_pbc));
+          vtmp = (*this)(rij_pbc);
+          gradient_log(gtmp, rij_pbc, drij_pbc);
+          lap += (dot(gtmp, gtmp)-2*ndim*cexpo)*vtmp;
+          gtmp *= vtmp;
+          val += vtmp;
+          grad += gtmp;
         }
       }
     }
+    pvec[j] = val;
+    dpvec[j] = grad;
+    d2pvec[j] = lap;
   }
 }
 
