@@ -8,7 +8,7 @@ namespace qmcplusplus
 class SpinOrientation : public OperatorBase
 {
 public:
-  SpinOrientation(ParticleSet& P);
+  SpinOrientation(const ParticleSet& ions, ParticleSet& P);
 
   std::string getClassName() const override { return "SpinOrientation"; }
   bool put(xmlNodePtr cur) override {         // read input xml node, required
@@ -39,6 +39,8 @@ public:
 private:
   ParticleSet& tpset; // reference to target particle set
   const size_t npart;
+  const size_t natom;
+  const int itab;
   int h5_index; // index of this estimator in the collectables carried by target pset
 
 }; // SpinOrientation
