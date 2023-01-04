@@ -144,7 +144,12 @@ bool ECPotentialBuilder::put(xmlNodePtr cur)
       {
         nknot_max = std::max(nknot_max, nonLocalPot[i]->getNknot());
         if (NLPP_algo == "batched")
-          nonLocalPot[i]->initVirtualParticle(targetPtcl);
+        {
+          if( !targetPtcl.isSpinor())
+            nonLocalPot[i]->initVirtualParticle(targetPtcl);
+          else
+            throw std::runtime_error("Batched NLPP evaluation not validated with spinors.  Use algorithm=\"non-batched\" in pseudopotential block."); 
+        } 
         apot->addComponent(i, std::move(nonLocalPot[i]));
       }
     }
@@ -176,16 +181,12 @@ bool ECPotentialBuilder::put(xmlNodePtr cur)
       {
         nknot_max = std::max(nknot_max, soPot[i]->getNknot());
         sknot_max = std::max(sknot_max, soPot[i]->getSknot());
-        if (NLPP_algo == "batched")
-          soPot[i]->initVirtualParticle(targetPtcl);
         apot->addComponent(i, std::move(soPot[i]));
       }
     }
     app_log() << "\n  Using SOECP potential \n"
               << "    Maximum grid on a sphere for SOECPotential: " << nknot_max << std::endl;
     app_log() << "    Maximum grid for Simpson's rule for spin integral: " << sknot_max << std::endl;
-    if (NLPP_algo == "batched")
-      app_log() << "    Using batched ratio computing in SOECP potential" << std::endl;
 
     if (physicalSO == "yes")
       targetH.addOperator(std::move(apot), "SOECP"); //default is physical operator
@@ -217,7 +218,7 @@ void ECPotentialBuilder::useXmlFormat(xmlNodePtr cur)
       std::string href("none");
       std::string ionName("none");
       std::string format("xml");
-      int nrule  = -1;
+      int nrule = -1;
       int llocal = -1;
       //RealType rc(2.0);//use 2 Bohr
       OhmmsAttributeSet hAttrib;

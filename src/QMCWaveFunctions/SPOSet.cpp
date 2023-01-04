@@ -109,9 +109,11 @@ void SPOSet::mw_evaluateVGLWithSpin(const RefVectorWithLeader<SPOSet>& spo_list,
                                     const RefVector<ValueVector>& psi_v_list,
                                     const RefVector<GradVector>& dpsi_v_list,
                                     const RefVector<ValueVector>& d2psi_v_list,
-                                    OffloadMatrix<ComplexType>& mw_dspin) const
+                                    const RefVector<ValueVector>& dspin_v_list) const
 {
-  throw std::runtime_error(getClassName() + "::mw_evaluateVGLWithSpin() is not supported. \n");
+  assert(this == &spo_list.getLeader());
+  for (int iw = 0; iw < spo_list.size(); iw++)
+    spo_list[iw].evaluateVGL_spin(P_list[iw], iat, psi_v_list[iw], dpsi_v_list[iw], d2psi_v_list[iw], dspin_v_list[iw]);
 }
 
 void SPOSet::mw_evaluateVGLandDetRatioGrads(const RefVectorWithLeader<SPOSet>& spo_list,

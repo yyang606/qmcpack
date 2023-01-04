@@ -60,24 +60,15 @@ private:
                                  TrialWaveFunction& Psi,
                                  int iel,
                                  RealType r,
-                                 const PosType& dr,
-                                 int iat);
+                                 const PosType& dr);
 
   std::vector<PosType> deltaV;
-  std::vector<RealType> deltaS;
   SpherGridType sgridxyz_m;
   SpherGridType rrotsgrid_m;
   std::vector<ValueType> psiratio;
   std::vector<ValueType> vrad;
   std::vector<RealType> sgridweight_m;
 
-  VirtualParticleSet* VP;
-
-  void buildQuadraturePointDeltas(RealType r,
-                                  const PosType& dr,
-                                  std::vector<PosType>& deltaV,
-                                  RealType ds,
-                                  std::vector<RealType>& deltaS) const;
 
 public:
   SOECPComponent();
@@ -125,8 +116,7 @@ public:
 
   void print(std::ostream& os);
 
-  void initVirtualParticle(const ParticleSet& qp);
-  void deleteVirtualParticle();
+  //void initVirtualParticle(const ParticleSet& qp){};
 
   inline void setRmax(int rmax) { Rmax = rmax; }
   inline RealType getRmax() const { return Rmax; }

@@ -29,6 +29,7 @@ struct NLPPJob
   using PosType  = TinyVector<RealType, 3>;
   const int ion_id;
   const int electron_id;
+  const PosType elec_pos;
   const RealType ion_elec_dist;
   const PosType ion_elec_displ;
 
@@ -38,10 +39,12 @@ struct NLPPJob
    */
   NLPPJob(const int ion_id_in,
           const int electron_id_in,
+          const PosType& elec_pos_in,
           const RealType ion_elec_dist_in,
           const PosType& ion_elec_displ_in)
       : ion_id(ion_id_in),
         electron_id(electron_id_in),
+        elec_pos(elec_pos_in),
         ion_elec_dist(ion_elec_dist_in),
         ion_elec_displ(ion_elec_displ_in)
   {}
