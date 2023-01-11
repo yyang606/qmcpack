@@ -223,6 +223,7 @@ std::unique_ptr<WaveFunctionComponent> RadialJastrowBuilder::createJ2(xmlNodePtr
         RealType red_mass = species(massInd, ia) * species(massInd, ib) / (species(massInd, ia) + species(massInd, ib));
         RealType dim_factor = (ia == ib) ? 1.0 / (ndim + 1) : 1.0 / (ndim - 1);
         if (ndim == 1) dim_factor = 1.0 / (ndim + 1);
+        if (targetPtcl.isSpinor()) dim_factor = 1.0 / (ndim - 1);
         cusp = -2 * qq * red_mass * dim_factor;
       }
       app_summary() << "    Radial function for species: " << spA << " - " << spB << std::endl;
