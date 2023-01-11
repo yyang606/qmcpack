@@ -50,6 +50,7 @@ public:
     const VMCDriverInput& vmcdrv_input;
     const DriftModifierBase& drift_modifier;
     const MCPopulation& population;
+    const size_t ndim;
     IndexType recalculate_properties_period;
     IndexType step            = -1;
     bool is_recomputing_block = false;
@@ -58,7 +59,7 @@ public:
                    const VMCDriverInput& vmci,
                    DriftModifierBase& drift_mod,
                    MCPopulation& pop)
-        : qmcdrv_input(qmci), vmcdrv_input(vmci), drift_modifier(drift_mod), population(pop)
+        : qmcdrv_input(qmci), vmcdrv_input(vmci), drift_modifier(drift_mod), population(pop), ndim(pop.get_golden_electrons().getLattice().ndim)
     {}
   };
 

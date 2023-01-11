@@ -101,6 +101,11 @@ void VMCBatched::advanceWalkers(const StateForThread& sft,
   {
     //This generates an entire steps worth of deltas.
     makeGaussRandomWithEngine(walker_deltas, step_context.get_random_gen());
+    if (sft.ndim < 3)
+    {
+      for (int iat = 0; iat < walker_deltas.positions.size(); ++iat)
+        walker_deltas.positions[iat][2] = 0;
+    }
 
     // up and down electrons are "species" within qmpack
     for (int ig = 0; ig < walker_leader.groups(); ++ig) //loop over species

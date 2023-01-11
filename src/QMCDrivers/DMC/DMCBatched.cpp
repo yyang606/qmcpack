@@ -117,6 +117,11 @@ void DMCBatched::advanceWalkers(const StateForThread& sft,
 
   //This generates an entire steps worth of deltas.
   makeGaussRandomWithEngine(walker_deltas, step_context.get_random_gen());
+  if (sft.ndim < 3)
+  {
+    for (int iat = 0; iat < walker_deltas.positions.size(); ++iat)
+      walker_deltas.positions[iat][2] = 0;
+  }
 
   std::vector<TrialWaveFunction::PsiValueType> ratios(num_walkers, TrialWaveFunction::PsiValueType(0.0));
   std::vector<RealType> log_gf(num_walkers, 0.0);
