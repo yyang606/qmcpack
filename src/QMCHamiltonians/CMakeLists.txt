@@ -40,9 +40,11 @@ set(HAMSRCS
     HarmonicExternalPotential.cpp
     GridExternalPotential.cpp
     MoirePotential.cpp
+    DisorderPotential.cpp
     StaticStructureFactor.cpp
     OrbitalImages.cpp
     SpinDensity.cpp
+    SpinOrientation.cpp
     SpeciesKineticEnergy.cpp
     LatticeDeviationEstimator.cpp
     SpaceWarpTransformation.cpp

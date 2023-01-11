@@ -37,8 +37,10 @@
 #include "QMCHamiltonians/HarmonicExternalPotential.h"
 #include "QMCHamiltonians/GridExternalPotential.h"
 #include "QMCHamiltonians/MoirePotential.h"
+#include "QMCHamiltonians/DisorderPotential.h"
 #include "QMCHamiltonians/StaticStructureFactor.h"
 #include "QMCHamiltonians/SpinDensity.h"
+#include "QMCHamiltonians/SpinOrientation.h"
 #include "QMCHamiltonians/OrbitalImages.h"
 #if !defined(REMOVE_TRACEMANAGER)
 #include "QMCHamiltonians/EnergyDensityEstimator.h"
@@ -214,6 +216,46 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
         app_log() << std::endl;
         targetH->addOperator(std::move(hs), potName, physical);
       }
+      if (potType == "disorder")
+      {
+        // find source particle set
+        auto spit(ptclPool.find(sourceInp));
+        if (spit == ptclPool.end())
+        {
+          APP_ABORT("Unknown source \"" + sourceInp + "\" for DisorderPotential.");
+        }
+        bool physical = false;
+        if (estType == "physical") physical = true;
+        std::unique_ptr<DisorderPotential> hs = std::make_unique<DisorderPotential>(*spit->second, targetPtcl);
+        hs->put(cur);
+        hs->get(app_log());
+        app_log() << "   disorder potential is physical: " << physical << std::endl;
+        app_log() << std::endl;
+        //// !!!! HACK: grid potential
+        //ParticleSet& P(targetPtcl);
+        //auto lattice = P.getLattice();
+        //const size_t nx = 16;
+        //const size_t nptcl = P.getTotalNum();
+        //double delta = 1.0/nx;
+        //double value_;
+        //app_log() << "grid start" << std::endl;
+        //for (int i=0;i<nx;i++)
+        //{
+        //  for (int j=0;j<nx;j++)
+        //  {
+        //    ParticleSet::PosType g = {i*delta, j*delta, 0.0};
+        //    ParticleSet::PosType r = dot(g, lattice.R);
+        //    for (int k=0;k<nptcl;k++) P.R[k] = r;
+        //    P.update();
+        //    value_ = hs->evaluate(P);
+        //    app_log() << r << " " << value_/nptcl << std::endl;
+        //  }
+        //}
+        //app_log() << "ERROR grid complete" << std::endl;
+        //throw std::runtime_error("stop");
+        //// end HACK !!!!
+        targetH->addOperator(std::move(hs), potName, physical);
+      }
     }
     else if (cname == "estimator")
     {
@@ -278,6 +320,19 @@ bool HamiltonianFactory::build(xmlNodePtr cur, bool buildtree)
       {
         app_log() << "  Adding SpinDensity" << std::endl;
         std::unique_ptr<SpinDensity> apot = std::make_unique<SpinDensity>(targetPtcl);
+        apot->put(cur);
+        targetH->addOperator(std::move(apot), potName, false);
+      }
+      else if (potType == "spinorientation")
+      {
+        // find source particle set
+        auto spit(ptclPool.find(sourceInp));
+        if (spit == ptclPool.end())
+        {
+          APP_ABORT("Unknown source \"" + sourceInp + "\" for DisorderPotential.");
+        }
+        app_log() << "  Adding SpinOrientation" << std::endl;
+        std::unique_ptr<SpinOrientation> apot = std::make_unique<SpinOrientation>(*spit->second, targetPtcl);
         apot->put(cur);
         targetH->addOperator(std::move(apot), potName, false);
       }
