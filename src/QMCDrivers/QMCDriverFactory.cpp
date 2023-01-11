@@ -38,6 +38,7 @@
 #include "QMCDrivers/WFOpt/QMCFixedSampleLinearOptimize.h"
 #include "QMCDrivers/WFOpt/QMCFixedSampleLinearOptimizeBatched.h"
 #include "QMCDrivers/WaveFunctionTester.h"
+#include "QMCDrivers/WaveFunctionPlotter.h"
 #include "OhmmsData/AttributeSet.h"
 #include "OhmmsData/ParameterSet.h"
 #include "QMCDrivers/WFOpt/QMCWFOptFactoryNew.h"
@@ -74,7 +75,7 @@ QMCDriverFactory::DriverAssemblyState QMCDriverFactory::readSection(xmlNodePtr c
 #endif
   OhmmsAttributeSet aAttrib;
   aAttrib.add(qmc_mode, "method",
-              {"", "vmc", "vmc_batch", "dmc", "dmc_batch", "csvmc", "rmc", "linear", "linear_batch", "wftest"});
+              {"", "vmc", "vmc_batch", "dmc", "dmc_batch", "csvmc", "rmc", "linear", "linear_batch", "wftest", "plot"});
   aAttrib.add(update_mode, "move");
   aAttrib.add(multi_tag, "multiple");
   aAttrib.add(warp_tag, "warp");
@@ -149,6 +150,8 @@ QMCDriverFactory::DriverAssemblyState QMCDriverFactory::readSection(xmlNodePtr c
         das.new_run_type = QMCRunType::DMC;
       else if (qmc_mode == "wftest")
         das.new_run_type = QMCRunType::WF_TEST;
+      else if (qmc_mode == "plot")
+        das.new_run_type = QMCRunType::WF_PLOT;
       else
         throw std::runtime_error("qmc method cannot be empty!");
     }
@@ -289,6 +292,12 @@ std::unique_ptr<QMCDriverInterface> QMCDriverFactory::createQMCDriver(xmlNodePtr
     app_log() << "Testing wavefunctions." << std::endl;
     QMCDriverInterface* temp_ptr =
         new WaveFunctionTester(project_data_, qmc_system, *primaryPsi, *primaryH, particle_pool, comm);
+    new_driver.reset(temp_ptr);
+  }
+  else if (das.new_run_type == QMCRunType::WF_PLOT)
+  {
+    app_log() << "Ploting wavefunctions." << std::endl;
+    QMCDriverInterface* temp_ptr = new WaveFunctionPlotter(project_data_, qmc_system, *primaryPsi, *primaryH, comm);
     new_driver.reset(temp_ptr);
   }
   else

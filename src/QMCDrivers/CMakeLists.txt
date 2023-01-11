@@ -42,6 +42,7 @@ set(QMCDRIVERS
     WFOpt/HamiltonianRef.cpp
     WFOpt/CostFunctionCrowdData.cpp
     WaveFunctionTester.cpp
+    WaveFunctionPlotter.cpp
     WalkerControlBase.cpp
     CloneManager.cpp
     ContextForSteps.cpp
