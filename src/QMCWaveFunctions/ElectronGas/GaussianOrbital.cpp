@@ -16,6 +16,7 @@ namespace qmcplusplus
 
 GaussianOrbital::GaussianOrbital(const std::string& my_name, ParticleSet& els, ParticleSet& ions, RealType cexpo_in, const TinyVector<int, OHMMS_DIM>& pbc_images)
  : SPOSet(my_name),
+   OptimizableObject(my_name),
    targetPtcl(els),
    sourcePtcl(ions),
    cexpo(cexpo_in),
@@ -25,6 +26,7 @@ GaussianOrbital::GaussianOrbital(const std::string& my_name, ParticleSet& els, P
    PBCImages(pbc_images)
 {
   OrbitalSetSize = ions.getTotalNum();
+  buildOptVariables(OrbitalSetSize);
 }
 
 GaussianOrbital::~GaussianOrbital(){}
@@ -392,6 +394,35 @@ void GaussianOrbital::report(const std::string& pad) const
   app_log() << pad << "  ndim     = " << ndim << std::endl;
   app_log() << pad << "  nimages  = " << PBCImages << std::endl;
   app_log() << pad << "end GaussianOrbital report" << std::endl;
+  if (isOptimizable())
+  {
+    app_log() << pad;
+    myVars.print(app_log());
+  }
   app_log().flush();
+}
+
+void GaussianOrbital::evaluateDerivatives(
+  ParticleSet& P,
+  const opt_variables_type& optvars,
+  Vector<ValueType>& dlogpsi,
+  Vector<ValueType>& dhpsioverpsi,
+  const int& firstIndex,
+  const int& lastIndex)
+{
+  if ((PBCImages[0] != 0) | (PBCImages[1] != 0) | (PBCImages[2] != 0))
+    throw std::runtime_error("GO eval derivs pbc images");
+  ValueType val(0.0);
+  RealType rij;
+  for (int i=firstIndex;i<lastIndex;i++)
+  {
+    const auto& dist = getDistanceRow(P, i);
+    for (int j=i+1;j<OrbitalSetSize;j++)
+    {
+      rij = dist[i];
+      val += -rij*rij;
+    }
+  }
+  dlogpsi += val;
 }
 } // qmcplusplus

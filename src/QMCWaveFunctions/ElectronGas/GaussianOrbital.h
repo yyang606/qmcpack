@@ -17,7 +17,7 @@
 
 namespace qmcplusplus
 {
-class GaussianOrbital : public SPOSet
+class GaussianOrbital : public SPOSet, public OptimizableObject
 {
 public:
   GaussianOrbital(const std::string& my_name, ParticleSet& target, ParticleSet& source, RealType cexpo, const TinyVector<int, OHMMS_DIM>& pbc_images);
@@ -66,6 +66,37 @@ public:
   std::unique_ptr<SPOSet> makeClone() const override { return std::make_unique<GaussianOrbital>(*this); }
   void setOrbitalSetSize(int norbs) override {};
   // required overrides end ----
+
+  // for parameter optimization
+  bool isOptimizable() const override { return true; }
+  void checkOutVariables(const opt_variables_type& active) override
+  {
+    myVars.getIndex(active);
+  }
+  void checkInVariablesExclusive(opt_variables_type& active) override
+  {
+    myVars.setIndexDefault();
+    if (myVars.size())
+      active.insertFrom(myVars);
+  }
+  void extractOptimizableObjectRefs(UniqueOptObjRefs& opt_obj_refs) override { opt_obj_refs.push_back(*this); }
+  void resetParametersExclusive(const opt_variables_type& active) override
+  {
+    int ilocal = 0;
+    int iglobal = myVars.where(ilocal);
+    cexpo = std::real(myVars[ilocal] = active[iglobal]);
+  }
+  void buildOptVariables(size_t nel) override
+  {
+    myVars.insert("cexpo", cexpo);
+  }
+  void evaluateDerivatives(ParticleSet& P,
+                           const opt_variables_type& optvars,
+                           Vector<ValueType>& dlogpsi,
+                           Vector<ValueType>& dhpsioverpsi,
+                           const int& FirstIndex,
+                           const int& lastIndex) override;
+
 private:
   ParticleSet& targetPtcl;
   ParticleSet& sourcePtcl;
