@@ -119,12 +119,31 @@ void GaussianOrbital::evaluateValue(
   int i,
   ValueVector& pvec)
 {
-  const auto& dist = getDistanceRow(P, i);
-  RealType rij;
+  const auto& lattice = P.getLattice();
+  const auto& displ = getDisplacementRow(P, i);
+  RealType rij_pbc;
+  PosType drij, drij_pbc;
   for (int j=0;j<OrbitalSetSize;j++)
   {
-    rij = dist[j];
-    pvec[j] = (*this)(rij);
+    drij = -displ[j];  // need ri - rj
+    ValueType val(0.0);
+    for (int ix=0; ix<=PBCImages[0]; ix++)
+    {
+      const int nx = indexPBCImage(ix);
+      for (int iy=0; iy<=PBCImages[1]; iy++)
+      {
+        const int ny = indexPBCImage(iy);
+        for (int iz=0; iz<=PBCImages[2]; iz++)
+        {
+          const int nz = indexPBCImage(iz);
+          const TinyVector<RealType, 3> nvec = {(float)nx, (float)ny, (float)nz};
+          drij_pbc = drij + vecmat(nvec, lattice.R);
+          rij_pbc = std::sqrt(dot(drij_pbc, drij_pbc));
+          val += (*this)(rij_pbc);
+        }
+      }
+    }
+    pvec[j] = val;
   }
 }
 
@@ -158,7 +177,6 @@ void GaussianOrbital::evaluateVGL(
   ValueVector& d2pvec)
 {
   const auto& lattice = P.getLattice();
-  const auto& dist = getDistanceRow(P, i);
   const auto& displ = getDisplacementRow(P, i);
   RealType rij, rij_pbc;
   PosType drij, drij_pbc;
@@ -166,7 +184,6 @@ void GaussianOrbital::evaluateVGL(
   ValueType vtmp;
   for (int j=0;j<OrbitalSetSize;j++)
   {
-    rij = dist[j];
     drij = -displ[j];  // need ri - rj
     // accumulate over PBC images
     GradType grad(0.0);
@@ -205,6 +222,8 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
                                            GradMatrix& dphi,
                                            HessMatrix& d2phi_mat)
 {
+  if ((PBCImages[0] != 0) | (PBCImages[1] != 0) | (PBCImages[2] != 0))
+    throw std::runtime_error("GO d2phi_mat pbc images");
   for (int iat = first, i = 0; iat < last; iat++, i++)
   {
     ValueVector p(phi[i], OrbitalSetSize);
@@ -239,6 +258,8 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
                                            HessMatrix& d2phi_mat,
                                            GGGMatrix& d3phi_mat)
 {
+  if ((PBCImages[0] != 0) | (PBCImages[1] != 0) | (PBCImages[2] != 0))
+    throw std::runtime_error("GO d3phi_mat pbc images");
   if (checkDerivatives)
     app_log() << "checking ggg evaluation" << std::endl;
   for (int iat = first, i = 0; iat < last; iat++, i++)
