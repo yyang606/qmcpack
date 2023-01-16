@@ -413,16 +413,15 @@ void GaussianOrbital::evaluateDerivatives(
   if ((PBCImages[0] != 0) | (PBCImages[1] != 0) | (PBCImages[2] != 0))
     throw std::runtime_error("GO eval derivs pbc images");
   ValueType val(0.0);
+  RealType hval(0.0);
   RealType rij;
   for (int i=firstIndex;i<lastIndex;i++)
-  {
     const auto& dist = getDistanceRow(P, i);
-    for (int j=i+1;j<OrbitalSetSize;j++)
-    {
-      rij = dist[i];
-      val += -rij*rij;
-    }
+    rij = dist[i];
+    val += -rij*rij;
+    hval += ndim-4*cexpo*rij*rij;
   }
   dlogpsi += val;
+  dhpsioverpsi += hval;
 }
 } // qmcplusplus
