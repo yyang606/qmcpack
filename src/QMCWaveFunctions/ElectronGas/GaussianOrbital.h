@@ -20,7 +20,7 @@ namespace qmcplusplus
 class GaussianOrbital : public SPOSet, public OptimizableObject
 {
 public:
-  GaussianOrbital(const std::string& my_name, ParticleSet& target, ParticleSet& source, RealType cexpo, const TinyVector<int, OHMMS_DIM>& pbc_images);
+  GaussianOrbital(const std::string& my_name, ParticleSet& target, ParticleSet& source, std::vector<RealType> cexpos, const TinyVector<int, OHMMS_DIM>& pbc_images);
   ~GaussianOrbital();
 
   // phi[i][j] is phi_j(r_i), i.e. electron i in orbital j
@@ -68,7 +68,10 @@ public:
   // required overrides end ----
 
   // for parameter optimization
-  bool isOptimizable() const override { return true; }
+  bool isOptimizable() const override
+  {
+    return myVars.size();
+  }
   void checkOutVariables(const opt_variables_type& active) override
   {
     myVars.getIndex(active);
@@ -76,16 +79,16 @@ public:
   void checkInVariablesExclusive(opt_variables_type& active) override
   {
     myVars.setIndexDefault();
-    if (myVars.size())
+    if (isOptimizable())
       active.insertFrom(myVars);
   }
   void extractOptimizableObjectRefs(UniqueOptObjRefs& opt_obj_refs) override { opt_obj_refs.push_back(*this); }
   void resetParametersExclusive(const opt_variables_type& active) override
-  {
+  {if (isOptimizable()){
     int ilocal = 0;
     int iglobal = myVars.where(ilocal);
     cexpo = std::real(myVars[ilocal] = active[iglobal]);
-  }
+  }}
   void buildOptVariables(size_t nel) override
   {
     myVars.insert("cexpo", cexpo);
@@ -101,6 +104,7 @@ private:
   ParticleSet& targetPtcl;
   ParticleSet& sourcePtcl;
   RealType cexpo;
+  std::vector<RealType> cexpos;
   const int ideitab;
   const int ndim;
   // helper functions

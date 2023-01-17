@@ -14,19 +14,22 @@
 namespace qmcplusplus
 {
 
-GaussianOrbital::GaussianOrbital(const std::string& my_name, ParticleSet& els, ParticleSet& ions, RealType cexpo_in, const TinyVector<int, OHMMS_DIM>& pbc_images)
+GaussianOrbital::GaussianOrbital(const std::string& my_name, ParticleSet& els, ParticleSet& ions, std::vector<RealType> cexpos_in, const TinyVector<int, OHMMS_DIM>& pbc_images)
  : SPOSet(my_name),
    OptimizableObject(my_name),
    targetPtcl(els),
    sourcePtcl(ions),
-   cexpo(cexpo_in),
+   cexpos(cexpos_in),
    ideitab(els.addTable(ions)),
    ndim(els.getLattice().ndim),
    checkDerivatives(false),
    PBCImages(pbc_images)
 {
-  OrbitalSetSize = ions.getTotalNum();
-  buildOptVariables(OrbitalSetSize);
+  OrbitalSetSize = cexpos.size();
+  cexpo = cexpos[0];
+  bool optimize = false;
+  if (optimize)
+    buildOptVariables(OrbitalSetSize);
 }
 
 GaussianOrbital::~GaussianOrbital(){}
@@ -127,6 +130,7 @@ void GaussianOrbital::evaluateValue(
   PosType drij, drij_pbc;
   for (int j=0;j<OrbitalSetSize;j++)
   {
+    cexpo = cexpos[j];
     drij = -displ[j];  // need ri - rj
     ValueType val(0.0);
     for (int ix=0; ix<=PBCImages[0]; ix++)
@@ -186,6 +190,7 @@ void GaussianOrbital::evaluateVGL(
   ValueType vtmp;
   for (int j=0;j<OrbitalSetSize;j++)
   {
+    cexpo = cexpos[j];
     drij = -displ[j];  // need ri - rj
     // accumulate over PBC images
     GradType grad(0.0);
@@ -239,6 +244,7 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
     PosType drij;
     for (int j=0;j<OrbitalSetSize;j++)
     {
+      cexpo = cexpos[j];
       rij = dist[j];
       drij = -displ[j];  // need ri - rj
       p[j] = (*this)(rij);
@@ -278,6 +284,7 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
     PosType drij;
     for (int j=0;j<OrbitalSetSize;j++)
     {
+      cexpo = cexpos[j];
       rij = dist[j];
       drij = -displ[j];  // need ri - rj
       if (checkDerivatives)
@@ -416,6 +423,7 @@ void GaussianOrbital::evaluateDerivatives(
   RealType hval(0.0);
   RealType rij;
   for (int i=firstIndex;i<lastIndex;i++)
+  {
     const auto& dist = getDistanceRow(P, i);
     rij = dist[i];
     val += -rij*rij;
