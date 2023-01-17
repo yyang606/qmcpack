@@ -28,6 +28,7 @@ std::unique_ptr<SPOSet> GaussianOrbitalBuilder::createSPOSetFromXML(xmlNodePtr c
 {
   std::string spo_object_name="Gaussian";
   RealType cexpo=0.1;
+  std::vector<RealType> cexpos;
   std::string sourceName="ion0";
   TinyVector<int, OHMMS_DIM> pbc_images=0;
 
@@ -44,8 +45,24 @@ std::unique_ptr<SPOSet> GaussianOrbitalBuilder::createSPOSetFromXML(xmlNodePtr c
     myComm->barrier_and_abort("GaussianOrbital needs the source particleset");
   else
     sourcePtcl = pit->second.get();
+  cexpos.resize(sourcePtcl->getTotalNum());
 
-  auto sposet = std::make_unique<GaussianOrbital>(spo_object_name, targetPtcl, *sourcePtcl, cexpo, pbc_images);
+  xmlNodePtr element = cur->xmlChildrenNode;
+  while (element != NULL)
+  {
+    std::string ename((const char*)element->name);
+    if (ename == "parameter")
+    {
+      const std::string name(getXMLAttributeValue(element, "name"));
+      if (name == "cexpos")
+      {
+        putContent(cexpos, element);
+      }
+    }
+    element = element->next;
+  }
+
+  auto sposet = std::make_unique<GaussianOrbital>(spo_object_name, targetPtcl, *sourcePtcl, cexpos, pbc_images);
   sposet->report("  ");
   return sposet;
 }

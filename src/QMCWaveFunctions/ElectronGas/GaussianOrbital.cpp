@@ -395,9 +395,17 @@ void GaussianOrbital::evaluate_notranspose(const ParticleSet& P,
 
 void GaussianOrbital::report(const std::string& pad) const
 {
+  bool same_cexpo = true;
+  for (int i=0;i<cexpos.size();i++) same_cexpo = (same_cexpo and (cexpos[i] == cexpo));
   app_log() << pad << "GaussianOrbital report" << std::endl;
   app_log() << pad << "  source   = " << sourcePtcl.getName() << std::endl;
-  app_log() << pad << "  cexpo    = " << cexpo << std::endl;
+  if (same_cexpo)
+  {
+    app_log() << pad << "  cexpo    = " << cexpo << std::endl;
+  } else {
+    for (int i=0;i<cexpos.size();i++)
+      app_log() << pad << "  cexpo(" << i << ") = " << cexpos[i] << std::endl;
+  }
   app_log() << pad << "  ndim     = " << ndim << std::endl;
   app_log() << pad << "  nimages  = " << PBCImages << std::endl;
   app_log() << pad << "end GaussianOrbital report" << std::endl;
