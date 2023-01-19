@@ -655,6 +655,8 @@ void EshdfFile::getNumElectrons(vector<vector<double>>& occupations,
   }
   nup = static_cast<int>(round(nup_flt));
   ndn = static_cast<int>(round(ndn_flt));
+  // edge case of 1 electron nonmagnetic cell
+  if ((nup == 0) && (ndn == 0)) nup = static_cast<int>(round(nup_flt+ndn_flt));
 }
 
 vector<double> EshdfFile::getPtvs(const XmlNode& qeXml)
