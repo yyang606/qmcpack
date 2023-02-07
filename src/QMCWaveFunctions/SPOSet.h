@@ -25,9 +25,6 @@
 #include "Particle/VirtualParticleSet.h"
 #include "QMCWaveFunctions/OrbitalSetTraits.h"
 #include "OptimizableObject.h"
-#ifdef QMC_CUDA
-#include "type_traits/CUDATypes.h"
-#endif
 #include "OMPTarget/OffloadAlignedAllocators.hpp"
 #include "DualAllocatorAliases.hpp"
 
@@ -113,11 +110,6 @@ public:
   /// check a few key parameters before putting the SPO into a determinant
   virtual void checkObject() const {}
 
-  /// create optimizable orbital rotation parameters
-  // Single Slater creation
-  virtual void buildOptVariables(const size_t nel) {}
-  // For the MSD case rotations must be created in MultiSlaterDetTableMethod class
-  virtual void buildOptVariables(const std::vector<std::pair<int, int>>& rotations) {}
   /// return true if this SPOSet can be wrappered by RotatedSPO
   virtual bool isRotationSupported() const { return false; }
   /// store parameters before getting destroyed by rotation.
@@ -125,12 +117,20 @@ public:
   /// apply rotation to all the orbitals
   virtual void applyRotation(const ValueMatrix& rot_mat, bool use_stored_copy = false);
 
+  /// Parameter derivatives of the wavefunction and the Laplacian of the wavefunction
   virtual void evaluateDerivatives(ParticleSet& P,
                                    const opt_variables_type& optvars,
                                    Vector<ValueType>& dlogpsi,
                                    Vector<ValueType>& dhpsioverpsi,
                                    const int& FirstIndex,
                                    const int& LastIndex);
+
+  /// Parameter derivatives of the wavefunction
+  virtual void evaluateDerivativesWF(ParticleSet& P,
+                                     const opt_variables_type& optvars,
+                                     Vector<ValueType>& dlogpsi,
+                                     int FirstIndex,
+                                     int LastIndex);
 
   /** Evaluate the derivative of the optimized orbitals with respect to the parameters
    *  this is used only for MSD, to be refined for better serving both single and multi SD
@@ -205,6 +205,18 @@ public:
                                  ValueVector& psi,
                                  const ValueVector& psiinv,
                                  std::vector<ValueType>& ratios);
+
+
+  /// Determinant ratios and parameter derivatives of the wavefunction for virtual moves
+  virtual void evaluateDerivRatios(const VirtualParticleSet& VP,
+                                   const opt_variables_type& optvars,
+                                   ValueVector& psi,
+                                   const ValueVector& psiinv,
+                                   std::vector<ValueType>& ratios,
+                                   Matrix<ValueType>& dratios,
+                                   int FirstIndex,
+                                   int LastIndex);
+
 
   /** evaluate determinant ratios for virtual moves, e.g., sphere move for nonlocalPP, of multiple walkers
    * @param spo_list the list of SPOSet pointers in a walker batch
@@ -533,43 +545,6 @@ public:
 
   /// return class name
   virtual std::string getClassName() const = 0;
-
-#ifdef QMC_CUDA
-  /** Evaluate the SPO value at an explicit position.
-   * Ye: This is used only for debugging the CUDA code and should be removed.
-   */
-  virtual void evaluate(const ParticleSet& P, PosType& r, ValueVector& psi);
-
-  using CTS = CUDAGlobalTypes;
-
-  //////////////////////////////////////////
-  // Walker-parallel vectorized functions //
-  //////////////////////////////////////////
-  virtual void reserve(PointerPool<gpu::device_vector<CTS::ValueType>>& pool) {}
-
-  virtual void evaluate(std::vector<Walker_t*>& walkers, int iat, gpu::device_vector<CTS::ValueType*>& phi);
-
-  virtual void evaluate(std::vector<Walker_t*>& walkers,
-                        std::vector<PosType>& new_pos,
-                        gpu::device_vector<CTS::ValueType*>& phi);
-
-  virtual void evaluate(std::vector<Walker_t*>& walkers,
-                        std::vector<PosType>& new_pos,
-                        gpu::device_vector<CTS::ValueType*>& phi,
-                        gpu::device_vector<CTS::ValueType*>& grad_lapl_list,
-                        int row_stride);
-
-  virtual void evaluate(std::vector<Walker_t*>& walkers,
-                        std::vector<PosType>& new_pos,
-                        gpu::device_vector<CTS::ValueType*>& phi,
-                        gpu::device_vector<CTS::ValueType*>& grad_lapl_list,
-                        int row_stride,
-                        int k,
-                        bool klinear);
-
-  virtual void evaluate(std::vector<PosType>& pos, gpu::device_vector<CTS::RealType*>& phi);
-  virtual void evaluate(std::vector<PosType>& pos, gpu::device_vector<CTS::ComplexType*>& phi);
-#endif
 
 protected:
   /// name of the object, unique identifier
