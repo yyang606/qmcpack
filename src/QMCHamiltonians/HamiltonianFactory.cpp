@@ -181,7 +181,7 @@ bool HamiltonianFactory::build(xmlNodePtr cur)
         bool physical = false;
         if (estType == "physical") physical = true;
         std::unique_ptr<MoirePotential> hs = std::make_unique<MoirePotential>(targetPtcl);
-        hs->put(cur);
+        hs->put(element);
         hs->get(app_log());
         app_log() << "   moire potential is physical: " << physical << std::endl;
         app_log() << std::endl;
