@@ -18,14 +18,13 @@ namespace qmcplusplus
 {
 
 EwaldHandlerQuasi2D::EwaldHandlerQuasi2D(ParticleSet& ref, mRealType kc_in)
-  : LRHandlerBase(kc_in)
+  : LRHandlerBase(kc_in), area(ref.getLattice().Area)
 {
   if (ref.getLattice().SuperCellEnum != SUPERCELL_SLAB)
     throw std::runtime_error("Quasi2D Ewald requires ppn boundary.");
   LR_rc = ref.getLattice().LR_rc; // CoulombPBC needs get_rc() to createSpline4RbyVs
   LR_kc = ref.getLattice().LR_kc; // get_kc() is used in QMCFiniteSize
   alpha = std::sqrt(LR_kc/2.0/LR_rc);
-  area = ref.getLattice().Volume/ref.getLattice().R(2,2);
   // report
   app_log() << "    alpha = " << alpha << " area = " << area << std::endl;
   fillFk(ref.getSimulationCell().getKLists());

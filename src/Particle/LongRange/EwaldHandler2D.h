@@ -57,7 +57,7 @@ public:
   // overrides end
 private:
   mRealType alpha;
-  mRealType area;
+  const mRealType area;
 };
 } // qmcplusplus
 #endif

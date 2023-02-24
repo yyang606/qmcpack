@@ -46,7 +46,7 @@ void EwaldHandler3D::initBreakup(ParticleSet& ref)
 }
 
 EwaldHandler3D::EwaldHandler3D(const EwaldHandler3D& aLR, ParticleSet& ref)
-    : LRHandlerBase(aLR), Sigma(aLR.Sigma), Volume(aLR.Volume), Area(aLR.Area), PreFactors(aLR.PreFactors)
+    : LRHandlerBase(aLR), Sigma(aLR.Sigma), Volume(aLR.Volume), PreFactors(aLR.PreFactors)
 {
   SuperCellEnum = aLR.SuperCellEnum;
 }

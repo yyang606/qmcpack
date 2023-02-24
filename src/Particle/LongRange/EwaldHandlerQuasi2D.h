@@ -65,7 +65,7 @@ public:
   // overrides end
 private:
   mRealType alpha;
-  mRealType area;
+  const mRealType area;
   ///store |k|
   std::vector<mRealType> kmags;
   // f(z, k) = e^{z k} erfc(k/(2\alpha)+\alpha*z)

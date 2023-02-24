@@ -54,6 +54,7 @@ void CrystalLattice<T, D>::reset()
   G      = inverse(R); //G = transpose(Inverse(R));
   Gt     = transpose(G);
   Volume = std::abs(det(R));
+  Area   = Volume/R(2,2);
   //M = dot(transpose(R),R);
   M   = dot(R, transpose(R));
   T t = TWOPI * TWOPI;

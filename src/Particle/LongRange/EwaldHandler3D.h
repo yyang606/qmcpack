@@ -33,8 +33,6 @@ public:
   mRealType Sigma;
   ///Volume of the supercell
   mRealType Volume;
-  ///Area of the supercell: always z is the slab direction
-  mRealType Area;
 
   TinyVector<mRealType, 4> PreFactors;
   ///store |k|
