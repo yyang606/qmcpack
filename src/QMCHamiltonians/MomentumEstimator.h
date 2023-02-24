@@ -70,6 +70,7 @@ public:
   /// print to hdf5 or scalar.dat
   bool hdf5_out;
   PosType twist;
+  const size_t ndim;
 };
 
 } // namespace qmcplusplus
