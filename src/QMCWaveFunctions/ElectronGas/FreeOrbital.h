@@ -41,6 +41,8 @@ public:
   // plug r_i into all orbitals
   void evaluateVGL(const ParticleSet& P, int i, ValueVector& pvec, GradVector& dpvec, ValueVector& d2pvec) override;
   void evaluateValue(const ParticleSet& P, int iat, ValueVector& pvec) override;
+  void evaluate_spin(const ParticleSet& P, int iat, ValueVector& psi, ValueVector& dpsi) override;
+  void evaluateVGL_spin(const ParticleSet& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi, ValueVector& dspin) override;
 
   // hessian matrix is needed by backflow
   void evaluate_notranspose(const ParticleSet& P,
@@ -69,6 +71,10 @@ private:
   const int mink;                   // minimum k index
   const int maxk;                   // maximum number of kvecs vectors
   std::vector<RealType> k2neg;      // minus kvecs^2
+  //temporary arrays
+  ValueVector psi_work;
+  GradVector dpsi_work;
+  ValueVector d2psi_work;
 };
 
 } // namespace qmcplusplus

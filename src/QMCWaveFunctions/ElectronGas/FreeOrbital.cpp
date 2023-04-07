@@ -20,6 +20,9 @@ FreeOrbital::FreeOrbital(const std::string& my_name, const std::vector<PosType>&
   k2neg.resize(maxk);
   for (int ik = 0; ik < maxk; ik++)
     k2neg[ik] = -dot(kvecs[ik], kvecs[ik]);
+  psi_work.resize(OrbitalSetSize);
+  dpsi_work.resize(OrbitalSetSize);
+  d2psi_work.resize(OrbitalSetSize);
 }
 
 FreeOrbital::~FreeOrbital() {}
@@ -72,6 +75,56 @@ void FreeOrbital::evaluateValue(const ParticleSet& P, int iat, ValueVector& pvec
 #ifndef QMC_COMPLEX
   pvec[0] = 1.0;
 #endif
+}
+
+void FreeOrbital::evaluate_spin(const ParticleSet& P, int iat, ValueVector& psi, ValueVector& dpsi)
+{
+#ifndef QMC_COMPLEX
+  throw std::runtime_error("evaluate_spin requires complex wavefunction");
+#endif
+  // spin part
+  ParticleSet::Scalar_t s = P.activeSpin(iat);
+  RealType coss(0.0), sins(0.0);
+  coss = std::cos(s);
+  sins = std::sin(s);
+  sincos(s, &sins, &coss);
+
+  ValueType eis(coss, sins);
+  ValueType emis(coss, -sins);
+  ValueType eye(0, 1.0);
+
+  // spatial part
+  evaluateValue(P, iat, psi_work);
+
+  // combine
+  psi  = eis * psi_work + emis * psi_work;
+  dpsi = eye * (eis * psi_work - emis * psi_work);
+}
+
+void FreeOrbital::evaluateVGL_spin(const ParticleSet& P, int iat, ValueVector& psi, GradVector& dpsi, ValueVector& d2psi, ValueVector& dspin)
+{
+#ifndef QMC_COMPLEX
+  throw std::runtime_error("evaluateVGL_spin requires complex wavefunction");
+#endif
+  // spin part
+  ParticleSet::Scalar_t s = P.activeSpin(iat);
+  RealType coss(0.0), sins(0.0);
+  coss = std::cos(s);
+  sins = std::sin(s);
+  sincos(s, &sins, &coss);
+
+  ValueType eis(coss, sins);
+  ValueType emis(coss, -sins);
+  ValueType eye(0, 1.0);
+
+  // spatial part
+  evaluateVGL(P, iat, psi_work, dpsi_work, d2psi_work);
+
+  // combine
+  psi   = eis * psi_work + emis * psi_work;
+  dpsi  = eis * dpsi_work + emis * dpsi_work;
+  d2psi = eis * d2psi_work + emis * d2psi_work;
+  dspin = eye * (eis * psi_work - emis * psi_work);
 }
 
 void FreeOrbital::evaluate_notranspose(const ParticleSet& P,
