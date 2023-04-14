@@ -52,11 +52,36 @@ void SOVMCUpdateAll::advanceWalker(Walker_t& thisWalker, bool recompute)
   for (int iter = 0; iter < nSubSteps; ++iter)
   { // make a few Monte-Carlo steps to decorrelate samples without calculating observables
     makeGaussRandomWithEngine(deltaR, RandomGen); // fill deltaR
+    if (ndim < 3)
+    {
+      for (int iat = 0; iat < deltaR.size(); ++iat)
+        deltaR[iat][2] = 0;
+    }
     makeGaussRandomWithEngine(deltaS, RandomGen);
     updated = false;
     if (UseDrift)
     {
-      APP_ABORT("All-electron spin moves with drift are not implemented\n");
+      assignDrift(Tau, MassInvP, thisWalker.G, drift); // fill variable drift
+      if (W.makeMoveAllParticlesWithDrift(thisWalker, drift, deltaR, SqrtTauOverMass))
+      { // W.R = thisWalker.R + drift + deltaR; W.DistTables,SK are updated; W.G,L are now stale
+        for (int iat = 0; iat < deltaS.size(); ++iat)
+          W.spins[iat] = thisWalker.spins[iat] + invSqrtSpinMass * SqrtTauOverMass[iat] * deltaS[iat];
+        RealType logpsi = Psi.evaluateLog(W); // update W.G,L; update Psi.PhaseValue,log_real_
+        RealType logGf  = -0.5 * Dot(deltaR, deltaR);
+        assignDrift(Tau, MassInvP, W.G, drift);      // update drift at proposed configuration
+        deltaR         = thisWalker.R - W.R - drift; // hijack deltaR to hold reverse move
+        RealType logGb = logBackwardGF(deltaR);
+
+        RealType g = std::exp(logGb - logGf + 2.0 * (logpsi - logpsi_old));
+        // accept or reject
+        if (RandomGen() <= g)
+        {
+          W.saveWalker(thisWalker);
+          ++nAccept;
+          logpsi_old = logpsi;
+          updated    = true;
+        }
+      }
     }
     else
     {

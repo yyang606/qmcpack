@@ -21,6 +21,7 @@
 #include "QMCDrivers/DMC/DMCUpdatePbyP.h"
 #include "QMCDrivers/DMC/DMCUpdatePbyPL2.h"
 #include "QMCDrivers/DMC/SODMCUpdatePbyP.h"
+#include "QMCDrivers/DMC/SODMCUpdateAll.h"
 #include "QMCDrivers/DMC/DMCUpdateAll.h"
 #include "QMCHamiltonians/HamiltonianPool.h"
 #include "Message/Communicate.h"
@@ -148,7 +149,11 @@ void DMC::resetUpdateEngines()
         }
         else
         {
-          APP_ABORT("SODMC Driver Mode must be PbyP\n");
+          Movers[ip] = new SODMCUpdateAll(*wClones[ip], *psiClones[ip], *hClones[ip], *Rng[ip]);
+          Movers[ip]->setSpinMass(SpinMass);
+          Movers[ip]->put(qmcNode);
+          Movers[ip]->resetRun(branchEngine.get(), estimatorClones[ip], traceClones[ip], DriftModifier);
+          Movers[ip]->initWalkers(W.begin() + wPerRank[ip], W.begin() + wPerRank[ip + 1]);
         }
       }
       else
