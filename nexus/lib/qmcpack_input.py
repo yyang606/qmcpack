@@ -1874,7 +1874,7 @@ sposet_builder = QIxmlFactory(
     name    = 'sposet_builder',
     types   = dict(bspline=bspline_builder,
                    einspline=bspline_builder,
-                   heg=heg_builder,
+                   free=heg_builder,
                    composite=composite_builder,
                    molecularorbital = molecular_orbital_builder),
     typekey = 'type'
@@ -4572,7 +4572,7 @@ def generate_sposets(type           = None,
 def generate_sposet_builder(type,*args,**kwargs):
     if type=='bspline' or type=='einspline':
         return generate_bspline_builder(type,*args,**kwargs)
-    elif type=='heg':
+    elif type=='free':
         return generate_heg_builder(*args,**kwargs)
     else:
         QmcpackInput.class_error('cannot generate sposet_builder\n  sposet_builder of type {0} is unrecognized'.format(type))
