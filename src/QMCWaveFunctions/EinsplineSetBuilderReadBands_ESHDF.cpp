@@ -96,7 +96,7 @@ bool EinsplineSetBuilder::ReadGvectors_ESHDF()
     MeshSize[0] = (MeshSize[0] > 128) ? *ix : (MeshSize[0] + MeshSize[0] % 2);
     MeshSize[1] = (MeshSize[1] > 128) ? *iy : (MeshSize[1] + MeshSize[1] % 2);
     MeshSize[2] = (MeshSize[2] > 128) ? *iz : (MeshSize[2] + MeshSize[2] % 2);
-    if (ndim < 3) MeshSize[2] = 1;
+    if (ndim < 3) MeshSize[2] = 2;
     if (Version[0] < 2)
     {
       //get the map for each twist, but use the MeshSize from kpoint_0
