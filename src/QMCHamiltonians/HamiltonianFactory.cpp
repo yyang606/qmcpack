@@ -39,6 +39,7 @@
 #include "QMCHamiltonians/MoirePotential.h"
 #include "QMCHamiltonians/StaticStructureFactor.h"
 #include "QMCHamiltonians/SpinDensity.h"
+#include "QMCHamiltonians/MagDensity.h"
 #include "QMCHamiltonians/OrbitalImages.h"
 #if !defined(REMOVE_TRACEMANAGER)
 #include "QMCHamiltonians/EnergyDensityEstimator.h"
@@ -245,6 +246,13 @@ bool HamiltonianFactory::build(xmlNodePtr cur)
         app_log() << "  Adding SpinDensity" << std::endl;
         std::unique_ptr<SpinDensity> apot = std::make_unique<SpinDensity>(targetPtcl);
         apot->put(element);
+        targetH->addOperator(std::move(apot), potName, false);
+      }
+      else if (potType == "magdensity")
+      {
+        app_log() << "  Adding MagDensity" << std::endl;
+        std::unique_ptr<MagDensityEstimator> apot = std::make_unique<MagDensityEstimator>(targetPtcl, *targetPsi);
+        apot->put(cur);
         targetH->addOperator(std::move(apot), potName, false);
       }
       else if (potType == "structurefactor")

@@ -44,6 +44,7 @@ set(HAMSRCS
     StaticStructureFactor.cpp
     OrbitalImages.cpp
     SpinDensity.cpp
+    MagDensity.cpp
     SpeciesKineticEnergy.cpp
     LatticeDeviationEstimator.cpp
     SpaceWarpTransformation.cpp
