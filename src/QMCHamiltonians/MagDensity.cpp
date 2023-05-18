@@ -244,14 +244,8 @@ void MagDensityEstimator::setParticlePropertyList(PropertySetType& plist, int of
 
 bool MagDensityEstimator::put(xmlNodePtr cur)
 {
-  Delta = 0.1;
-  std::vector<double> delta;
-  std::string debug("no");
-  std::string potential("no");
   std::string integrator_string("simpson");
   OhmmsAttributeSet attrib;
-  attrib.add(debug, "debug");
-  attrib.add(potential, "potential");
   attrib.add(density_min[0], "x_min");
   attrib.add(density_min[1], "y_min");
   attrib.add(density_min[2], "z_min");
@@ -260,8 +254,48 @@ bool MagDensityEstimator::put(xmlNodePtr cur)
   attrib.add(density_max[2], "z_max");
   attrib.add(nSamples_, "nsamples");
   attrib.add(integrator_string, "spin_integral");
-  attrib.add(Delta, "delta");
   attrib.put(cur);
+
+  xmlNodePtr element = cur->xmlChildrenNode;
+  while (element != NULL)
+  {
+    std::string ename((const char*)element->name);
+    if (ename == "estimator")
+    {
+      xmlNodePtr e1 = element->xmlChildrenNode;
+      while (e1 != NULL)
+      {
+        std::string en1((const char*)e1->name);
+        if (en1 == "parameter")
+        {
+          const std::string name(getXMLAttributeValue(e1, "name"));
+          if (name == "grid")
+          {
+            putContent(NumGrids, e1);
+          }
+          else if (name == "samples")
+          {
+            putContent(nSamples_, e1);
+          }
+          else if (name == "integrator")
+          {
+            putContent(integrator_string, e1);
+          }
+        }
+        e1 = e1->next;
+      }
+    }
+    element = element->next;
+  }
+  app_log() << " grid =" << NumGrids[0] << " " << NumGrids[1] << " " << NumGrids[2] << std::endl;
+  app_log() << " nsamples = " << nSamples_ << std::endl;
+  NumGrids[OHMMS_DIM] = 1;
+  for (int l=0; l<Delta.size(); l++)
+  {
+    Delta[l] = 1.0/NumGrids[l];
+    DeltaInv[l] = 1.0/Delta[l];
+    NumGrids[OHMMS_DIM] *= NumGrids[l];
+  }
 
   std::string tmp = lowerCase(integrator_string);
   size_t found    = tmp.find("simp");
@@ -295,13 +329,12 @@ bool MagDensityEstimator::put(xmlNodePtr cur)
     for (int dim = 0; dim < OHMMS_DIM; ++dim)
       ScaleFactor[dim] = 1.0 / (density_max[dim] - density_min[dim]);
   }
-  resize();
   return true;
 }
 
 bool MagDensityEstimator::get(std::ostream& os) const
 {
-  os << name_ << " bin =" << Delta << " bohrs " << std::endl;
+  os << name_ << " grid =" << NumGrids[0] << " " << NumGrids[1] << " " << NumGrids[2] << std::endl;
   return true;
 }
 
@@ -320,21 +353,6 @@ std::unique_ptr<OperatorBase> MagDensityEstimator::makeClone(ParticleSet& qp, Tr
   myClone->Periodic                            = Periodic;
   myClone->prefix                              = prefix;
   return myClone;
-}
-
-void MagDensityEstimator::resize()
-{
-  for (int i = 0; i < OHMMS_DIM; ++i)
-  {
-    DeltaInv[i] = 1.0 / Delta[i];
-    NumGrids[i] = static_cast<int>(DeltaInv[i]);
-    if (NumGrids[i] < 2)
-    {
-      APP_ABORT("MagDensityEstimator::resize invalid bin size");
-    }
-  }
-  app_log() << " MagDensityEstimator bin_size= " << NumGrids << " delta = " << Delta << std::endl;
-  NumGrids[OHMMS_DIM] = NumGrids[0] * NumGrids[1] * NumGrids[2];
 }
 
 } // namespace qmcplusplus
