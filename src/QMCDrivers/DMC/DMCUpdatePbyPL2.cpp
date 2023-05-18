@@ -55,6 +55,7 @@ void DMCUpdatePbyPL2::advanceWalker(Walker_t& thisWalker, bool recompute)
   }
   //create a 3N-Dimensional Gaussian with variance=1
   makeGaussRandomWithEngine(deltaR, RandomGen);
+  if (ndim < 3) for (int iat = 0; iat < deltaR.size(); ++iat) deltaR[iat][2] = 0;
   int nAcceptTemp(0);
   int nRejectTemp(0);
   //copy the old energy and scale factor of drift

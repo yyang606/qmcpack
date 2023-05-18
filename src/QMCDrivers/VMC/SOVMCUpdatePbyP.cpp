@@ -52,6 +52,7 @@ void SOVMCUpdatePbyP::advanceWalker(Walker_t& thisWalker, bool recompute)
   {
     //create a 3N-Dimensional Gaussian with variance=1
     makeGaussRandomWithEngine(deltaR, RandomGen);
+    if (ndim < 3) for (int iat = 0; iat < deltaR.size(); ++iat) deltaR[iat][2] = 0;
     makeGaussRandomWithEngine(deltaS, RandomGen);
     moved = false;
     for (int ig = 0; ig < W.groups(); ++ig) //loop over species

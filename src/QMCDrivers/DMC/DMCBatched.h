@@ -50,6 +50,7 @@ public:
     const DMCDriverInput& dmcdrv_input;
     const DriftModifierBase& drift_modifier;
     const MCPopulation& population;
+    const size_t ndim;
     SFNBranch& branch_engine;
     IndexType recalculate_properties_period;
     IndexType step            = -1;
@@ -59,7 +60,7 @@ public:
                    DriftModifierBase& drift_mod,
                    SFNBranch& branch_eng,
                    MCPopulation& pop)
-        : qmcdrv_input(qmci), dmcdrv_input(dmci), drift_modifier(drift_mod), population(pop), branch_engine(branch_eng)
+        : qmcdrv_input(qmci), dmcdrv_input(dmci), drift_modifier(drift_mod), population(pop), ndim(pop.get_golden_electrons().getLattice().ndim), branch_engine(branch_eng)
     {}
   };
 

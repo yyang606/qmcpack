@@ -44,7 +44,8 @@ QMCUpdateBase::QMCUpdateBase(MCWalkerConfiguration& w,
       RandomGen(rg),
       branchEngine(0),
       DriftModifier(0),
-      Estimators(0)
+      Estimators(0),
+      ndim(w.getLattice().ndim)
 {
   setDefaults();
 }
@@ -60,7 +61,8 @@ QMCUpdateBase::QMCUpdateBase(MCWalkerConfiguration& w, TrialWaveFunction& psi, Q
       RandomGen(rg),
       branchEngine(0),
       DriftModifier(0),
-      Estimators(0)
+      Estimators(0),
+      ndim(w.getLattice().ndim)
 {
   setDefaults();
 }
