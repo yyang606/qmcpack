@@ -20,6 +20,9 @@ namespace qmcplusplus
 class GaussianOrbital : public SPOSet
 {
 public:
+using HessType    = Tensor<ValueType, OHMMS_DIM>;
+using GGGType     = TinyVector<HessType, OHMMS_DIM>;
+using GGGMatrix   = Matrix<GGGType>;
   GaussianOrbital(const std::string& my_name, ParticleSet& target, ParticleSet& source, RealType cexpo, const TinyVector<int, OHMMS_DIM>& pbc_images);
   ~GaussianOrbital();
 
