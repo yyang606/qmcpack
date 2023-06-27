@@ -85,6 +85,8 @@ struct CrystalLattice : public LRBreakupParameters<T, D>
   /**@brief Physical properties of a supercell*/
   /// Volume of a supercell
   Scalar_t Volume;
+  /// Area of a supercell
+  Scalar_t Area;
   /// Wigner-Seitz cell radius
   Scalar_t WignerSeitzRadius;
   /// simulation cell radii
