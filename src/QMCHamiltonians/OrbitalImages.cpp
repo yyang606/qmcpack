@@ -22,7 +22,7 @@ OrbitalImages::OrbitalImages(ParticleSet& P,
                              const PSPool& PSP,
                              Communicate* mpicomm,
                              const SPOMap& spomap)
-    : psetpool(PSP), spomap_(spomap)
+    : psetpool(PSP), sposet_indices(std::make_shared<std::vector<std::vector<int>>>()), spomap_(spomap)
 {
   //keep the electron particle to get the cell later, if necessary
   Peln = &P;
@@ -219,7 +219,7 @@ bool OrbitalImages::put(xmlNodePtr cur)
 
     sposets.push_back(spo_it->second->makeClone());
     auto& sposet = sposets.back();
-    std::vector<int>& sposet_inds = (*sposet_indices)[i];
+    auto& sposet_inds = (*sposet_indices)[i];
     if (sposet_inds.size() == 0)
       for (int n = 0; n < sposet->size(); ++n)
         sposet_inds.push_back(n);
