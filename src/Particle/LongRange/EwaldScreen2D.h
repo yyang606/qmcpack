@@ -2,25 +2,20 @@
 // This file is distributed under the University of Illinois/NCSA Open Source License.
 // See LICENSE file in top directory for details.
 //
-// Copyright (c) 2022 QMCPACK developers.
+// Copyright (c) 2023 QMCPACK developers.
 //
 // File developed by: Yubo "Paul" Yang, yubo.paul.yang@gmail.com, CCQ @ Flatiron
 //
 // File created by: Yubo "Paul" Yang, yubo.paul.yang@gmail.com, CCQ @ Flatiron
 //////////////////////////////////////////////////////////////////////////////////////
 
-#ifndef QMCPLUSPLUS_EWALD2D_HANDLER_H
-#define QMCPLUSPLUS_EWALD2D_HANDLER_H
+#ifndef QMCPLUSPLUS_EWALDSCREEN2D_H
+#define QMCPLUSPLUS_EWALDSCREEN2D_H
 
 #include "Particle/LongRange/LRHandlerBase.h"
 
 namespace qmcplusplus
 {
-/* LR breakup for the standard Ewald method in 2D
- * 1/r = \left[ \sum_r erfc(\alpha*r)/r + erf(\alpha*r)/r \right]
- *     = \left[ \sum_r erfc(\alpha*r)/r \right] +
- *       \left[ \sum_k 2\pi/k * erfc(k/(2*\alpha)) \right]
- */
 class EwaldScreen2D : public LRHandlerBase
 {
 public:
