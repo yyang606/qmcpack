@@ -14,8 +14,8 @@
 namespace qmcplusplus
 {
 
-EwaldScreen2D::EwaldScreen2D(ParticleSet& ref, mRealType kc_in)
-  : LRHandlerBase(kc_in)
+EwaldScreen2D::EwaldScreen2D(ParticleSet& ref, mRealType dgate_in, mRealType kc_in)
+  : LRHandlerBase(kc_in), dgate(dgate_in)
 {
   if (ref.getLattice().ndim != 2)
     throw std::runtime_error("2D Ewald requires 2D Lattice");
@@ -25,6 +25,7 @@ EwaldScreen2D::EwaldScreen2D(ParticleSet& ref, mRealType kc_in)
   area = ref.getLattice().Volume/ref.getLattice().R(2,2);
   // report
   app_log() << "    alpha = " << alpha << " area = " << area << std::endl;
+  app_log() << "    dgate = " << dgate << std::endl;
   fillFk(ref.getSimulationCell().getKLists());
 }
 
@@ -41,7 +42,8 @@ void EwaldScreen2D::fillFk(const KContainer& KList)
   for (int ks = 0, ki = 0; ks < Fk_symm.size(); ks++)
   {
     kmag = std::sqrt(KList.ksq[ki]);
-    uk = knorm * erfc(kalpha*kmag)/kmag;
+    //uk = knorm * erfc(kalpha*kmag)/kmag;
+    uk = knorm/kmag*(std::tanh(kmag*dgate)-std::erf(kalpha*kmag));
     Fk_symm[ks] = uk;
     while (ki < KList.kshell[ks + 1] && ki < Fk.size())
       Fk[ki++] = uk;
