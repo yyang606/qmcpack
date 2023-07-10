@@ -26,7 +26,7 @@ public:
 
   // short-range part
   inline mRealType evaluate(mRealType r, mRealType rinv) const override { return erfc(alpha*r) * rinv; }
-  inline mRealType evaluateLR_r0() const override { return 2.0 * alpha / std::sqrt(M_PI); }
+  mRealType evaluateLR_r0() const override;
 
   // long-range part
   inline mRealType evaluateLR(mRealType r) const override { return erf(alpha*r) / r; }

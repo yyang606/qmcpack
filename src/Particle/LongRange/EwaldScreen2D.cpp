@@ -42,12 +42,33 @@ void EwaldScreen2D::fillFk(const KContainer& KList)
   for (int ks = 0, ki = 0; ks < Fk_symm.size(); ks++)
   {
     kmag = std::sqrt(KList.ksq[ki]);
-    //uk = knorm * erfc(kalpha*kmag)/kmag;
     uk = knorm/kmag*(std::tanh(kmag*dgate)-std::erf(kalpha*kmag));
     Fk_symm[ks] = uk;
     while (ki < KList.kshell[ks + 1] && ki < Fk.size())
       Fk[ki++] = uk;
   }
+}
+
+EwaldScreen2D::mRealType EwaldScreen2D::evaluateLR_r0() const
+{
+  const mRealType kalpha = 1.0 / (2.0*alpha);
+  mRealType kmax_d, kmax_a, kmax;
+  // let 1-tanh(kd) < 5e-9
+  kmax_d = 10.0/dgate;
+  // let 1-erf(k/(2*alpha)) < 5e-9
+  kmax_a = 8.3*alpha;
+  kmax = std::max(kmax_d, kmax_a);
+  // iFT[vlr_k] at r=0
+  double dk = LR_kc/1e6;
+  int nk = kmax/dk;
+  double vlr_r0 = 0.0;
+  for (int ik=0;ik<nk;ik++)
+  {
+    double k=ik*dk;
+    vlr_r0 += std::tanh(k*dgate) - std::erf(k*kalpha);
+  }
+  vlr_r0 *= dk;
+  return vlr_r0;
 }
 
 } // qmcplusplus
