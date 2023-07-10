@@ -14,11 +14,13 @@
 namespace qmcplusplus
 {
 
-EwaldScreen2D::EwaldScreen2D(ParticleSet& ref, mRealType dgate_in, mRealType kc_in)
-  : LRHandlerBase(kc_in), dgate(dgate_in)
+EwaldScreen2D::EwaldScreen2D(ParticleSet& ref, mRealType kc_in)
+  : LRHandlerBase(kc_in), dgate(ref.getLattice().dgate)
 {
   if (ref.getLattice().ndim != 2)
     throw std::runtime_error("2D Ewald requires 2D Lattice");
+  if (dgate < 0)
+    throw std::runtime_error("screened Ewald requires distance_to_gate");
   LR_rc = ref.getLattice().LR_rc; // CoulombPBC needs get_rc() to createSpline4RbyVs
   LR_kc = ref.getLattice().LR_kc; // get_kc() is used in QMCFiniteSize
   alpha = std::sqrt(LR_kc/2.0/LR_rc);

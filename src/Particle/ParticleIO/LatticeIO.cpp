@@ -143,6 +143,10 @@ bool LatticeParser::put(xmlNodePtr cur)
         else
           throw UniformCommunicateError("LatticeParser::put. Long range breakup handler not recognized.");
       }
+      else if (aname == "distance_to_gate")
+      {
+        putContent(ref_.dgate, cur);
+      }
       else if (aname == "LR_tol")
       {
         putContent(ref_.LR_tol, cur);

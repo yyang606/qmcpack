@@ -19,7 +19,7 @@ namespace qmcplusplus
 class EwaldScreen2D : public LRHandlerBase
 {
 public:
-  EwaldScreen2D(ParticleSet& ref, mRealType dgate_in, mRealType kc_in=-1.0);
+  EwaldScreen2D(ParticleSet& ref, mRealType kc_in=-1.0);
 
   // copy constructor
   LRHandlerBase* makeClone(ParticleSet& ref) const override { return new EwaldScreen2D(*this); }
