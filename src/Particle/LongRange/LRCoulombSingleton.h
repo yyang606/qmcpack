@@ -43,7 +43,8 @@ struct LRCoulombSingleton
     EWALD,
     NATOLI,
     QUASI2D,
-    STRICT2D
+    STRICT2D,
+    SCREEN2D
   };
   static lr_type this_lr_type;
   ///Stores the energ optimized LR handler.

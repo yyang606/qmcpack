@@ -241,6 +241,7 @@ struct CrystalLattice : public LRBreakupParameters<T, D>
     Base::LR_kc         = rhs.LR_kc;
     Base::LR_rc         = rhs.LR_rc;
     Base::ndim          = rhs.ndim;
+    Base::dgate         = rhs.dgate;
 
     explicitly_defined = rhs.explicitly_defined;
     BoxBConds          = rhs.BoxBConds;

@@ -135,8 +135,17 @@ bool LatticeParser::put(xmlNodePtr cur)
         }
         else if (handler_type == "ewald_quasi2d")
           LRCoulombSingleton::this_lr_type = LRCoulombSingleton::QUASI2D;
+        else if (handler_type == "ewald_screen2d")
+        {
+          LRCoulombSingleton::this_lr_type = LRCoulombSingleton::SCREEN2D;
+          ref_.ndim                        = 2;
+        }
         else
           throw UniformCommunicateError("LatticeParser::put. Long range breakup handler not recognized.");
+      }
+      else if (aname == "distance_to_gate")
+      {
+        putContent(ref_.dgate, cur);
       }
       else if (aname == "LR_tol")
       {
