@@ -176,7 +176,6 @@ void MultiDiracDeterminant::evaluateForWalkerMove(const ParticleSet& P, bool fro
     }
   }
 
-
   const auto& confgList = *ciConfigList;
 
   {
@@ -216,7 +215,7 @@ void MultiDiracDeterminant::evaluateForWalkerMove(const ParticleSet& P, bool fro
       it++;
     }
     lapls(ReferenceDeterminant, iat) = ratioLapl;
-    for (size_t idim = 0; idim < OHMMS_DIM; idim++)
+    for (size_t idim = 0; idim < ndim; idim++)
     {
       dpsiMinv = psiMinv;
       it       = confgList[ReferenceDeterminant].occup.begin();
@@ -310,7 +309,7 @@ void MultiDiracDeterminant::evaluateForWalkerMoveWithSpin(const ParticleSet& P, 
     }
     lapls(ReferenceDeterminant, iat)     = ratioLapl;
     spingrads(ReferenceDeterminant, iat) = spingradRatio;
-    for (size_t idim = 0; idim < OHMMS_DIM; idim++)
+    for (size_t idim = 0; idim < ndim; idim++)
     {
       dpsiMinv = psiMinv;
       it       = confgList[ReferenceDeterminant].occup.begin();
@@ -552,6 +551,7 @@ MultiDiracDeterminant::MultiDiracDeterminant(const MultiDiracDeterminant& s)
       offload_timer(s.offload_timer),
       transferH2D_timer(s.transferH2D_timer),
       transferD2H_timer(s.transferD2H_timer),
+      ndim(2), // !!!! HACK
       Phi(s.Phi->makeClone()),
       NumOrbitals(Phi->getOrbitalSetSize()),
       FirstIndex(s.FirstIndex),
@@ -598,6 +598,7 @@ MultiDiracDeterminant::MultiDiracDeterminant(std::unique_ptr<SPOSet>&& spos, boo
       offload_timer(*timer_manager.createTimer(getClassName() + "::offload")),
       transferH2D_timer(*timer_manager.createTimer(getClassName() + "::transferH2D")),
       transferD2H_timer(*timer_manager.createTimer(getClassName() + "::transferD2H")),
+      ndim(2), // !!!! HACK
       Phi(std::move(spos)),
       NumOrbitals(Phi->getOrbitalSetSize()),
       FirstIndex(first),

@@ -38,6 +38,7 @@ public:
   NewTimer &updateInverse_timer, &calculateRatios_timer, &calculateGradRatios_timer, &updateRatios_timer;
   NewTimer &evaluateDetsForPtclMove_timer, &evaluateDetsAndGradsForPtclMove_timer, &evaluateGrads_timer;
   NewTimer &offload_timer, &transferH2D_timer, &transferD2H_timer;
+  const size_t ndim;
 
   // Optimizable parameter
   opt_variables_type myVars;

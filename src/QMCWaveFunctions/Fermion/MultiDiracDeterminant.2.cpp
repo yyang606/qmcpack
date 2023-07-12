@@ -562,7 +562,7 @@ void MultiDiracDeterminant::evaluateDetsAndGradsForPtclMove(const ParticleSet& P
   }
   buildTableMatrix_calculateRatios(ReferenceDeterminant, psiMinv_temp, TpsiM, *detData, *uniquePairs, *DetSigns,
                                    table_matrix, new_ratios_to_ref_);
-  for (size_t idim = 0; idim < OHMMS_DIM; idim++)
+  for (size_t idim = 0; idim < ndim; idim++)
   {
     {
       ScopedTimer inverse(updateInverse_timer);
@@ -622,7 +622,7 @@ void MultiDiracDeterminant::evaluateDetsAndGradsForPtclMoveWithSpin(const Partic
   }
   buildTableMatrix_calculateRatios(ReferenceDeterminant, psiMinv_temp, TpsiM, *detData, *uniquePairs, *DetSigns,
                                    table_matrix, new_ratios_to_ref_);
-  for (size_t idim = 0; idim < OHMMS_DIM; idim++)
+  for (size_t idim = 0; idim < ndim; idim++)
   {
     {
       ScopedTimer inverse(updateInverse_timer);
@@ -886,7 +886,7 @@ void MultiDiracDeterminant::evaluateGrads(ParticleSet& P, int iat)
   assert(WorkingIndex >= 0 && WorkingIndex < LastIndex - FirstIndex);
 
   const auto& confgList = *ciConfigList;
-  for (size_t idim = 0; idim < OHMMS_DIM; idim++)
+  for (size_t idim = 0; idim < ndim; idim++)
   {
     //dpsiMinv = psiMinv_temp;
     dpsiMinv         = psiMinv;
@@ -916,7 +916,7 @@ void MultiDiracDeterminant::evaluateGradsWithSpin(ParticleSet& P, int iat)
   assert(WorkingIndex >= 0 && WorkingIndex < LastIndex - FirstIndex);
 
   const auto& confgList = *ciConfigList;
-  for (size_t idim = 0; idim < OHMMS_DIM; idim++)
+  for (size_t idim = 0; idim < ndim; idim++)
   {
     //dpsiMinv = psiMinv_temp;
     dpsiMinv         = psiMinv;
