@@ -38,6 +38,7 @@ public:
   NewTimer &updateInverse_timer, &calculateRatios_timer, &calculateGradRatios_timer, &updateRatios_timer;
   NewTimer &evaluateDetsForPtclMove_timer, &evaluateDetsAndGradsForPtclMove_timer, &evaluateGrads_timer;
   NewTimer &offload_timer, &transferH2D_timer, &transferD2H_timer;
+  const size_t ndim;
 
   // Optimizable parameter
   opt_variables_type myVars;
@@ -123,7 +124,7 @@ public:
    *@param spos the single-particle orbital set
    *@param first index of the first particle
    */
-  MultiDiracDeterminant(std::unique_ptr<SPOSet>&& spos, bool spinor, int first, int nel);
+  MultiDiracDeterminant(std::unique_ptr<SPOSet>&& spos, bool spinor, int first, int nel, int ndim);
 
   ///default destructor
   ~MultiDiracDeterminant() override;
