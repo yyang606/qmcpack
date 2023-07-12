@@ -551,7 +551,7 @@ MultiDiracDeterminant::MultiDiracDeterminant(const MultiDiracDeterminant& s)
       offload_timer(s.offload_timer),
       transferH2D_timer(s.transferH2D_timer),
       transferD2H_timer(s.transferD2H_timer),
-      ndim(2), // !!!! HACK
+      ndim(s.ndim),
       Phi(s.Phi->makeClone()),
       NumOrbitals(Phi->getOrbitalSetSize()),
       FirstIndex(s.FirstIndex),
@@ -581,7 +581,7 @@ std::unique_ptr<WaveFunctionComponent> MultiDiracDeterminant::makeClone(Particle
  *@param first index of the first particle
  *@param spinor flag to determinane if spin arrays need to be resized and used
  */
-MultiDiracDeterminant::MultiDiracDeterminant(std::unique_ptr<SPOSet>&& spos, bool spinor, int first, int nel)
+MultiDiracDeterminant::MultiDiracDeterminant(std::unique_ptr<SPOSet>&& spos, bool spinor, int first, int nel, int ndim_in)
     : inverse_timer(*timer_manager.createTimer(getClassName() + "::invertRefDet")),
       buildTable_timer(*timer_manager.createTimer(getClassName() + "::buildTable")),
       table2ratios_timer(*timer_manager.createTimer(getClassName() + "::table2ratios")),
@@ -598,7 +598,7 @@ MultiDiracDeterminant::MultiDiracDeterminant(std::unique_ptr<SPOSet>&& spos, boo
       offload_timer(*timer_manager.createTimer(getClassName() + "::offload")),
       transferH2D_timer(*timer_manager.createTimer(getClassName() + "::transferH2D")),
       transferD2H_timer(*timer_manager.createTimer(getClassName() + "::transferD2H")),
-      ndim(2), // !!!! HACK
+      ndim(ndim_in),
       Phi(std::move(spos)),
       NumOrbitals(Phi->getOrbitalSetSize()),
       FirstIndex(first),

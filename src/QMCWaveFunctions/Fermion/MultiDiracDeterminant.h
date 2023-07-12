@@ -124,7 +124,7 @@ public:
    *@param spos the single-particle orbital set
    *@param first index of the first particle
    */
-  MultiDiracDeterminant(std::unique_ptr<SPOSet>&& spos, bool spinor, int first, int nel);
+  MultiDiracDeterminant(std::unique_ptr<SPOSet>&& spos, bool spinor, int first, int nel, int ndim);
 
   ///default destructor
   ~MultiDiracDeterminant() override;

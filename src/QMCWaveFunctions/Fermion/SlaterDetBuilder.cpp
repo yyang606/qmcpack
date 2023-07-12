@@ -519,7 +519,7 @@ std::unique_ptr<MultiSlaterDetTableMethod> SlaterDetBuilder::createMSDFast(
   for (int grp = 0; grp < nGroups; grp++)
   {
     dets.emplace_back(std::make_unique<MultiDiracDeterminant>(std::move(spo_clones[grp]), spinor, targetPtcl.first(grp),
-                                                              nptcls[grp]));
+                                                              nptcls[grp], target_ptcl.getLattice().ndim));
     std::vector<ci_configuration2> list(uniqueConfgs[grp].size());
     for (int i = 0; i < list.size(); i++)
     {
