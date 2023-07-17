@@ -30,6 +30,7 @@
 #include "QMCHamiltonians/LatticeDeviationEstimator.h"
 #include "QMCHamiltonians/MomentumEstimator.h"
 #include "QMCHamiltonians/Pressure.h"
+#include "QMCHamiltonians/ComplexPolarization.h"
 #include "QMCHamiltonians/ForwardWalking.h"
 #include "QMCHamiltonians/PairCorrEstimator.h"
 #include "QMCHamiltonians/DensityEstimator.h"
@@ -370,6 +371,12 @@ bool HamiltonianFactory::build(xmlNodePtr cur)
           //             DMCPressureCorr* DMCP = new DMCPressureCorr(targetPtcl,nlen);
           //             targetH->addOperator(DMCP,"PressureSum",false);
         }
+      }
+      else if (potType == "polarization")
+      {
+        std::unique_ptr<ComplexPolarization> cp = std::make_unique<ComplexPolarization>(targetPtcl);
+        cp->put(element);
+        targetH->addOperator(std::move(cp), "compz", false);
       }
       else if (potType == "momentum")
       {
