@@ -45,8 +45,10 @@ private:
   const ParticleSet::ParticleLayout& lattice; // used for frac. coord.
   const size_t ndim;
   //  my_index_: the index of this estimator in the property list in target pset
+  const int d_aa_ID_;
   PosType center, corner;
   TinyVector<int, DIM> grid;
+  TinyVector<int, DIM> gdims;
   int npoints;
 
 }; // VectorPairCorr

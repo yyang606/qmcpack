@@ -11,6 +11,7 @@
 
 #include "VectorPairCorr.h"
 #include "OhmmsData/AttributeSet.h"
+#include "Particle/DistanceTable.h"
 
 namespace qmcplusplus
 {
@@ -18,7 +19,9 @@ VectorPairCorr::VectorPairCorr(ParticleSet& P) :
   tpset(P),
   lattice(P.getLattice()),
   ndim(lattice.ndim),
+  d_aa_ID_(P.addTable(P, DTModes::NEED_FULL_TABLE_ON_HOST_AFTER_DONEPBYP)),
   center(0.0),
+  corner(0.0),
   grid(-1)
 {
   update_mode_.set(COLLECTABLE, 1);
@@ -47,15 +50,20 @@ bool VectorPairCorr::put(xmlNodePtr cur)
     element = element->next;
   }
   // number of grid points
-  if (grid[0] <= 0)
-  {
-    std::ostringstream msg;
-    msg << "grid is required in VectorPairCorr\n";
-    throw std::runtime_error(msg.str());
-  }
   npoints = 1;
   for (int l = 0; l < ndim; ++l)
+  {
+    if (grid[0] <= 0)
+    {
+      std::ostringstream msg;
+      msg << "grid is required in VectorPairCorr\n";
+      throw std::runtime_error(msg.str());
+    }
     npoints *= grid[l];
+  }
+  gdims[0] = npoints / grid[0];
+  for (int d = 1; d < ndim; ++d)
+    gdims[d] = gdims[d - 1] / grid[d];
   // corner
   corner = 0.0;
   for (int l = 0; l < ndim; ++l)
@@ -96,6 +104,22 @@ void VectorPairCorr::registerCollectables(std::vector<ObservableHelper>& h5desc,
 VectorPairCorr::Return_t VectorPairCorr::evaluate(ParticleSet& P)
 {
   RealType wgt = t_walker_->Weight;
+  const auto& dii(P.getDistTableAA(d_aa_ID_));
+  int offset = my_index_;
+  for (int iat = 1; iat < dii.centers(); ++iat)
+  {
+    const auto& drs = dii.getDisplRow(iat);
+    for (int j = 0; j < iat; ++j)
+    { // steal from SpinDensity
+      const PosType u = lattice.toUnit(drs[j]-corner);
+      //if ((iat == 1) and (j == 0)) app_log() << u << std::endl; // !!!! HACK
+      int point = offset;
+      for (int l=0;l<ndim;l++)
+        point += gdims[l] * ((int)(grid[l] * (u[l] - std::floor(u[l]))));
+      if ((0 <= point) and (point < npoints)) P.Collectables[point] += wgt;
+    }
+  }
+
   value_ = 0.0; // Value is no longer used in scalar.dat
   return value_;
 }
