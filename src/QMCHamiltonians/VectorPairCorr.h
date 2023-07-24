@@ -20,7 +20,6 @@ class VectorPairCorr : public OperatorBase
 {
 public:
   VectorPairCorr(ParticleSet& P);
-  ~VectorPairCorr(){};
 
   bool put(xmlNodePtr cur) override final; // read input xml node, required
 
@@ -29,9 +28,10 @@ public:
   // allocate multiple columns in scalar.dat (plist) or stat.h5 (collectables)
   void addObservables(PropertySetType& plist, BufferType& collectables) override final;
   // fill columns in scalar.dat
-  void setObservables(PropertySetType& plist) override final {};
+  void setObservables(PropertySetType& plist) override final {}
   // fill datasets in stat.h5
   void registerCollectables(std::vector<ObservableHelper>& h5desc, hdf_archive& file) const override final;
+  void setParticlePropertyList(PropertySetType& plist, int offset) override final {}
 
   // ---- begin required overrides
   // pure virtual functions require overrider
