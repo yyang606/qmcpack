@@ -18,6 +18,7 @@ namespace qmcplusplus
 VectorPairCorr::VectorPairCorr(ParticleSet& P) :
   lattice(P.getLattice()),
   ndim(lattice.ndim),
+  nelec(P.getTotalNum()),
   d_aa_ID_(P.addTable(P, DTModes::NEED_FULL_TABLE_ON_HOST_AFTER_DONEPBYP)),
   grid(-1)
 {
@@ -62,6 +63,9 @@ bool VectorPairCorr::put(xmlNodePtr cur)
   gdims[0] = npoints / grid[0];
   for (int d = 1; d < ndim; ++d)
     gdims[d] = gdims[d - 1] / grid[d];
+  // normalize
+  const size_t npair = (nelec*(nelec-1))/2;
+  norm = (RealType)npoints/npair; // 1/[average hit per bin]
   // report
   get(app_log());
   return true;
@@ -74,6 +78,7 @@ bool VectorPairCorr::get(std::ostream& os) const
   os << "  npoints = " << npoints << std::endl;
   os << "  grid    = " << grid << std::endl;
   os << "  gdims   = " << gdims << std::endl;
+  os << "  norm    = " << norm << std::endl;
   return true;
 }
 
@@ -95,7 +100,7 @@ void VectorPairCorr::registerCollectables(std::vector<ObservableHelper>& h5desc,
 
 VectorPairCorr::Return_t VectorPairCorr::evaluate(ParticleSet& P)
 {
-  RealType wgt = t_walker_->Weight;
+  RealType wt = t_walker_->Weight;
   const auto& dii(P.getDistTableAA(d_aa_ID_));
   int offset = my_index_;
   for (int iat = 1; iat < dii.centers(); ++iat)
@@ -107,7 +112,7 @@ VectorPairCorr::Return_t VectorPairCorr::evaluate(ParticleSet& P)
       int point = offset;
       for (int l=0;l<ndim;l++)
         point += gdims[l] * ((int)(grid[l] * (u[l] - std::floor(u[l]))));
-      if ((0 <= point-offset) and (point-offset < npoints)) P.Collectables[point] += wgt;
+      if ((0 <= point-offset) and (point-offset < npoints)) P.Collectables[point] += wt*norm;
     }
   }
 

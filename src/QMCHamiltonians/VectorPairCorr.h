@@ -43,13 +43,12 @@ public:
 
 private:
   const ParticleSet::ParticleLayout& lattice; // used for frac. coord.
-  const size_t ndim;
+  const size_t ndim, nelec;
   //  my_index_: the index of this estimator in the property list in target pset
   const int d_aa_ID_;
-  TinyVector<int, DIM> grid;
-  TinyVector<int, DIM> gdims;
+  TinyVector<int, DIM> grid, gdims;
   int npoints;
-
+  RealType norm;
 }; // VectorPairCorr
 
 } // namespace qmcplusplus
