@@ -47,6 +47,7 @@ set(HAMSRCS
     MagDensity.cpp
     SpeciesKineticEnergy.cpp
     ComplexPolarization.cpp
+    VectorPairCorr.cpp
     LatticeDeviationEstimator.cpp
     SpaceWarpTransformation.cpp
     ObservableHelper.cpp)
