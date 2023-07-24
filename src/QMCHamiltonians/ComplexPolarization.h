@@ -42,7 +42,7 @@ public:
 
 private:
   ParticleSet& tpset; // reference to target particle set
-  const ParticleSet::ParticleLayout& lattice;
+  const ParticleSet::ParticleLayout& lattice; // used for frac. coord.
   const size_t ndim;
   std::vector<RealType> values;
   //  myIndex: the index of this estimator in the property list in target pset

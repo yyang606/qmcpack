@@ -19,8 +19,8 @@ ComplexPolarization::ComplexPolarization(ParticleSet& P) :
   lattice(P.getLattice()),
   ndim(lattice.ndim)
 {
-  // [v0_real, v0_imag, v1_real, v1_imag, ..., vsum_real, vsum_imag]
-  values.resize(2*ndim+2);
+  // [v0_real, v0_imag, v1_real, v1_imag, ...]
+  values.resize(2*ndim);
 };
 
 bool ComplexPolarization::put(xmlNodePtr cur)
@@ -90,14 +90,6 @@ ComplexPolarization::Return_t ComplexPolarization::evaluate(ParticleSet& P)
     values[2*l] = cosz;
     values[2*l+1] = sinz;
   }
-
-  // sum all expos
-  // v = exp(i 2*pi * \sum_j \sum_l f_{jl})
-  RealType expo = 0.0;
-  for (int l=0; l<ndim; l++) expo += expos[l];
-  sincos(2*M_PI*expo, &cosz, &sinz);
-  values[2*ndim] = cosz;
-  values[2*ndim+1] = sinz;
 
   value_ = 0.0; // Value is no longer used in scalar.dat
   return value_;
