@@ -91,8 +91,22 @@ void VectorPairCorr::addObservables(PropertySetType& plist, BufferType& collecta
 
 void VectorPairCorr::registerCollectables(std::vector<ObservableHelper>& h5desc, hdf_archive& file) const
 {
-  std::vector<int> ng(1);
-  ng[0] = npoints;
+  // add lattice information
+  Matrix<double> axes(ndim);
+  for (int l=0;l<ndim;l++)
+    for (int m=0;m<ndim;m++)
+      axes(l,m) = lattice.R(l,m);
+  file.push(hdf_path{name_});
+  file.write(axes, "axes");
+  file.pop();
+  std::vector<int> mesh(ndim);
+  for (int l=0;l<ndim;l++) mesh[l] = grid[l];
+  file.push(hdf_path{name_});
+  file.write(mesh, "mesh");
+  file.pop();
+  // add data grid
+  std::vector<int> ng(ndim);
+  for (int l=0;l<ndim;l++) ng[l] = grid[l];
   h5desc.emplace_back(hdf_path{name_});
   auto& oh = h5desc.back();
   oh.set_dimensions(ng, my_index_);
