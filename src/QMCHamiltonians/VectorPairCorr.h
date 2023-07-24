@@ -24,13 +24,13 @@ public:
   bool put(xmlNodePtr cur) override final; // read input xml node, required
 
   Return_t evaluate(ParticleSet& P) override final;
-  // enable forward walking
-  void setParticlePropertyList(PropertySetType& plist, int offset) override final;
 
-  // allocate multiple columns in scalar.dat
+  // allocate multiple columns in scalar.dat (plist) or stat.h5 (collectables)
   void addObservables(PropertySetType& plist, BufferType& collectables) override final;
-  // fill multiple columns in scalar.dat
-  void setObservables(PropertySetType& plist) override final;
+  // fill columns in scalar.dat
+  void setObservables(PropertySetType& plist) override final {};
+  // fill datasets in stat.h5
+  void registerCollectables(std::vector<ObservableHelper>& h5desc, hdf_archive& file) const override final;
 
   // ---- begin required overrides
   // pure virtual functions require overrider
@@ -44,8 +44,10 @@ private:
   ParticleSet& tpset; // reference to target particle set
   const ParticleSet::ParticleLayout& lattice; // used for frac. coord.
   const size_t ndim;
-  std::vector<RealType> values;
-  //  myIndex: the index of this estimator in the property list in target pset
+  //  my_index_: the index of this estimator in the property list in target pset
+  PosType center, corner;
+  TinyVector<int, DIM> grid;
+  int npoints;
 
 }; // VectorPairCorr
 

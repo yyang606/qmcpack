@@ -17,80 +17,85 @@ namespace qmcplusplus
 VectorPairCorr::VectorPairCorr(ParticleSet& P) :
   tpset(P),
   lattice(P.getLattice()),
-  ndim(lattice.ndim)
+  ndim(lattice.ndim),
+  center(0.0),
+  grid(-1)
 {
-  // [v0_real, v0_imag, v1_real, v1_imag, ...]
-  values.resize(2*ndim);
+  update_mode_.set(COLLECTABLE, 1);
 };
 
 bool VectorPairCorr::put(xmlNodePtr cur)
 {
   OhmmsAttributeSet attrib;
   attrib.put(cur);
+  xmlNodePtr element = cur->xmlChildrenNode;
+  while (element != NULL)
+  {
+    std::string ename((const char*)element->name);
+    if (ename == "parameter")
+    {
+      const std::string name(getXMLAttributeValue(element, "name"));
+      if (name == "grid")
+      {
+        putContent(grid, element);
+      }
+      else if (name == "corner")
+      {
+        putContent(corner, element);
+      }
+    }
+    element = element->next;
+  }
+  // number of grid points
+  if (grid[0] <= 0)
+  {
+    std::ostringstream msg;
+    msg << "grid is required in VectorPairCorr\n";
+    throw std::runtime_error(msg.str());
+  }
+  npoints = 1;
+  for (int l = 0; l < ndim; ++l)
+    npoints *= grid[l];
+  // corner
+  corner = 0.0;
+  for (int l = 0; l < ndim; ++l)
+    corner[l] = center[l] - lattice.Center[l];
+  // report
+  get(app_log());
   return true;
 }
 
 bool VectorPairCorr::get(std::ostream& os) const
 { // class description
-  os << "VectorPairCorr: " << name_;
+  os << "VectorPairCorr: " << name_ << std::endl;
+  os << "  ndim    = " << ndim << std::endl;
+  os << "  npoints = " << npoints << std::endl;
+  os << "  grid    = " << grid << std::endl;
+  os << "  corner  = " << corner << std::endl;
   return true;
 }
 
 void VectorPairCorr::addObservables(PropertySetType& plist, BufferType& collectables)
 {
-  my_index_ = plist.size();
-  for (int l=0;l<values.size();l++)
-  { // make columns in scalar.dat
-    std::ostringstream obsName;
-    obsName << name_ << "_" << l;
-    plist.add(obsName.str());
-  }
+  my_index_ = collectables.current();
+  std::vector<RealType> tmp(npoints);
+  collectables.add(tmp.begin(), tmp.end());
 }
 
-void VectorPairCorr::setObservables(PropertySetType& plist)
-{ // slots in plist must be allocated by addObservables() first
-  copy(values.begin(), values.end(), plist.begin() + my_index_);
-}
-
-void VectorPairCorr::setParticlePropertyList(PropertySetType& plist, int offset)
+void VectorPairCorr::registerCollectables(std::vector<ObservableHelper>& h5desc, hdf_archive& file) const
 {
-  int index = my_index_ + offset;
-  for (int i=0; i<values.size(); i++)
-  {
-    plist[index] = values[i];
-    index++;
-  }
+  std::vector<int> ng(1);
+  ng[0] = npoints;
+
+  hdf_path grp_name{name_};
+  h5desc.emplace_back(grp_name);
+  auto& oh = h5desc.back();
+  oh.set_dimensions(ng, my_index_);
 }
 
 VectorPairCorr::Return_t VectorPairCorr::evaluate(ParticleSet& P)
 {
   RealType wgt = t_walker_->Weight;
-
-  const int npart=P.getTotalNum();
-  auto lattice = P.getLattice();
-  RealType cosz, sinz;
-
-  std::vector<RealType> expos(ndim);
-  std::fill(expos.begin(), expos.end(), 0.0);
-
-  // v_l = exp(i 2*pi * \sum_j f_{jl})
-  for (int iat=0; iat<npart; iat++)
-  {
-    auto r = P.R[iat];
-    // fractional coordinate
-    auto f = lattice.toUnit(r);
-    for (int l=0; l<ndim; l++)
-    {
-      expos[l] += f[l];
-    }
-  }
-  for (int l=0; l<ndim; l++)
-  {
-    sincos(2*M_PI*expos[l], &cosz, &sinz);
-    values[2*l] = cosz;
-    values[2*l+1] = sinz;
-  }
-
   value_ = 0.0; // Value is no longer used in scalar.dat
   return value_;
 }
