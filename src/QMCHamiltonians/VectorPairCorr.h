@@ -20,6 +20,7 @@ class VectorPairCorr : public OperatorBase
 {
 public:
   VectorPairCorr(ParticleSet& P);
+  ~VectorPairCorr(){};
 
   bool put(xmlNodePtr cur) override final; // read input xml node, required
 
@@ -41,7 +42,6 @@ public:
   // required overrides end ----
 
 private:
-  ParticleSet& tpset; // reference to target particle set
   const ParticleSet::ParticleLayout& lattice; // used for frac. coord.
   const size_t ndim;
   //  my_index_: the index of this estimator in the property list in target pset

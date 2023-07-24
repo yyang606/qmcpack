@@ -16,7 +16,6 @@
 namespace qmcplusplus
 {
 VectorPairCorr::VectorPairCorr(ParticleSet& P) :
-  tpset(P),
   lattice(P.getLattice()),
   ndim(lattice.ndim),
   d_aa_ID_(P.addTable(P, DTModes::NEED_FULL_TABLE_ON_HOST_AFTER_DONEPBYP)),
@@ -34,8 +33,6 @@ VectorPairCorr::VectorPairCorr(ParticleSet& P) :
 
 bool VectorPairCorr::put(xmlNodePtr cur)
 {
-  OhmmsAttributeSet attrib;
-  attrib.put(cur);
   xmlNodePtr element = cur->xmlChildrenNode;
   while (element != NULL)
   {

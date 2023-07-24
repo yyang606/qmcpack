@@ -33,6 +33,7 @@
 #include "QMCHamiltonians/ComplexPolarization.h"
 #include "QMCHamiltonians/ForwardWalking.h"
 #include "QMCHamiltonians/PairCorrEstimator.h"
+#include "QMCHamiltonians/VectorPairCorr.h"
 #include "QMCHamiltonians/DensityEstimator.h"
 #include "QMCHamiltonians/SkEstimator.h"
 #include "QMCHamiltonians/HarmonicExternalPotential.h"
@@ -233,6 +234,12 @@ bool HamiltonianFactory::build(xmlNodePtr cur)
       else if (potType == "gofr")
       {
         std::unique_ptr<PairCorrEstimator> apot = std::make_unique<PairCorrEstimator>(targetPtcl, sourceInp);
+        apot->put(element);
+        targetH->addOperator(std::move(apot), potName, false);
+      }
+      else if (potType == "vecgofr")
+      {
+        std::unique_ptr<VectorPairCorr> apot = std::make_unique<VectorPairCorr>(targetPtcl);
         apot->put(element);
         targetH->addOperator(std::move(apot), potName, false);
       }
