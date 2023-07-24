@@ -20,6 +20,7 @@ VectorPairCorr::VectorPairCorr(ParticleSet& P) :
   ndim(lattice.ndim),
   d_aa_ID_(P.addTable(P, DTModes::NEED_FULL_TABLE_ON_HOST_AFTER_DONEPBYP)),
   species(P.getSpeciesSet()),
+  npair((species.size()*(species.size()-1))/2+species.size()),
   grid(-1)
 {
   update_mode_.set(COLLECTABLE, 1);
@@ -74,8 +75,8 @@ bool VectorPairCorr::put(xmlNodePtr cur)
     for (int j=0;j<species.size();j++)
     {
       const size_t nj = species_size[j];
-      const size_t npair =  i==j ? (ni*(nj-1))/2 : ni*nj;
-      norms(i,j) = (RealType)npoints/npair; // 1/[average hit per bin]
+      const size_t npij =  i==j ? (ni*(nj-1))/2 : ni*nj;
+      norms(i,j) = (RealType)npoints/npij; // 1/[average hit per bin]
     }
   }
   // report
@@ -90,14 +91,14 @@ bool VectorPairCorr::get(std::ostream& os) const
   os << "  npoints = " << npoints << std::endl;
   os << "  grid    = " << grid << std::endl;
   os << "  gdims   = " << gdims << std::endl;
-  os << "  norm    = " << norms(0,0) << std::endl;
+  os << "  npair   = " << npair << std::endl;
   return true;
 }
 
 void VectorPairCorr::addObservables(PropertySetType& plist, BufferType& collectables)
 {
   my_index_ = collectables.current();
-  std::vector<RealType> tmp(npoints);
+  std::vector<RealType> tmp(npair*npoints);
   collectables.add(tmp.begin(), tmp.end());
 }
 
@@ -117,8 +118,9 @@ void VectorPairCorr::registerCollectables(std::vector<ObservableHelper>& h5desc,
   file.write(mesh, "mesh");
   file.pop();
   // add data grid
-  std::vector<int> ng(ndim);
-  for (int l=0;l<ndim;l++) ng[l] = grid[l];
+  std::vector<int> ng(ndim+1);
+  ng[0] = npair;
+  for (int l=0;l<ndim;l++) ng[l+1] = grid[l];
   h5desc.emplace_back(hdf_path{name_});
   auto& oh = h5desc.back();
   oh.set_dimensions(ng, my_index_);
@@ -127,24 +129,36 @@ void VectorPairCorr::registerCollectables(std::vector<ObservableHelper>& h5desc,
 VectorPairCorr::Return_t VectorPairCorr::evaluate(ParticleSet& P)
 {
   RealType wt = t_walker_->Weight;
-  auto norm = norms(0, 0);
   const auto& dii(P.getDistTableAA(d_aa_ID_));
-  int offset = my_index_;
   for (int iat = 1; iat < dii.centers(); ++iat)
   {
     const auto& drs = dii.getDisplRow(iat);
+    const int ig = P.GroupID[iat];
     for (int j = 0; j < iat; ++j)
     { // steal from SpinDensity
+      const int jg = P.GroupID[j];
+      const int ipair = gen_pair_id(ig, jg, species.size());
+      int offset = my_index_+ipair*npoints;
+      // locate grid point
       const PosType u = lattice.toUnit(drs[j]);
-      int point = offset;
+      int point = 0;
       for (int l=0;l<ndim;l++)
         point += gdims[l] * ((int)(grid[l] * (u[l] - std::floor(u[l]))));
-      if ((0 <= point-offset) and (point-offset < npoints)) P.Collectables[point] += wt*norm;
+      // increament grid point
+      if ((0 <= point) and (point < npoints)) P.Collectables[point+offset] += wt*norms(ig,jg);
     }
   }
 
   value_ = 0.0; // Value is no longer used in scalar.dat
   return value_;
+}
+
+int VectorPairCorr::gen_pair_id(const int ig, const int jg, const int ns) const
+{ // steal from PairCorr
+  if (jg < ig)
+    return ns * (ns - 1) / 2 - (ns - jg) * (ns - jg - 1) / 2 + ig;
+  else
+    return ns * (ns - 1) / 2 - (ns - ig) * (ns - ig - 1) / 2 + jg;
 }
 
 std::unique_ptr<OperatorBase> VectorPairCorr::makeClone(ParticleSet& qp, TrialWaveFunction& psi)

@@ -42,12 +42,15 @@ public:
   bool get(std::ostream& os) const override final; // class description, required
   // required overrides end ----
 
+  int gen_pair_id(const int ig, const int jg, const int ns) const;
+
 private:
   const ParticleSet::ParticleLayout& lattice; // used for frac. coord.
   const size_t ndim;
   //  my_index_: the index of this estimator in the property list in target pset
   const int d_aa_ID_;
   const SpeciesSet& species;
+  const size_t npair;
   TinyVector<int, DIM> grid, gdims;
   int npoints;
   Matrix<RealType> norms;
