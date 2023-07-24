@@ -18,8 +18,8 @@ namespace qmcplusplus
 VectorPairCorr::VectorPairCorr(ParticleSet& P) :
   lattice(P.getLattice()),
   ndim(lattice.ndim),
-  nelec(P.getTotalNum()),
   d_aa_ID_(P.addTable(P, DTModes::NEED_FULL_TABLE_ON_HOST_AFTER_DONEPBYP)),
+  species(P.getSpeciesSet()),
   grid(-1)
 {
   update_mode_.set(COLLECTABLE, 1);
@@ -30,6 +30,10 @@ VectorPairCorr::VectorPairCorr(ParticleSet& P) :
     msg << "NotImplementedError: VectorPairCorr with open boundary\n";
     throw std::runtime_error(msg.str());
   }
+  const size_t nspec=species.size();
+  norms.resize(nspec, nspec);
+  for (int s = 0; s < nspec; ++s)
+    species_size.push_back(P.groupsize(s));
 };
 
 bool VectorPairCorr::put(xmlNodePtr cur)
@@ -64,8 +68,16 @@ bool VectorPairCorr::put(xmlNodePtr cur)
   for (int d = 1; d < ndim; ++d)
     gdims[d] = gdims[d - 1] / grid[d];
   // normalize
-  const size_t npair = (nelec*(nelec-1))/2;
-  norm = (RealType)npoints/npair; // 1/[average hit per bin]
+  for (int i=0;i<species.size();i++)
+  {
+    const size_t ni = species_size[i];
+    for (int j=0;j<species.size();j++)
+    {
+      const size_t nj = species_size[j];
+      const size_t npair =  i==j ? (ni*(nj-1))/2 : ni*nj;
+      norms(i,j) = (RealType)npoints/npair; // 1/[average hit per bin]
+    }
+  }
   // report
   get(app_log());
   return true;
@@ -78,7 +90,7 @@ bool VectorPairCorr::get(std::ostream& os) const
   os << "  npoints = " << npoints << std::endl;
   os << "  grid    = " << grid << std::endl;
   os << "  gdims   = " << gdims << std::endl;
-  os << "  norm    = " << norm << std::endl;
+  os << "  norm    = " << norms(0,0) << std::endl;
   return true;
 }
 
@@ -115,6 +127,7 @@ void VectorPairCorr::registerCollectables(std::vector<ObservableHelper>& h5desc,
 VectorPairCorr::Return_t VectorPairCorr::evaluate(ParticleSet& P)
 {
   RealType wt = t_walker_->Weight;
+  auto norm = norms(0, 0);
   const auto& dii(P.getDistTableAA(d_aa_ID_));
   int offset = my_index_;
   for (int iat = 1; iat < dii.centers(); ++iat)

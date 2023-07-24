@@ -31,6 +31,7 @@ public:
   void setObservables(PropertySetType& plist) override final {}
   // fill datasets in stat.h5
   void registerCollectables(std::vector<ObservableHelper>& h5desc, hdf_archive& file) const override final;
+  // !!!! Must override to avoid memory corruption
   void setParticlePropertyList(PropertySetType& plist, int offset) override final {}
 
   // ---- begin required overrides
@@ -43,12 +44,14 @@ public:
 
 private:
   const ParticleSet::ParticleLayout& lattice; // used for frac. coord.
-  const size_t ndim, nelec;
+  const size_t ndim;
   //  my_index_: the index of this estimator in the property list in target pset
   const int d_aa_ID_;
+  const SpeciesSet& species;
   TinyVector<int, DIM> grid, gdims;
   int npoints;
-  RealType norm;
+  Matrix<RealType> norms;
+  std::vector<int> species_size;
 }; // VectorPairCorr
 
 } // namespace qmcplusplus
