@@ -20,11 +20,16 @@ VectorPairCorr::VectorPairCorr(ParticleSet& P) :
   lattice(P.getLattice()),
   ndim(lattice.ndim),
   d_aa_ID_(P.addTable(P, DTModes::NEED_FULL_TABLE_ON_HOST_AFTER_DONEPBYP)),
-  center(0.0),
-  corner(0.0),
   grid(-1)
 {
   update_mode_.set(COLLECTABLE, 1);
+  bool periodic = lattice.SuperCellEnum != SUPERCELL_OPEN;
+  if (not periodic)
+  {
+    std::ostringstream msg;
+    msg << "NotImplementedError: VectorPairCorr with open boundary\n";
+    throw std::runtime_error(msg.str());
+  }
 };
 
 bool VectorPairCorr::put(xmlNodePtr cur)
@@ -42,10 +47,6 @@ bool VectorPairCorr::put(xmlNodePtr cur)
       {
         putContent(grid, element);
       }
-      else if (name == "corner")
-      {
-        putContent(corner, element);
-      }
     }
     element = element->next;
   }
@@ -53,7 +54,7 @@ bool VectorPairCorr::put(xmlNodePtr cur)
   npoints = 1;
   for (int l = 0; l < ndim; ++l)
   {
-    if (grid[0] <= 0)
+    if (grid[l] <= 0)
     {
       std::ostringstream msg;
       msg << "grid is required in VectorPairCorr\n";
@@ -64,10 +65,6 @@ bool VectorPairCorr::put(xmlNodePtr cur)
   gdims[0] = npoints / grid[0];
   for (int d = 1; d < ndim; ++d)
     gdims[d] = gdims[d - 1] / grid[d];
-  // corner
-  corner = 0.0;
-  for (int l = 0; l < ndim; ++l)
-    corner[l] = center[l] - lattice.Center[l];
   // report
   get(app_log());
   return true;
@@ -79,7 +76,7 @@ bool VectorPairCorr::get(std::ostream& os) const
   os << "  ndim    = " << ndim << std::endl;
   os << "  npoints = " << npoints << std::endl;
   os << "  grid    = " << grid << std::endl;
-  os << "  corner  = " << corner << std::endl;
+  os << "  gdims   = " << gdims << std::endl;
   return true;
 }
 
@@ -94,9 +91,7 @@ void VectorPairCorr::registerCollectables(std::vector<ObservableHelper>& h5desc,
 {
   std::vector<int> ng(1);
   ng[0] = npoints;
-
-  hdf_path grp_name{name_};
-  h5desc.emplace_back(grp_name);
+  h5desc.emplace_back(hdf_path{name_});
   auto& oh = h5desc.back();
   oh.set_dimensions(ng, my_index_);
 }
@@ -111,12 +106,11 @@ VectorPairCorr::Return_t VectorPairCorr::evaluate(ParticleSet& P)
     const auto& drs = dii.getDisplRow(iat);
     for (int j = 0; j < iat; ++j)
     { // steal from SpinDensity
-      const PosType u = lattice.toUnit(drs[j]-corner);
-      //if ((iat == 1) and (j == 0)) app_log() << u << std::endl; // !!!! HACK
+      const PosType u = lattice.toUnit(drs[j]);
       int point = offset;
       for (int l=0;l<ndim;l++)
         point += gdims[l] * ((int)(grid[l] * (u[l] - std::floor(u[l]))));
-      if ((0 <= point) and (point < npoints)) P.Collectables[point] += wgt;
+      if ((0 <= point-offset) and (point-offset < npoints)) P.Collectables[point] += wgt;
     }
   }
 
