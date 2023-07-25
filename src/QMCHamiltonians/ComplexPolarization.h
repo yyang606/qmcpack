@@ -35,7 +35,7 @@ public:
   // ---- begin required overrides
   // pure virtual functions require overrider
   std::unique_ptr<OperatorBase> makeClone(ParticleSet& qp, TrialWaveFunction& psi) override final;
-  void resetTargetParticleSet(ParticleSet& P) override final {APP_ABORT("not implemented");};
+  void resetTargetParticleSet(ParticleSet& P) override final {throw std::runtime_error("not implemented");};
   std::string getClassName() const override final {return "ComplexPolarization";};
   bool get(std::ostream& os) const override final; // class description, required
   // required overrides end ----

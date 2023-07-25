@@ -231,6 +231,12 @@ bool HamiltonianFactory::build(xmlNodePtr cur)
       }
       else if (potType == "Force")
         addForceHam(element);
+      else if (potType == "cpol")
+      {
+        std::unique_ptr<ComplexPolarization> cp = std::make_unique<ComplexPolarization>(targetPtcl);
+        cp->put(element);
+        targetH->addOperator(std::move(cp), potName, false);
+      }
       else if (potType == "gofr")
       {
         std::unique_ptr<PairCorrEstimator> apot = std::make_unique<PairCorrEstimator>(targetPtcl, sourceInp);
@@ -378,12 +384,6 @@ bool HamiltonianFactory::build(xmlNodePtr cur)
           //             DMCPressureCorr* DMCP = new DMCPressureCorr(targetPtcl,nlen);
           //             targetH->addOperator(DMCP,"PressureSum",false);
         }
-      }
-      else if (potType == "polarization")
-      {
-        std::unique_ptr<ComplexPolarization> cp = std::make_unique<ComplexPolarization>(targetPtcl);
-        cp->put(element);
-        targetH->addOperator(std::move(cp), "compz", false);
       }
       else if (potType == "momentum")
       {
