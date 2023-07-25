@@ -10,7 +10,6 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 #include "ComplexPolarization.h"
-#include "OhmmsData/AttributeSet.h"
 
 namespace qmcplusplus
 {
@@ -25,8 +24,6 @@ ComplexPolarization::ComplexPolarization(ParticleSet& P) :
 
 bool ComplexPolarization::put(xmlNodePtr cur)
 {
-  OhmmsAttributeSet attrib;
-  attrib.put(cur);
   return true;
 }
 
@@ -74,15 +71,12 @@ ComplexPolarization::Return_t ComplexPolarization::evaluate(ParticleSet& P)
   std::fill(expos.begin(), expos.end(), 0.0);
 
   // v_l = exp(i 2*pi * \sum_j f_{jl})
-  for (int iat=0; iat<npart; iat++)
+  for (int i=0; i<npart; i++)
   {
-    auto r = P.R[iat];
+    auto r = P.R[i];
     // fractional coordinate
     auto f = lattice.toUnit(r);
-    for (int l=0; l<ndim; l++)
-    {
-      expos[l] += f[l];
-    }
+    for (int l=0; l<ndim; l++) expos[l] += f[l];
   }
   for (int l=0; l<ndim; l++)
   {
