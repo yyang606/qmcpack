@@ -140,7 +140,7 @@ bool LatticeParser::put(xmlNodePtr cur)
           LRCoulombSingleton::this_lr_type = LRCoulombSingleton::SCREEN2D;
           ref_.ndim                        = 2;
         }
-        else if (handler_type == "ewald_srscreen2d")
+        else if (handler_type == "screen2d")
         {
           LRCoulombSingleton::this_lr_type = LRCoulombSingleton::SRSCREEN2D;
           ref_.ndim                        = 2;

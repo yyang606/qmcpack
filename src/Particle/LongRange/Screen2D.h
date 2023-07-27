@@ -16,13 +16,13 @@
 
 namespace qmcplusplus
 {
-class EwaldSRScreen2D : public LRHandlerBase
+class Screen2D : public LRHandlerBase
 {
 public:
-  EwaldSRScreen2D(ParticleSet& ref, mRealType kc_in=-1.0);
+  Screen2D(ParticleSet& ref, mRealType kc_in=-1.0);
 
   // copy constructor
-  LRHandlerBase* makeClone(ParticleSet& ref) const override { return new EwaldSRScreen2D(*this); }
+  LRHandlerBase* makeClone(ParticleSet& ref) const override { return new Screen2D(*this); }
 
   // short-range part
   mRealType evaluate(mRealType r, mRealType rinv) const override;
@@ -53,7 +53,7 @@ public:
 private:
   mRealType area;
   mRealType dgate;
-  size_t mimg;
+  int mimg;
 };
 } // qmcplusplus
 #endif
