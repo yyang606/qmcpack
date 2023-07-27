@@ -19,7 +19,8 @@ SpeciesSkAll::SpeciesSkAll(ParticleSet& P) :
   lattice(P.getLattice()),
   ndim(lattice.ndim),
   species(P.getSpeciesSet()),
-  npair((species.size()*(species.size()-1))/2+species.size()),
+  nspec(species.size()),
+  npair((nspec*(nspec-1))/2+nspec),
   npoints(P.getSimulationCell().getKLists().numk)
 {
   update_mode_.set(COLLECTABLE, 1);
@@ -49,7 +50,7 @@ bool SpeciesSkAll::get(std::ostream& os) const
 void SpeciesSkAll::addObservables(PropertySetType& plist, BufferType& collectables)
 {
   my_index_ = collectables.current();
-  std::vector<RealType> tmp(npair*npoints);
+  std::vector<RealType> tmp(npair*npoints+nspec*2*npoints);
   collectables.add(tmp.begin(), tmp.end());
 }
 
@@ -63,33 +64,52 @@ void SpeciesSkAll::registerCollectables(std::vector<ObservableHelper>& h5desc, h
   file.push(hdf_path{name_});
   file.write(axes, "axes");
   file.pop();
-  // add data grid
+  // space for sofk
   std::vector<int> ng(2);
   ng[0] = npair;
   ng[1] = npoints;
-  h5desc.emplace_back(hdf_path{name_});
+  h5desc.emplace_back(hdf_path{name_}/"sofk");
   auto& oh = h5desc.back();
   oh.set_dimensions(ng, my_index_);
+  // space for rhok
+  ng[0] = nspec;
+  ng[1] = 2*npoints; // real & imag
+  h5desc.emplace_back(hdf_path{name_}/"rhok");
+  auto& rhok_obs_helper = h5desc.back();
+  rhok_obs_helper.set_dimensions(ng, my_index_+npair*npoints);
 }
 
 SpeciesSkAll::Return_t SpeciesSkAll::evaluate(ParticleSet& P)
 {
   RealType wt = t_walker_->Weight;
  
-  for (int ig=0;ig<species.size();ig++)
+  // sofk
+  for (int ig=0;ig<nspec;ig++)
   {
     auto* restrict rki_re_ptr = P.getSK().rhok_r[ig];
     auto* restrict rki_im_ptr = P.getSK().rhok_i[ig];
-    for (int jg=0;jg<species.size();jg++)
+    for (int jg=0;jg<nspec;jg++)
     {
       auto* restrict rkj_re_ptr = P.getSK().rhok_r[jg];
       auto* restrict rkj_im_ptr = P.getSK().rhok_i[jg];
-      const int ipair = gen_pair_id(ig, jg, species.size());
+      const int ipair = gen_pair_id(ig, jg, nspec);
       const int offset = my_index_+ipair*npoints;
       for (int k=0;k<npoints;k++)
       {
         P.Collectables[offset+k] += wt*(rki_re_ptr[k]*rkj_re_ptr[k] + rki_im_ptr[k]*rkj_im_ptr[k]);
       }
+    }
+  }
+  // rhok
+  for (int ig=0;ig<nspec;ig++)
+  {
+    auto* restrict rki_re_ptr = P.getSK().rhok_r[ig];
+    auto* restrict rki_im_ptr = P.getSK().rhok_i[ig];
+    const int rhok_offset = my_index_+npair*npoints+ig*2*npoints;
+    for (int k=0;k<npoints;k++)
+    {
+      P.Collectables[rhok_offset+k] += wt*rki_re_ptr[k];
+      P.Collectables[rhok_offset+npoints+k] += wt*rki_im_ptr[k];
     }
   }
 

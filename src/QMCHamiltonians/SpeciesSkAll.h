@@ -49,8 +49,7 @@ private:
   const size_t ndim;
   //  my_index_: the index of this estimator in the property list in target pset
   const SpeciesSet& species;
-  const size_t npair;
-  const int npoints;
+  const size_t nspec, npair, npoints;
 }; // SpeciesSkAll
 
 } // namespace qmcplusplus
