@@ -15,7 +15,7 @@ namespace qmcplusplus
 {
 
 Screen2D::Screen2D(ParticleSet& ref, mRealType kc_in)
-  : LRHandlerBase(kc_in), dgate(ref.getLattice().dgate)
+  : LRHandlerBase(kc_in), dgate(ref.getLattice().dgate), mimg(ref.getLattice().mimg)
 {
   if (ref.getLattice().ndim != 2)
     throw std::runtime_error("2D potential requires 2D Lattice");
@@ -26,8 +26,8 @@ Screen2D::Screen2D(ParticleSet& ref, mRealType kc_in)
   area = ref.getLattice().Volume/ref.getLattice().R(2,2);
   // report
   app_log() << "    dgate = " << dgate << std::endl;
+  app_log() << "    mimg  = " << mimg << std::endl;
   fillFk(ref.getSimulationCell().getKLists());
-  mimg = 100;
 }
 
 void Screen2D::fillFk(const KContainer& KList)

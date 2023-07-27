@@ -152,6 +152,10 @@ bool LatticeParser::put(xmlNodePtr cur)
       {
         putContent(ref_.dgate, cur);
       }
+      else if (aname == "max_image")
+      {
+        putContent(ref_.mimg, cur);
+      }
       else if (aname == "LR_tol")
       {
         putContent(ref_.LR_tol, cur);

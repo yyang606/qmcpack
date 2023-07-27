@@ -53,7 +53,7 @@ public:
 private:
   mRealType area;
   mRealType dgate;
-  int mimg;
+  const int mimg;
 };
 } // qmcplusplus
 #endif
