@@ -33,6 +33,7 @@ set(HAMSRCS
     SkPot.cpp
     SkEstimator.cpp
     SkAllEstimator.cpp
+    SpeciesSkAll.cpp
     MomentumEstimator.cpp
     ForceBase.cpp
     BareForce.cpp
