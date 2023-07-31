@@ -51,6 +51,7 @@
 #include "QMCHamiltonians/ChiesaCorrection.h"
 #include "QMCHamiltonians/SkAllEstimator.h"
 #endif
+#include "QMCHamiltonians/SpeciesSkAll.h"
 #include "QMCHamiltonians/SkPot.h"
 #include "OhmmsData/AttributeSet.h"
 
@@ -371,6 +372,12 @@ bool HamiltonianFactory::build(xmlNodePtr cur)
       }
 
 #endif
+      else if (potType == "sskall")
+      {
+        std::unique_ptr<SpeciesSkAll> apot = std::make_unique<SpeciesSkAll>(targetPtcl);
+        apot->put(element);
+        targetH->addOperator(std::move(apot), potName, false);
+      }
       else if (potType == "Pressure")
       {
         if (estType == "coulomb")
