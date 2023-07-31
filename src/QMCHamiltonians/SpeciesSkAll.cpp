@@ -21,7 +21,8 @@ SpeciesSkAll::SpeciesSkAll(ParticleSet& P) :
   species(P.getSpeciesSet()),
   nspec(species.size()),
   npair((nspec*(nspec-1))/2+nspec),
-  npoints(P.getSimulationCell().getKLists().numk)
+  npoints(P.getSimulationCell().getKLists().numk),
+  kvecs(P.getSimulationCell().getKLists().kpts_cart)
 {
   update_mode_.set(COLLECTABLE, 1);
   bool periodic = lattice.SuperCellEnum != SUPERCELL_OPEN;
@@ -64,6 +65,10 @@ void SpeciesSkAll::registerCollectables(std::vector<ObservableHelper>& h5desc, h
   file.push(hdf_path{name_});
   file.write(axes, "axes");
   file.pop();
+  // Add k-point information
+  h5desc.emplace_back(hdf_path{name_} / "kpoints");
+  auto& obs_helper = h5desc.back();
+  obs_helper.addProperty(kvecs, "value", file);
   // space for sofk
   std::vector<int> ng(2);
   ng[0] = npair;

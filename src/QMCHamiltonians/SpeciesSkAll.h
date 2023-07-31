@@ -50,6 +50,7 @@ private:
   //  my_index_: the index of this estimator in the property list in target pset
   const SpeciesSet& species;
   const size_t nspec, npair, npoints;
+  const std::vector<PosType>& kvecs;
 }; // SpeciesSkAll
 
 } // namespace qmcplusplus
