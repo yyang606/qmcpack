@@ -98,12 +98,18 @@ bool LatticeDeviationEstimator::put(xmlNodePtr cur)
 
   if (lsap_flag == "yes") lsap = true;
 
+  get(app_log());
   return true;
 }
 
 bool LatticeDeviationEstimator::get(std::ostream& os) const
 { // class description
-  os << "LatticeDeviationEstimator: " << name_ << "lattice = " << spset.getName();
+  os << "LatticeDeviationEstimator: " << name_ << std::endl;
+  os << "  target = " << tpset.getName() << " group = " << tgroup << std::endl;
+  os << "  source = " << spset.getName() << " group = " << sgroup << std::endl;
+  os << "  hdf5 = " << hdf5_out << std::endl;
+  os << "  xyz  = " << per_xyz << std::endl;
+  os << "  lsap = " << lsap << std::endl;
   return true;
 }
 
