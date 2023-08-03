@@ -71,12 +71,14 @@ private:
   bool hdf5_out;              // use .h5 file for data (follow SkEstimator)
   int h5_index;               // track the starting memory location in P.Collectables
   bool per_xyz;               // track deviation in each of x,y,z directions
+  bool lsap;                  // solve the linear sum assignment problem
   std::vector<RealType> xyz2; // temporary storage for deviation in each of x,y,z directions
   xmlNodePtr input_xml;       // original xml
   // distance table ID
   const int myTableID_;
   std::vector<std::vector<RealType>> rij;
-  std::vector<size_t> ij_map;
+  RealType **temp_rij;  // interface to asp routine
+  std::vector<long> ij_map;
 }; // LatticeDeviationEstimator
 
 } // namespace qmcplusplus

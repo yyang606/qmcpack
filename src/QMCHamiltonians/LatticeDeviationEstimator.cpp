@@ -11,6 +11,7 @@
 
 #include "LatticeDeviationEstimator.h"
 #include "OhmmsData/AttributeSet.h"
+#include "Numerics/asp.h"
 
 namespace qmcplusplus
 {
@@ -47,6 +48,7 @@ LatticeDeviationEstimator::LatticeDeviationEstimator(ParticleSet& P,
   ij_map.resize(num_sites);
   for (int i=0; i<ij_map.size();i++)
     ij_map[i] = i;
+  temp_rij = create_matrix(num_tars, num_sites);
 }
 
 bool LatticeDeviationEstimator::put(xmlNodePtr cur)
@@ -54,9 +56,11 @@ bool LatticeDeviationEstimator::put(xmlNodePtr cur)
   input_xml             = cur;
   std::string hdf5_flag = "no";
   std::string xyz_flag  = "no";
+  std::string lsap_flag = "no";
   OhmmsAttributeSet attrib;
   attrib.add(hdf5_flag, "hdf5");
   attrib.add(xyz_flag, "per_xyz");
+  attrib.add(lsap_flag, "lsap");
   attrib.put(cur);
 
   if (hdf5_flag == "yes")
@@ -92,6 +96,8 @@ bool LatticeDeviationEstimator::put(xmlNodePtr cur)
     APP_ABORT("LatticeDeviationEstimator::put() - Please choose \"yes\" or \"no\" for per_xyz flag");
   } // end if xyz_flag
 
+  if (lsap_flag == "yes") lsap = true;
+
   return true;
 }
 
@@ -115,11 +121,14 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
     const auto& dists = d_table.getDistRow(iel);
     for (int jat=first_src;jat<last_src;jat++)
     {
-      rij[iel][jat] = dists[jat];
+      const RealType r = dists[jat];
+      rij[iel][jat] = r;
+      temp_rij[iel][jat] = r;
     }
   }
 
-  // TODO: assign each particle to a unique site
+  if (lsap) // assign each particle to a unique site
+    asp(ij_map.size(), temp_rij, ij_map.data());
 
   // extract r^2 at each site
   int nsite(0); // site index
