@@ -30,14 +30,23 @@ LatticeDeviationEstimator::LatticeDeviationEstimator(ParticleSet& P,
 {
   // calculate number of source particles to use as lattice sites
   int src_species_id = sspecies.findSpecies(sgroup);
-  num_sites          = spset.last(src_species_id) - spset.first(src_species_id);
+  first_src = spset.first(src_species_id);
+  last_src = spset.last(src_species_id);
+  num_sites = last_src - first_src;
   int tar_species_id = tspecies.findSpecies(tgroup);
-  int num_tars       = tpset.last(tar_species_id) - tpset.first(tar_species_id);
+  first_tar = tpset.first(tar_species_id);
+  last_tar = tpset.last(tar_species_id);
+  int num_tars = last_tar - first_tar;
   if (num_tars != num_sites)
   {
     app_log() << "number of target particles = " << num_tars << std::endl;
     app_log() << "number of source particles = " << num_sites << std::endl;
     APP_ABORT("nsource != ntargets in LatticeDeviationEstimator");
+  }
+  rij.resize(num_tars);
+  for (int i=0; i<rij.size();i++)
+  {
+    rij[i].resize(num_sites);
   }
 }
 
@@ -101,50 +110,46 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
   RealType wgt        = t_walker_->Weight;
   const auto& d_table = P.getDistTableAB(myTableID_);
 
-  // temp variables
-  RealType r, r2;
-  PosType dr;
+  // extract distance table section
+  for (int iel=first_tar;iel<last_tar;iel++)
+  {
+    const auto& dists = d_table.getDistRow(iel);
+    for (int jat=first_src;jat<last_src;jat++)
+    {
+      rij[iel][jat] = dists[jat];
+    }
+  }
 
-  int nsite(0);    // site index
-  int cur_jat(-1); // target particle index
-  for (int iat = 0; iat < spset.getTotalNum(); iat++)
-  { // for each desired source particle
-    if (sspecies.speciesName[spset.GroupID[iat]] == sgroup)
-    { // find desired species
-      for (int jat = cur_jat + 1; jat < tpset.getTotalNum(); jat++)
-      { // find corresponding (!!!! assume next) target particle
-        if (tspecies.speciesName[tpset.GroupID[jat]] == tgroup)
+  // extract r^2 at each site
+  int nsite(0); // site index
+  for (size_t iel=first_tar;iel<last_tar;iel++)
+  {
+    const auto& row = rij[iel];
+    const size_t jat = first_src + iel;  // identity map
+
+    const RealType r = row[jat];
+    const RealType r2 = r*r;
+    value_ += r2;
+
+    if (hdf5_out & !per_xyz)
+    { // store deviration for each lattice site if h5 file is available
+      P.Collectables[h5_index + nsite] = wgt * r2;
+    }
+
+    if (per_xyz)
+    {
+      const auto& dr = d_table.getDisplRow(iel)[jat];
+      for (int idir = 0; idir < OHMMS_DIM; idir++)
+      {
+        RealType dir2 = dr[idir] * dr[idir];
+        xyz2[idir] += dir2;
+        if (hdf5_out)
         {
-          // distance between particle iat in source pset, and jat in target pset
-          r  = d_table.getDistRow(jat)[iat];
-          r2 = r * r;
-          value_ += r2;
-
-          if (hdf5_out & !per_xyz)
-          { // store deviration for each lattice site if h5 file is available
-            P.Collectables[h5_index + nsite] = wgt * r2;
-          }
-
-          if (per_xyz)
-          {
-            dr = d_table.getDisplRow(jat)[iat];
-            for (int idir = 0; idir < OHMMS_DIM; idir++)
-            {
-              RealType dir2 = dr[idir] * dr[idir];
-              xyz2[idir] += dir2;
-              if (hdf5_out)
-              {
-                P.Collectables[h5_index + nsite * OHMMS_DIM + idir] = wgt * dir2;
-              }
-            }
-          }
-
-          cur_jat = jat;
-          break;
+          P.Collectables[h5_index + nsite * OHMMS_DIM + idir] = wgt * dir2;
         }
       }
-      nsite += 1; // count the number of sites, for checking only
-    }             // found desired species (source particle)
+    }
+    nsite++;
   }
 
   if (nsite != num_sites)
