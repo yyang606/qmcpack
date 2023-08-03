@@ -43,9 +43,10 @@ LatticeDeviationEstimator::LatticeDeviationEstimator(ParticleSet& P,
   }
   rij.resize(num_tars);
   for (int i=0; i<rij.size();i++)
-  {
     rij[i].resize(num_sites);
-  }
+  ij_map.resize(num_sites);
+  for (int i=0; i<ij_map.size();i++)
+    ij_map[i] = i;
 }
 
 bool LatticeDeviationEstimator::put(xmlNodePtr cur)
@@ -118,12 +119,14 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
     }
   }
 
+  // TODO: assign each particle to a unique site
+
   // extract r^2 at each site
   int nsite(0); // site index
   for (size_t iel=first_tar;iel<last_tar;iel++)
   {
     const auto& row = rij[iel];
-    const size_t jat = first_src + iel;  // identity map
+    const size_t jat = first_src + ij_map[iel];
 
     const RealType r = row[jat];
     const RealType r2 = r*r;

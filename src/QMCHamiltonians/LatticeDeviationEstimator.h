@@ -76,6 +76,7 @@ private:
   // distance table ID
   const int myTableID_;
   std::vector<std::vector<RealType>> rij;
+  std::vector<size_t> ij_map;
 }; // LatticeDeviationEstimator
 
 } // namespace qmcplusplus
