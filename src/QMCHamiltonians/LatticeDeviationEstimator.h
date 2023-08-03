@@ -66,6 +66,7 @@ private:
   SpeciesSet& sspecies;       // species table of source particle set
   ParticleSet &tpset, spset;  // save references to source and target particle sets
   std::string tgroup, sgroup; // name of species to track
+  const size_t first_tar, last_tar, first_src, last_src;
   int num_sites;              // number of lattice sites (i.e. number of source particles)
   bool hdf5_out;              // use .h5 file for data (follow SkEstimator)
   int h5_index;               // track the starting memory location in P.Collectables
@@ -75,7 +76,6 @@ private:
   // distance table ID
   const int myTableID_;
   std::vector<std::vector<RealType>> rij;
-  size_t first_src, last_src, first_tar, last_tar;
 }; // LatticeDeviationEstimator
 
 } // namespace qmcplusplus

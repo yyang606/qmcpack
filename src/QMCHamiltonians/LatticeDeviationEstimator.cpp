@@ -24,18 +24,16 @@ LatticeDeviationEstimator::LatticeDeviationEstimator(ParticleSet& P,
       spset(sP),
       tgroup(tgroup_in),
       sgroup(sgroup_in),
+      first_tar(tpset.first(tspecies.findSpecies(tgroup))),
+      last_tar(tpset.last(tspecies.findSpecies(tgroup))),
+      first_src(spset.first(sspecies.findSpecies(sgroup))),
+      last_src(spset.last(sspecies.findSpecies(sgroup))),
       hdf5_out(false),
       per_xyz(false),
       myTableID_(P.addTable(sP))
 {
   // calculate number of source particles to use as lattice sites
-  int src_species_id = sspecies.findSpecies(sgroup);
-  first_src = spset.first(src_species_id);
-  last_src = spset.last(src_species_id);
   num_sites = last_src - first_src;
-  int tar_species_id = tspecies.findSpecies(tgroup);
-  first_tar = tpset.first(tar_species_id);
-  last_tar = tpset.last(tar_species_id);
   int num_tars = last_tar - first_tar;
   if (num_tars != num_sites)
   {
