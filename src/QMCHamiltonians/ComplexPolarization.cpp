@@ -35,9 +35,10 @@ bool ComplexPolarization::put(xmlNodePtr cur)
   for (int l=0;l<axis.size();l++)
     norm += axis[l]*axis[l];
   axis /= std::sqrt(norm);
-  TinyVector<RealType,DIM> rvec = lattice.R[0];
+  auto axes = lattice.R;
+  TinyVector<RealType,DIM> rvec = axes.getRow(0);
   for (int l=1;l<ndim;l++)
-    rvec += lattice.R[l];
+    rvec += axes.getRow(l);
   rmax = dot(rvec, axis);
   get(app_log());
   return true;
@@ -82,7 +83,6 @@ ComplexPolarization::Return_t ComplexPolarization::evaluate(ParticleSet& P)
   RealType wgt = t_walker_->Weight;
 
   const int npart=P.getTotalNum();
-  auto lattice = P.getLattice();
   RealType cosz, sinz;
 
   // v = exp(i 2*pi * \sum_j f_j)
