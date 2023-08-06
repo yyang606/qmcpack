@@ -24,6 +24,8 @@ ComplexPolarization::ComplexPolarization(ParticleSet& P) :
   // look along x by default
   axis = 0.0;
   axis[0] = 1.0;
+  // maximum projcetion distance
+  rmax = 0.0;
 };
 
 bool ComplexPolarization::put(xmlNodePtr cur)
@@ -36,10 +38,23 @@ bool ComplexPolarization::put(xmlNodePtr cur)
     norm += axis[l]*axis[l];
   axis /= std::sqrt(norm);
   auto axes = lattice.R;
-  TinyVector<RealType,DIM> rvec = axes.getRow(0);
-  for (int l=1;l<ndim;l++)
-    rvec += axes.getRow(l);
-  rmax = dot(rvec, axis);
+  std::vector<RealType> lengths;
+  for (int i=0;i<ndim;i++)
+  {
+    auto ai = axes.getRow(i);
+    lengths.push_back(dot(ai, axis));
+    for (int j=i+1;j<ndim;j++)
+    {
+      auto aj = axes.getRow(j);
+      lengths.push_back(dot(ai+aj, axis));
+    }
+  }
+  if (ndim == 3)
+  {
+    auto rvec = axes.getRow(0)+axes.getRow(1)+axes.getRow(2);
+    lengths.push_back(dot(rvec, axis));
+  }
+  rmax = *std::max_element(lengths.begin(), lengths.end());
   get(app_log());
   return true;
 }
