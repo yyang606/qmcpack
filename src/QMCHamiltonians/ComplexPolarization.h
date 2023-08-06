@@ -45,6 +45,8 @@ private:
   const ParticleSet::ParticleLayout& lattice; // used for frac. coord.
   const size_t ndim;
   std::vector<RealType> values;
+  TinyVector<RealType,DIM> axis;
+  RealType rmax;
   //  myIndex: the index of this estimator in the property list in target pset
 
 }; // ComplexPolarization
