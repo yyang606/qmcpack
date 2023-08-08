@@ -31,6 +31,7 @@ LatticeDeviationEstimator::LatticeDeviationEstimator(ParticleSet& P,
       last_src(spset.last(sspecies.findSpecies(sgroup))),
       hdf5_out(false),
       per_xyz(false),
+      lsap(false),
       myTableID_(P.addTable(sP))
 {
   // calculate number of source particles to use as lattice sites
@@ -43,12 +44,21 @@ LatticeDeviationEstimator::LatticeDeviationEstimator(ParticleSet& P,
     APP_ABORT("nsource != ntargets in LatticeDeviationEstimator");
   }
   rij.resize(num_tars);
-  for (int i=0; i<rij.size();i++)
+  drij.resize(num_tars);
+  for (int i=0; i<rij.size(); i++)
+  {
     rij[i].resize(num_sites);
+    drij[i].resize(num_sites);
+  }
   ij_map.resize(num_sites);
   for (int i=0; i<ij_map.size();i++)
     ij_map[i] = i;
   temp_rij = create_matrix(num_tars, num_sites);
+}
+
+LatticeDeviationEstimator::~LatticeDeviationEstimator()
+{
+  destroy_matrix(temp_rij, num_sites);
 }
 
 bool LatticeDeviationEstimator::put(xmlNodePtr cur)
@@ -124,12 +134,16 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
   // extract distance table section
   for (int iel=first_tar;iel<last_tar;iel++)
   {
+    const int i = iel-first_tar;
     const auto& dists = d_table.getDistRow(iel);
+    const auto& disps = d_table.getDisplRow(iel);
     for (int jat=first_src;jat<last_src;jat++)
     {
+      const int j = jat-first_src;
       const RealType r = dists[jat];
-      rij[iel-first_tar][jat-first_src] = r;
-      temp_rij[iel-first_tar][jat-first_src] = r;
+      drij[i][j] = disps[jat];
+      rij[i][j] = r;
+      temp_rij[i][j] = r; // copy rij to be scrambled by asp
     }
   }
 
@@ -137,41 +151,31 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
     asp(ij_map.size(), temp_rij, ij_map.data());
 
   // extract r^2 at each site
-  int nsite(0); // site index
-  for (size_t iel=0;iel<num_sites;iel++)
+  for (size_t i=0;i<num_sites;i++)
   {
-    const auto& row = rij[iel];
-    const size_t jat = ij_map[iel];
-
-    const RealType r = row[jat];
+    const size_t j = ij_map[i];
+    const RealType r = rij[i][j];
     const RealType r2 = r*r;
     value_ += r2;
 
     if (hdf5_out & !per_xyz)
     { // store deviration for each lattice site if h5 file is available
-      P.Collectables[h5_index + nsite] = wgt * r2;
+      P.Collectables[h5_index + i] = wgt * r2;
     }
 
     if (per_xyz)
     {
-      const auto& dr = d_table.getDisplRow(iel)[jat];
-      for (int idir = 0; idir < OHMMS_DIM; idir++)
+      const auto& dr = drij[i][j];
+      for (int idir = 0; idir < DIM; idir++)
       {
         RealType dir2 = dr[idir] * dr[idir];
         xyz2[idir] += dir2;
         if (hdf5_out)
         {
-          P.Collectables[h5_index + nsite * OHMMS_DIM + idir] = wgt * dir2;
+          P.Collectables[h5_index + i * DIM + idir] = wgt * dir2;
         }
       }
     }
-    nsite++;
-  }
-
-  if (nsite != num_sites)
-  {
-    app_log() << "num_sites = " << num_sites << " nsites = " << nsite << std::endl;
-    APP_ABORT("Mismatch in LatticeDeivationEstimator.");
   }
 
   // average per site

@@ -40,7 +40,7 @@ class LatticeDeviationEstimator : public OperatorBase
 {
 public:
   LatticeDeviationEstimator(ParticleSet& P, ParticleSet& sP, const std::string& tgroup, const std::string& sgroup);
-  ~LatticeDeviationEstimator() override {}
+  ~LatticeDeviationEstimator() override final;
 
   std::string getClassName() const override { return "LatticeDeviationEstimator"; }
   bool put(xmlNodePtr cur) override;         // read input xml node, required
@@ -77,6 +77,7 @@ private:
   // distance table ID
   const int myTableID_;
   std::vector<std::vector<RealType>> rij;
+  std::vector<std::vector<PosType>> drij;
   RealType **temp_rij;  // interface to asp routine
   std::vector<long> ij_map;
 }; // LatticeDeviationEstimator
