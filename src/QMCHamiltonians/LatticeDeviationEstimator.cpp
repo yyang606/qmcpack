@@ -160,7 +160,7 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
 
     if (hdf5_out & !per_xyz)
     { // store deviration for each lattice site if h5 file is available
-      P.Collectables[h5_index + i] = wgt * r2;
+      P.Collectables[h5_index + i] += wgt * r2;
     }
 
     if (per_xyz)
@@ -172,7 +172,7 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
         xyz2[idir] += dir2;
         if (hdf5_out)
         {
-          P.Collectables[h5_index + i * DIM + idir] = wgt * dir2;
+          P.Collectables[h5_index + i * DIM + idir] += wgt * dir2;
         }
       }
     }
