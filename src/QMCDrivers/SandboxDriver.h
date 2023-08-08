@@ -27,9 +27,13 @@ public:
                      Communicate* comm);
   ~SandboxDriver() override final {};
 
-  bool run() override final {return true;};
+  bool run() override final;
   bool put(xmlNodePtr q) override final {return true;}
   QMCRunType getRunType() override final { return QMCRunType::SANDBOX; }
+
+  // begin custom methods
+  void plot_obs(std::string name);
+  // custom methods end
 private:
   ParticleSetPool& PtclPool;
   const size_t ndim;
