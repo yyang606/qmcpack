@@ -128,8 +128,8 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
     for (int jat=first_src;jat<last_src;jat++)
     {
       const RealType r = dists[jat];
-      rij[iel][jat] = r;
-      temp_rij[iel][jat] = r;
+      rij[iel-first_tar][jat-first_src] = r;
+      temp_rij[iel-first_tar][jat-first_src] = r;
     }
   }
 
@@ -138,10 +138,10 @@ LatticeDeviationEstimator::Return_t LatticeDeviationEstimator::evaluate(Particle
 
   // extract r^2 at each site
   int nsite(0); // site index
-  for (size_t iel=first_tar;iel<last_tar;iel++)
+  for (size_t iel=0;iel<num_sites;iel++)
   {
     const auto& row = rij[iel];
-    const size_t jat = first_src + ij_map[iel];
+    const size_t jat = ij_map[iel];
 
     const RealType r = row[jat];
     const RealType r2 = r*r;
