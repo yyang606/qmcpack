@@ -43,6 +43,7 @@ public:
   // required overrides end ----
 
   int gen_pair_id(const int ig, const int jg, const int ns) const;
+  int locate_grid_point(const PosType u) const;
 
 private:
   const ParticleSet::ParticleLayout& lattice; // used for frac. coord.
