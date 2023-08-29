@@ -111,8 +111,8 @@ ComplexPolarization::Return_t ComplexPolarization::evaluate(ParticleSet& P)
     expo += fj;
   }
   sincos(2*M_PI*expo, &cosz, &sinz);
-  values[0] = cosz;
-  values[1] = sinz;
+  values[0] = wgt*cosz;
+  values[1] = wgt*sinz;
 
   value_ = 0.0; // Value is no longer used in scalar.dat
   return value_;
