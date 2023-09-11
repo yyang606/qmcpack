@@ -24,6 +24,7 @@
 #include "LongRange/EwaldHandler3D.h"
 #include "LongRange/EwaldHandler2D.h"
 #include "LongRange/EwaldScreen2D.h"
+#include "LongRange/Screen2D.h"
 #include <numeric>
 namespace qmcplusplus
 {
@@ -91,6 +92,12 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getHandle
     {
       app_log() << "\n  Creating CoulombHandler with the 2D Ewald of Screened Coulomb potential. " << std::endl;
       CoulombHandler = std::make_unique<EwaldScreen2D>(ref);
+    }
+    else if (this_lr_type == SRSCREEN2D)
+    {
+      app_log() << "\n  Creating CoulombHandler with the 2D Ewald of Screened Coulomb potential. " << std::endl;
+      CoulombHandler = std::make_unique<Screen2D>(ref);
+      CoulombHandler->llr = false;
     }
     else
     {

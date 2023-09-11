@@ -37,6 +37,8 @@ struct LRHandlerBase
   mRealType LR_kc;
   /// Maximum r cutoff
   mRealType LR_rc;
+  ///evaluate long-range piece (Fk is not all zero)
+  bool llr;
   ///Fourier component for all the k-point
   Vector<mRealType> Fk;
   ///Fourier component of the LR part, fit to optimize the gradients.
@@ -60,7 +62,7 @@ struct LRHandlerBase
 
 
   //constructor
-  explicit LRHandlerBase(mRealType kc) : MaxKshell(0), LR_kc(kc), LR_rc(0), ClassName("LRHandlerBase") {}
+  explicit LRHandlerBase(mRealType kc) : MaxKshell(0), LR_kc(kc), LR_rc(0), llr(true), ClassName("LRHandlerBase") {}
 
   // virtual destructor
   virtual ~LRHandlerBase() = default;

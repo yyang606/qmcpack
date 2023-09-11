@@ -207,7 +207,13 @@ CoulombPBCAA::Return_t CoulombPBCAA::evaluate(ParticleSet& P)
       value_ = evaluate_sp(P);
     else
 #endif
-      value_ = evalLR(P) + evalSR(P) + myConst;
+    {
+      value_ = evalSR(P) + myConst;
+      if (AA->llr){
+        const RealType elr = evalLR(P);
+        value_ += elr;
+      }
+    }
   }
   return value_;
 }
