@@ -56,10 +56,4 @@ Screen2D::mRealType Screen2D::evaluate(mRealType r, mRealType rinv) const
   return vsr;
 }
 
-Screen2D::mRealType Screen2D::evaluateSR_k0() const
-{
-  //return 2*M_PI*dgate;
-  return 0.0;
-}
-
 } // qmcplusplus

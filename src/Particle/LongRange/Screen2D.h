@@ -30,7 +30,7 @@ public:
 
   // long-range part
   inline mRealType evaluateLR(mRealType r) const override {return 0.0;}
-  mRealType evaluateSR_k0() const override;
+  inline mRealType evaluateSR_k0() const override { return 2*M_PI*dgate/area; }
   void fillFk(const KContainer& KList);
 
   // begin required overrides
