@@ -97,6 +97,7 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getHandle
     {
       app_log() << "\n  Creating CoulombHandler with the 2D Ewald of Screened Coulomb potential. " << std::endl;
       CoulombHandler = std::make_unique<Screen2D>(ref);
+      CoulombHandler->llr = false;
     }
     else
     {
