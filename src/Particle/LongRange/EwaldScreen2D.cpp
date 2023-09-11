@@ -23,10 +23,12 @@ EwaldScreen2D::EwaldScreen2D(ParticleSet& ref, mRealType kc_in)
     throw std::runtime_error("screened Ewald requires distance_to_gate");
   LR_rc = ref.getLattice().LR_rc; // CoulombPBC needs get_rc() to createSpline4RbyVs
   LR_kc = ref.getLattice().LR_kc; // get_kc() is used in QMCFiniteSize
-  alpha = std::sqrt(LR_kc/2.0/LR_rc);
+  const mRealType alpha0 = std::sqrt(LR_kc/2.0/LR_rc);
+  alpha = std::max(1.0/dgate/std::sqrt(2.7), alpha0);
   area = ref.getLattice().Volume/ref.getLattice().R(2,2);
   // report
   app_log() << "    alpha = " << alpha << " area = " << area << std::endl;
+  app_log() << "   alpha0 = " << alpha0 << std::endl;
   app_log() << "    dgate = " << dgate << std::endl;
   fillFk(ref.getSimulationCell().getKLists());
 }
