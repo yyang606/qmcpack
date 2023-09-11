@@ -28,6 +28,7 @@ Screen2D::Screen2D(ParticleSet& ref, mRealType kc_in)
   app_log() << "    dgate = " << dgate << std::endl;
   app_log() << "    mimg  = " << mimg << std::endl;
   fillFk(ref.getSimulationCell().getKLists());
+  llr = false;
 }
 
 void Screen2D::fillFk(const KContainer& KList)
