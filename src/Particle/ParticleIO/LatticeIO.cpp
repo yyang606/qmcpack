@@ -140,12 +140,21 @@ bool LatticeParser::put(xmlNodePtr cur)
           LRCoulombSingleton::this_lr_type = LRCoulombSingleton::SCREEN2D;
           ref_.ndim                        = 2;
         }
+        else if (handler_type == "screen2d")
+        {
+          LRCoulombSingleton::this_lr_type = LRCoulombSingleton::SRSCREEN2D;
+          ref_.ndim                        = 2;
+        }
         else
           throw UniformCommunicateError("LatticeParser::put. Long range breakup handler not recognized.");
       }
       else if (aname == "distance_to_gate")
       {
         putContent(ref_.dgate, cur);
+      }
+      else if (aname == "max_image")
+      {
+        putContent(ref_.mimg, cur);
       }
       else if (aname == "LR_tol")
       {
