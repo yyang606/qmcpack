@@ -50,9 +50,9 @@ Screen2D::mRealType Screen2D::evaluate(mRealType r, mRealType rinv) const
   mRealType vsr = 0.0;
   for (int m=-mimg;m<=mimg;m++)
   {
-    vsr += std::pow(-1, m)/std::sqrt(
-      r*r + (2*dgate*m)*(2*dgate*m)
-    );
+    double dm_p=2*m*2*dgate-2*dgate;
+    double dm_n=2*m*2*dgate;
+    vsr += -1/std::sqrt(r*r + dm_p*dm_p) + 1/std::sqrt(r*r + dm_n*dm_n);
   }
   return vsr;
 }
