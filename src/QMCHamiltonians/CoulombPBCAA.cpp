@@ -208,7 +208,8 @@ CoulombPBCAA::Return_t CoulombPBCAA::evaluate(ParticleSet& P)
     else
 #endif
     {
-      value_ = evalSR(P) + myConst;
+      const RealType esr = evalSR(P);
+      value_ = esr + myConst;
       if (AA->llr){
         const RealType elr = evalLR(P);
         value_ += elr;
@@ -563,17 +564,17 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
   mRealType v1;           //single particle energy
   mRealType vl_r0 = AA->evaluateLR_r0();
   mRealType vs_k0 = AA->evaluateSR_k0();
+  if (report)
+  {
+    app_log() << "    vlr(r->0) = " << vl_r0 << std::endl;
+    app_log() << "   1/V vsr_k0 = " << vs_k0 << std::endl;
+  }
 
   if (quasi2d) // background term has z dependence
   {            // just evaluate the Madelung term
     for (int ispec = 1; ispec < NumSpecies; ispec++)
       if (Zspec[ispec] != Zspec[0])
         throw std::runtime_error("quasi2d assumes same charge");
-    if (report)
-    {
-      app_log() << "    vlr(r->0) = " << vl_r0 << std::endl;
-      app_log() << "   1/V vsr_k0 = " << vs_k0 << std::endl;
-    }
     // make sure we can ignore the short-range Madelung sum
     mRealType Rws           = Ps.getLattice().WignerSeitzRadius;
     mRealType rvsr_at_image = Rws * AA->evaluate(Rws, 1.0 / Rws);
@@ -644,6 +645,7 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
     const auto& dist = d_aa.getDistRow(ipart);
     for (size_t j = 0; j < ipart; ++j)
       esum += Zat[j] * rVs->splint(dist[j]) / dist[j];
+      //esum += Zat[j] * AA->evaluate(dist[j], 1.0/dist[j]);
     SR += Zat[ipart] * esum;
 
     const size_t ipart_reverse = NumCenters - ipart;
@@ -654,6 +656,7 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
     const auto& dist2 = d_aa.getDistRow(ipart_reverse);
     for (size_t j = 0; j < ipart_reverse; ++j)
       esum += Zat[j] * rVs->splint(dist2[j]) / dist2[j];
+      //esum += Zat[j] * AA->evaluate(dist2[j], 1.0/dist2[j]);
     SR += Zat[ipart_reverse] * esum;
   }
   return SR;
