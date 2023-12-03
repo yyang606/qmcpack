@@ -186,6 +186,23 @@ std::unique_ptr<OneDimCubicSpline<T>> createSpline4RbyVs_temp(const LRHandlerBas
   T deriv   = (v[1] - v[0]) / ((*agrid)[1] - (*agrid)[0]);
   // left derivative = deriv; right derivative = 0
   V0->spline(0, deriv, ng - 1, 0.0);
+  // check interpolation at mid points
+  T chi2 = 0.0;
+  T vs;
+  for (int ig=0; ig<ng-1; ig++)
+  {
+    r = 0.5*((*agrid)[ig]+(*agrid)[ig+1]);
+    vs = V0->splint(r);
+    vn = r*aLR->evaluate(r, 1.0/r);
+    chi2 += (vs-vn)*(vs-vn);
+  }
+  if (chi2 > vtol)
+  {
+    std::ostringstream msg;
+    msg << "LRCoulombSingleton::createSpline4RbyVs_temp. Short-range potential\n";
+    msg << "  interpolation chi^2 = " << chi2 << "\n";
+    throw std::runtime_error(msg.str());
+  }
   return V0;
 }
 
