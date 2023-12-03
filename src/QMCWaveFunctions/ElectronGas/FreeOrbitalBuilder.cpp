@@ -90,12 +90,13 @@ std::unique_ptr<SPOSet> FreeOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
   // kpts_cart is sorted by magnitude
   std::vector<PosType> kpts(npw);
   KContainer klists;
-  RealType kcut = 1.1*calc_kf(lattice, targetPtcl.getTotalNum());
+  RealType kcut = 2.1*calc_kf(lattice, targetPtcl.getTotalNum());
   klists.updateKLists(lattice, kcut, lattice.ndim, twist);
   if (klists.numk < npw)
   {
     std::ostringstream msg;
-    msg << "nklist = " << klists.numk << " npw = " << npw;
+    msg << "kf = " << kcut << std::endl;
+    msg << "nklist = " << klists.numk << " npw = " << npw << std::endl;
     msg << " updateKLists did not create enough PWs" << std::endl;
     throw std::runtime_error(msg.str());
   }
