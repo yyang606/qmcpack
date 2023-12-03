@@ -37,6 +37,7 @@ private:
   int NumTargetPtcls, NumCenters;
   RealType curVal, curLap;
   PosType curGrad;
+  const size_t ndim;
 
 public:
   std::vector<RealType> ParticleAlpha;
