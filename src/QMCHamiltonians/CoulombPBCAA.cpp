@@ -460,12 +460,12 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   }
   Zat_ref.updateTo();
 
-  size_t nlat = 0;
   // short-range lattice images
+  auto cell = Ps.getLattice();
+  size_t nlat = cell.nlat;
+  size_t ndim = cell.ndim;
   int nlat_x, nlat_y, nlat_z;
   nlat_x = nlat_y = nlat_z = nlat;
-  auto cell = Ps.getLattice();
-  size_t ndim = cell.ndim;
   if (ndim < 3) nlat_z = 0;
   if (ndim < 2) nlat_y = 0;
   size_t npts = (2*nlat_x+1) * (2*nlat_y+1) * (2*nlat_z+1);
