@@ -240,6 +240,8 @@ struct CrystalLattice : public LRBreakupParameters<T, D>
     Base::LR_dim_cutoff = rhs.LR_dim_cutoff;
     Base::LR_kc         = rhs.LR_kc;
     Base::LR_rc         = rhs.LR_rc;
+    Base::ewaldAlpha    = rhs.ewaldAlpha;
+    Base::nlat          = rhs.nlat;
     Base::ndim          = rhs.ndim;
     Base::dgate         = rhs.dgate;
     Base::mimg          = rhs.mimg;

@@ -208,7 +208,8 @@ CoulombPBCAA::Return_t CoulombPBCAA::evaluate(ParticleSet& P)
     else
 #endif
     {
-      value_ = evalSR(P) + myConst;
+      const RealType esr = evalSR(P);
+      value_ = esr + myConst;
       if (AA->llr){
         const RealType elr = evalLR(P);
         value_ += elr;
@@ -459,10 +460,42 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   }
   Zat_ref.updateTo();
 
+  // short-range lattice images
+  auto cell = Ps.getLattice();
+  size_t nlat = cell.nlat;
+  size_t ndim = cell.ndim;
+  int nlat_x, nlat_y, nlat_z;
+  nlat_x = nlat_y = nlat_z = nlat;
+  if (ndim < 3) nlat_z = 0;
+  if (ndim < 2) nlat_y = 0;
+  size_t npts = (2*nlat_x+1) * (2*nlat_y+1) * (2*nlat_z+1);
+  lats.resize(npts);
+  size_t ilat = 0;
+  for (int ix=-1*nlat_x; ix<=nlat_x; ix++)
+  {
+  for (int iy=-nlat_y; iy<=nlat_y; iy++)
+  {
+  for (int iz=-nlat_z; iz<=nlat_z; iz++)
+  {
+    TinyVector<RealType, DIM> rvec = 0;
+    for (size_t l=0; l<ndim; l++)
+    {
+      rvec[l] = ix*cell.R(0, l) + iy*cell.R(1, l) + iz*cell.R(2, l);
+    }
+    lats[ilat++] = rvec;
+  }
+  }
+  }
+  app_log() << " sum over lattice images: \n";
+  for (auto dlat : lats)
+    app_log() << dlat << "\n";
+
+  // long-range sum from LRHandler
   AA = LRCoulombSingleton::getHandler(P);
   //AA->initBreakup(*PtclRef);
   myConst = evalConsts();
-  myRcut  = AA->get_rc(); //Basis.get_rc();
+  myRcut  = AA->get_rc();
+  myRcut  = myRcut + 2*myRcut*nlat;
 
   if (rVs == nullptr)
     rVs = LRCoulombSingleton::createSpline4RbyVs(AA.get(), myRcut);
@@ -563,17 +596,17 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalConsts(bool report)
   mRealType v1;           //single particle energy
   mRealType vl_r0 = AA->evaluateLR_r0();
   mRealType vs_k0 = AA->evaluateSR_k0();
+  if (report)
+  {
+    app_log() << "    vlr(r->0) = " << vl_r0 << std::endl;
+    app_log() << "   1/V vsr_k0 = " << vs_k0 << std::endl;
+  }
 
   if (quasi2d) // background term has z dependence
   {            // just evaluate the Madelung term
     for (int ispec = 1; ispec < NumSpecies; ispec++)
       if (Zspec[ispec] != Zspec[0])
         throw std::runtime_error("quasi2d assumes same charge");
-    if (report)
-    {
-      app_log() << "    vlr(r->0) = " << vl_r0 << std::endl;
-      app_log() << "   1/V vsr_k0 = " << vs_k0 << std::endl;
-    }
     // make sure we can ignore the short-range Madelung sum
     mRealType Rws           = Ps.getLattice().WignerSeitzRadius;
     mRealType rvsr_at_image = Rws * AA->evaluate(Rws, 1.0 / Rws);
@@ -641,9 +674,17 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
   for (size_t ipart = 1; ipart < (NumCenters / 2 + 1); ipart++)
   {
     mRealType esum   = 0.0;
-    const auto& dist = d_aa.getDistRow(ipart);
+    const auto& disps = d_aa.getDisplRow(ipart);
     for (size_t j = 0; j < ipart; ++j)
-      esum += Zat[j] * rVs->splint(dist[j]) / dist[j];
+    {
+      for (auto dlat : lats)
+      {
+      const auto& dr = disps[j]+dlat;
+      const auto r = std::sqrt(dot(dr, dr));
+      esum += Zat[j] * rVs->splint(r) / r;
+      //esum += Zat[j] * AA->evaluate(r, 1.0/r); // avoid spline
+      }
+    }
     SR += Zat[ipart] * esum;
 
     const size_t ipart_reverse = NumCenters - ipart;
@@ -651,9 +692,17 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
       continue;
 
     esum              = 0.0;
-    const auto& dist2 = d_aa.getDistRow(ipart_reverse);
+    const auto& disps2 = d_aa.getDisplRow(ipart_reverse);
     for (size_t j = 0; j < ipart_reverse; ++j)
-      esum += Zat[j] * rVs->splint(dist2[j]) / dist2[j];
+    {
+      for (auto dlat : lats)
+      {
+      const auto& dr = disps2[j]+dlat;
+      const auto r = std::sqrt(dot(dr, dr));
+      esum += Zat[j] * rVs->splint(r) / r;
+      //esum += Zat[j] * AA->evaluate(r, 1.0/r); // avoid spline
+      }
+    }
     SR += Zat[ipart_reverse] * esum;
   }
   return SR;

@@ -149,7 +149,8 @@ std::unique_ptr<LRCoulombSingleton::LRHandlerType> LRCoulombSingleton::getDerivH
 template<typename T>
 std::unique_ptr<OneDimCubicSpline<T>> createSpline4RbyVs_temp(const LRHandlerBase* aLR,
                                                               T rcut,
-                                                              const LinearGrid<T>* agrid)
+                                                              const LinearGrid<T>* agrid,
+                                                              const T vtol)
 {
   using func_type = OneDimCubicSpline<T>;
   std::unique_ptr<LinearGrid<T>> agrid_local;
@@ -161,19 +162,47 @@ std::unique_ptr<OneDimCubicSpline<T>> createSpline4RbyVs_temp(const LRHandlerBas
   }
   const int ng = agrid->size();
   std::vector<T> v(ng);
-  T r = (*agrid)[0];
-  //check if the first point is not zero
-  v[0] = (r > std::numeric_limits<T>::epsilon()) ? r * aLR->evaluate(r, 1.0 / r) : 0.0;
+  // check last grid point is close to zero
+  T r = (*agrid)[ng-1];
+  T vn = r*aLR->evaluate(r, 1.0/r);
+  if (std::abs(vn) > vtol)
+  {
+    std::ostringstream msg;
+    msg << "LRCoulombSingleton::createSpline4RbyVs_temp. Short-range potential\n";
+    msg << "  Vsr(rcut=" << r << ") = " << vn << " is not zero.\n";
+    throw std::runtime_error(msg.str());
+  }
+  // ignore data at first and last grid points
   for (int ig = 1; ig < ng - 1; ig++)
   {
     r     = (*agrid)[ig];
     v[ig] = r * aLR->evaluate(r, 1.0 / r);
   }
+  // set first point by **linear** derivative
   v[0]      = 2.0 * v[1] - v[2];
+  // set last point to zero
   v[ng - 1] = 0.0;
   auto V0   = std::make_unique<func_type>(agrid->makeClone(), v);
   T deriv   = (v[1] - v[0]) / ((*agrid)[1] - (*agrid)[0]);
+  // left derivative = deriv; right derivative = 0
   V0->spline(0, deriv, ng - 1, 0.0);
+  // check interpolation at mid points
+  T chi2 = 0.0;
+  T vs;
+  for (int ig=0; ig<ng-1; ig++)
+  {
+    r = 0.5*((*agrid)[ig]+(*agrid)[ig+1]);
+    vs = V0->splint(r);
+    vn = r*aLR->evaluate(r, 1.0/r);
+    chi2 += (vs-vn)*(vs-vn);
+  }
+  if (chi2 > vtol)
+  {
+    std::ostringstream msg;
+    msg << "LRCoulombSingleton::createSpline4RbyVs_temp. Short-range potential\n";
+    msg << "  interpolation chi^2 = " << chi2 << "\n";
+    throw std::runtime_error(msg.str());
+  }
   return V0;
 }
 
@@ -217,9 +246,10 @@ std::unique_ptr<OneDimCubicSpline<T>> createSpline4RbyVsDeriv_temp(const LRHandl
 
 std::unique_ptr<LRCoulombSingleton::RadFunctorType> LRCoulombSingleton::createSpline4RbyVs(const LRHandlerType* aLR,
                                                                                            mRealType rcut,
-                                                                                           const GridType* agrid)
+                                                                                           const GridType* agrid,
+                                                                                           mRealType vtol)
 {
-  return createSpline4RbyVs_temp(aLR, static_cast<pRealType>(rcut), agrid);
+  return createSpline4RbyVs_temp(aLR, static_cast<pRealType>(rcut), agrid, vtol);
 }
 
 std::unique_ptr<LRCoulombSingleton::RadFunctorType> LRCoulombSingleton::createSpline4RbyVsDeriv(
