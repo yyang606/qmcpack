@@ -85,6 +85,7 @@ struct CoulombPBCAA : public OperatorBase, public ForceBase
   Array<TraceReal, 1> V_const;
 #endif
   ParticleSet& Ps;
+  std::vector<TinyVector<RealType, DIM>> lats;
 
 
   /** constructor */

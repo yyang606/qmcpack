@@ -460,10 +460,42 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   }
   Zat_ref.updateTo();
 
+  size_t nlat = 0;
+  // short-range lattice images
+  int nlat_x, nlat_y, nlat_z;
+  nlat_x = nlat_y = nlat_z = nlat;
+  auto cell = Ps.getLattice();
+  size_t ndim = cell.ndim;
+  if (ndim < 3) nlat_z = 0;
+  if (ndim < 2) nlat_y = 0;
+  size_t npts = (2*nlat_x+1) * (2*nlat_y+1) * (2*nlat_z+1);
+  lats.resize(npts);
+  size_t ilat = 0;
+  for (int ix=-1*nlat_x; ix<=nlat_x; ix++)
+  {
+  for (int iy=-nlat_y; iy<=nlat_y; iy++)
+  {
+  for (int iz=-nlat_z; iz<=nlat_z; iz++)
+  {
+    TinyVector<RealType, DIM> rvec = 0;
+    for (size_t l=0; l<ndim; l++)
+    {
+      rvec[l] = ix*cell.R(0, l) + iy*cell.R(1, l) + iz*cell.R(2, l);
+    }
+    lats[ilat++] = rvec;
+  }
+  }
+  }
+  app_log() << " sum over lattice images: \n";
+  for (auto dlat : lats)
+    app_log() << dlat << "\n";
+
+  // long-range sum from LRHandler
   AA = LRCoulombSingleton::getHandler(P);
   //AA->initBreakup(*PtclRef);
   myConst = evalConsts();
-  myRcut  = AA->get_rc(); //Basis.get_rc();
+  myRcut  = AA->get_rc();
+  myRcut  = myRcut + 2*myRcut*nlat;
 
   if (rVs == nullptr)
     rVs = LRCoulombSingleton::createSpline4RbyVs(AA.get(), myRcut);
@@ -642,10 +674,17 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
   for (size_t ipart = 1; ipart < (NumCenters / 2 + 1); ipart++)
   {
     mRealType esum   = 0.0;
-    const auto& dist = d_aa.getDistRow(ipart);
+    const auto& disps = d_aa.getDisplRow(ipart);
     for (size_t j = 0; j < ipart; ++j)
-      esum += Zat[j] * rVs->splint(dist[j]) / dist[j];
-      //esum += Zat[j] * AA->evaluate(dist[j], 1.0/dist[j]);
+    {
+      for (auto dlat : lats)
+      {
+      const auto& dr = disps[j]+dlat;
+      const auto r = std::sqrt(dot(dr, dr));
+      esum += Zat[j] * rVs->splint(r) / r;
+      //esum += Zat[j] * AA->evaluate(r, 1.0/r); // avoid spline
+      }
+    }
     SR += Zat[ipart] * esum;
 
     const size_t ipart_reverse = NumCenters - ipart;
@@ -653,10 +692,17 @@ CoulombPBCAA::Return_t CoulombPBCAA::evalSR(ParticleSet& P)
       continue;
 
     esum              = 0.0;
-    const auto& dist2 = d_aa.getDistRow(ipart_reverse);
+    const auto& disps2 = d_aa.getDisplRow(ipart_reverse);
     for (size_t j = 0; j < ipart_reverse; ++j)
-      esum += Zat[j] * rVs->splint(dist2[j]) / dist2[j];
-      //esum += Zat[j] * AA->evaluate(dist2[j], 1.0/dist2[j]);
+    {
+      for (auto dlat : lats)
+      {
+      const auto& dr = disps2[j]+dlat;
+      const auto r = std::sqrt(dot(dr, dr));
+      esum += Zat[j] * rVs->splint(r) / r;
+      //esum += Zat[j] * AA->evaluate(r, 1.0/r); // avoid spline
+      }
+    }
     SR += Zat[ipart_reverse] * esum;
   }
   return SR;
