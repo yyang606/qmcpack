@@ -75,7 +75,7 @@ struct LRCoulombSingleton
   static std::unique_ptr<RadFunctorType> createSpline4RbyVs(const LRHandlerType* aLR,
                                                             mRealType rcut,
                                                             const GridType* agrid = nullptr,
-                                                            const mRealType vtol = 1e-10);
+                                                            const mRealType vtol = 1e-8);
   /** create a linear spline of the derivative of short-range potential
    * @param aLR LRHandler
    * @param rcut cutoff radius
