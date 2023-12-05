@@ -170,6 +170,7 @@ std::unique_ptr<OneDimCubicSpline<T>> createSpline4RbyVs_temp(const LRHandlerBas
     std::ostringstream msg;
     msg << "LRCoulombSingleton::createSpline4RbyVs_temp. Short-range potential\n";
     msg << "  Vsr(rcut=" << r << ") = " << vn << " is not zero.\n";
+    msg << "  increase ewald_alpha or nlat.\n";
     throw std::runtime_error(msg.str());
   }
   // ignore data at first and last grid points
