@@ -157,7 +157,7 @@ std::unique_ptr<OneDimCubicSpline<T>> createSpline4RbyVs_temp(const LRHandlerBas
   if (agrid == nullptr)
   {
     agrid_local = std::make_unique<LinearGrid<T>>();
-    agrid_local->set(0.0, rcut, 1001);
+    agrid_local->set(0.0, rcut, 10001);
     agrid = agrid_local.get();
   }
   const int ng = agrid->size();
