@@ -28,7 +28,6 @@ Screen2D::Screen2D(ParticleSet& ref, mRealType kc_in)
   app_log() << "    dgate = " << dgate << std::endl;
   app_log() << "    mimg  = " << mimg << std::endl;
   fillFk(ref.getSimulationCell().getKLists());
-  llr = false;
 }
 
 void Screen2D::fillFk(const KContainer& KList)
@@ -46,15 +45,26 @@ void Screen2D::fillFk(const KContainer& KList)
 }
 
 Screen2D::mRealType Screen2D::evaluate(mRealType r, mRealType rinv) const
-{
+{ // Robert E. Throckmorton and Oskar Vafek PRB 86, 115447 (2012).
+  // Agnes Valenti et al. 2307.15119 (S68) -> (S77)
   mRealType vsr = 0.0;
+  if (r < dgate/4) // sum images in real space
+  { // eq. (29)
   for (int m=-mimg;m<=mimg;m++)
   {
     double dm_p=2*m*2*dgate-2*dgate;
     double dm_n=2*m*2*dgate;
     vsr += -1/std::sqrt(r*r + dm_p*dm_p) + 1/std::sqrt(r*r + dm_n*dm_n);
   }
-  return vsr;
+    return vsr;
+  }
+  const mRealType pre = 2.0/dgate;
+  const mRealType arg = r/(2*dgate);
+  for (int k=0;k<=mimg;k++)
+  { // eq. (B4)
+    vsr += std::cyl_bessel_k(0, (2*k+1)*M_PI*arg);
+  }
+  return pre*vsr;
 }
 
 } // qmcplusplus

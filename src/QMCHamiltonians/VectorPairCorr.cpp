@@ -126,6 +126,14 @@ void VectorPairCorr::registerCollectables(std::vector<ObservableHelper>& h5desc,
   oh.set_dimensions(ng, my_index_);
 }
 
+int VectorPairCorr::locate_grid_point(const PosType u) const
+{
+  int point = 0;
+  for (int l=0;l<ndim;l++)
+    point += gdims[l] * ((int)(grid[l] * (u[l] - std::floor(u[l]))));
+  return point;
+}
+
 VectorPairCorr::Return_t VectorPairCorr::evaluate(ParticleSet& P)
 {
   RealType wt = t_walker_->Weight;
@@ -141,11 +149,14 @@ VectorPairCorr::Return_t VectorPairCorr::evaluate(ParticleSet& P)
       int offset = my_index_+ipair*npoints;
       // locate grid point
       const PosType u = lattice.toUnit(drs[j]);
-      int point = 0;
-      for (int l=0;l<ndim;l++)
-        point += gdims[l] * ((int)(grid[l] * (u[l] - std::floor(u[l]))));
+      int point = locate_grid_point(u);
       // increament grid point
-      if ((0 <= point) and (point < npoints)) P.Collectables[point+offset] += wt*norms(ig,jg);
+      if ((0 <= point) and (point < npoints)) P.Collectables[point+offset] += 0.5*wt*norms(ig,jg);
+      // locate grid point -r
+      const PosType u1 = lattice.toUnit(drs[j]*-1.0);
+      point = locate_grid_point(u1);
+      // increament grid point -r
+      if ((0 <= point) and (point < npoints)) P.Collectables[point+offset] += 0.5*wt*norms(ig,jg);
     }
   }
 

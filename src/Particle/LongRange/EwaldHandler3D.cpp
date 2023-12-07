@@ -36,7 +36,8 @@ void EwaldHandler3D::initBreakup(ParticleSet& ref)
   //  Sigma/=ref.getLattice().LR_rc;
 
   //This heuristic for choosing Sigma is from the 1992 Natoli Ceperley Optimized Breakup Paper.
-  Sigma = std::sqrt(LR_kc / (2.0 * LR_rc));
+  Sigma = ref.getLattice().ewaldAlpha;
+  if (Sigma < 0) Sigma = std::sqrt(LR_kc / (2.0 * LR_rc));
   app_log() << "  Sigma=" << Sigma << std::endl;
   Volume     = ref.getLattice().Volume;
   PreFactors = 0.0;

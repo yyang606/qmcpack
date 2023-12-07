@@ -33,6 +33,7 @@ set(HAMSRCS
     SkPot.cpp
     SkEstimator.cpp
     SkAllEstimator.cpp
+    SpeciesSkAll.cpp
     MomentumEstimator.cpp
     ForceBase.cpp
     BareForce.cpp
@@ -48,6 +49,7 @@ set(HAMSRCS
     SpeciesKineticEnergy.cpp
     ComplexPolarization.cpp
     VectorPairCorr.cpp
+    SubLattice.cpp
     LatticeDeviationEstimator.cpp
     SpaceWarpTransformation.cpp
     ObservableHelper.cpp)

@@ -21,6 +21,31 @@ FreeOrbitalBuilder::FreeOrbitalBuilder(ParticleSet& els, Communicate* comm, xmlN
     : SPOSetBuilder("PW", comm), targetPtcl(els)
 {}
 
+double FreeOrbitalBuilder::calc_kf(const PtclOnLatticeTraits::ParticleLayout lattice, const size_t nelec)
+{
+  const size_t ndim = lattice.ndim;
+  double rs, kf;
+  if (ndim == 2)
+  {
+    const double sa = M_PI;
+    rs = std::pow(lattice.Area/nelec/sa, 1.0/ndim);
+    kf = 2.0/rs;
+  }
+  else if (lattice.ndim == 3)
+  {
+    const double sa = 4.0*M_PI/3.0;
+    rs = std::pow(lattice.Volume/nelec/sa, 1.0/ndim);
+    kf = std::pow(9.0*M_PI/2.0, 1.0/ndim)/rs;
+  }
+  else
+  {
+    std::ostringstream msg;
+    msg << "calc_kf ndim = " << ndim << "\n";
+    throw std::runtime_error(msg.str());
+  }
+  return kf;
+}
+
 std::unique_ptr<SPOSet> FreeOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
 {
   int norb = -1;
@@ -65,8 +90,16 @@ std::unique_ptr<SPOSet> FreeOrbitalBuilder::createSPOSetFromXML(xmlNodePtr cur)
   // kpts_cart is sorted by magnitude
   std::vector<PosType> kpts(npw);
   KContainer klists;
-  RealType kcut = lattice.LR_kc; // to-do: reduce kcut to >~ kf
+  RealType kcut = 2.1*calc_kf(lattice, targetPtcl.getTotalNum());
   klists.updateKLists(lattice, kcut, lattice.ndim, twist);
+  if (klists.numk < npw)
+  {
+    std::ostringstream msg;
+    msg << "kf = " << kcut << std::endl;
+    msg << "nklist = " << klists.numk << " npw = " << npw << std::endl;
+    msg << " updateKLists did not create enough PWs" << std::endl;
+    throw std::runtime_error(msg.str());
+  }
 
   // k0 is not in kpts_cart
   kpts[0] = tvec;

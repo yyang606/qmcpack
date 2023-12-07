@@ -21,7 +21,8 @@ using ValueType    = LatticeGaussianProduct::ValueType;
 using GradType     = LatticeGaussianProduct::GradType;
 using PsiValueType = LatticeGaussianProduct::PsiValueType;
 
-LatticeGaussianProduct::LatticeGaussianProduct(ParticleSet& centers, ParticleSet& ptcls) : CenterRef(centers)
+LatticeGaussianProduct::LatticeGaussianProduct(ParticleSet& centers, ParticleSet& ptcls) :
+  CenterRef(centers), ndim(ptcls.getLattice().ndim)
 {
   NumTargetPtcls = ptcls.getTotalNum();
   NumCenters     = centers.getTotalNum();
@@ -71,7 +72,7 @@ LatticeGaussianProduct::LogValueType LatticeGaussianProduct::evaluateLog(const P
       log_value_ -= a * dist * dist;
       U[iat] += a * dist * dist;
       G[iat] -= 2.0 * a * disp;
-      L[iat] -= 6.0 * a;
+      L[iat] -= 2.0 * a * ndim;
       icent++;
     }
   }

@@ -46,14 +46,18 @@ std::unique_ptr<WaveFunctionComponent> LatticeGaussianProductBuilder::buildCompo
   auto orb         = std::make_unique<LatticeGaussianProduct>(sourcePtcl, targetPtcl);
   orb->ParticleAlpha.resize(targetPtcl.getTotalNum());
   orb->ParticleCenter.resize(targetPtcl.getTotalNum());
+
+  app_log() << "LatticeGaussianProductBuilder" << std::endl;
   int num_nonzero = 0;
   for (int iat = 0; iat < p.getTotalNum(); iat++)
   {
     RealType w = widthOpt[iat];
     if (w > 0.0)
     {
+      app_log() << "ptcl " << iat << " center " << num_nonzero-1;
       orb->ParticleCenter[iat] = num_nonzero++;
       orb->ParticleAlpha[iat]  = 0.5 / (w * w);
+      app_log() << " alpha = " << orb->ParticleAlpha[iat] << std::endl;
     }
     else
     {

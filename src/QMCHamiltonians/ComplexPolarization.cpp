@@ -10,6 +10,7 @@
 //////////////////////////////////////////////////////////////////////////////////////
 
 #include "ComplexPolarization.h"
+#include "OhmmsData/AttributeSet.h"
 
 namespace qmcplusplus
 {
@@ -18,18 +19,51 @@ ComplexPolarization::ComplexPolarization(ParticleSet& P) :
   lattice(P.getLattice()),
   ndim(lattice.ndim)
 {
-  // [v0_real, v0_imag, v1_real, v1_imag, ...]
-  values.resize(2*ndim);
+  // [v0_real, v0_imag]
+  values.resize(2);
+  // look along x by default
+  axis = 0.0;
+  axis[0] = 1.0;
+  // maximum projcetion distance
+  rmax = 0.0;
 };
 
 bool ComplexPolarization::put(xmlNodePtr cur)
 {
+  OhmmsAttributeSet attrib;
+  attrib.add(axis, "axis");
+  attrib.put(cur);
+  RealType norm=0.0;
+  for (int l=0;l<axis.size();l++)
+    norm += axis[l]*axis[l];
+  axis /= std::sqrt(norm);
+  auto axes = lattice.R;
+  std::vector<RealType> lengths;
+  for (int i=0;i<ndim;i++)
+  {
+    auto ai = axes.getRow(i);
+    lengths.push_back(dot(ai, axis));
+    for (int j=i+1;j<ndim;j++)
+    {
+      auto aj = axes.getRow(j);
+      lengths.push_back(dot(ai+aj, axis));
+    }
+  }
+  if (ndim == 3)
+  {
+    auto rvec = axes.getRow(0)+axes.getRow(1)+axes.getRow(2);
+    lengths.push_back(dot(rvec, axis));
+  }
+  rmax = *std::max_element(lengths.begin(), lengths.end());
+  get(app_log());
   return true;
 }
 
 bool ComplexPolarization::get(std::ostream& os) const
 { // class description
-  os << "ComplexPolarization: " << name_;
+  os << "ComplexPolarization: " << name_ << std::endl;
+  os << "  axis =" << axis << std::endl;
+  os << "  rmax =" << rmax << std::endl;
   return true;
 }
 
@@ -64,26 +98,21 @@ ComplexPolarization::Return_t ComplexPolarization::evaluate(ParticleSet& P)
   RealType wgt = t_walker_->Weight;
 
   const int npart=P.getTotalNum();
-  auto lattice = P.getLattice();
   RealType cosz, sinz;
 
-  std::vector<RealType> expos(ndim);
-  std::fill(expos.begin(), expos.end(), 0.0);
-
-  // v_l = exp(i 2*pi * \sum_j f_{jl})
-  for (int i=0; i<npart; i++)
+  // v = exp(i 2*pi * \sum_j f_j)
+  RealType expo = 0.0;
+  for (int j=0; j<npart; j++)
   {
-    auto r = P.R[i];
+    auto r = P.R[j];
     // fractional coordinate
-    auto f = lattice.toUnit(r);
-    for (int l=0; l<ndim; l++) expos[l] += f[l];
+    auto rp = dot(r, axis);
+    auto fj = rp/rmax;
+    expo += fj;
   }
-  for (int l=0; l<ndim; l++)
-  {
-    sincos(2*M_PI*expos[l], &cosz, &sinz);
-    values[2*l] = cosz;
-    values[2*l+1] = sinz;
-  }
+  sincos(2*M_PI*expo, &cosz, &sinz);
+  values[0] = wgt*cosz;
+  values[1] = wgt*sinz;
 
   value_ = 0.0; // Value is no longer used in scalar.dat
   return value_;

@@ -23,6 +23,7 @@ public:
   ~FreeOrbitalBuilder() {}
 
   std::unique_ptr<SPOSet> createSPOSetFromXML(xmlNodePtr cur) override;
+  double calc_kf(const PtclOnLatticeTraits::ParticleLayout lattice, const size_t nelec);
 
 private:
   ParticleSet& targetPtcl;

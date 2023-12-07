@@ -40,7 +40,7 @@ class LatticeDeviationEstimator : public OperatorBase
 {
 public:
   LatticeDeviationEstimator(ParticleSet& P, ParticleSet& sP, const std::string& tgroup, const std::string& sgroup);
-  ~LatticeDeviationEstimator() override {}
+  ~LatticeDeviationEstimator() override final;
 
   std::string getClassName() const override { return "LatticeDeviationEstimator"; }
   bool put(xmlNodePtr cur) override;         // read input xml node, required
@@ -66,14 +66,20 @@ private:
   SpeciesSet& sspecies;       // species table of source particle set
   ParticleSet &tpset, spset;  // save references to source and target particle sets
   std::string tgroup, sgroup; // name of species to track
+  const size_t first_tar, last_tar, first_src, last_src;
   int num_sites;              // number of lattice sites (i.e. number of source particles)
   bool hdf5_out;              // use .h5 file for data (follow SkEstimator)
   int h5_index;               // track the starting memory location in P.Collectables
   bool per_xyz;               // track deviation in each of x,y,z directions
+  bool lsap;                  // solve the linear sum assignment problem
   std::vector<RealType> xyz2; // temporary storage for deviation in each of x,y,z directions
   xmlNodePtr input_xml;       // original xml
   // distance table ID
   const int myTableID_;
+  std::vector<std::vector<RealType>> rij;
+  std::vector<std::vector<PosType>> drij;
+  RealType **temp_rij;  // interface to asp routine
+  std::vector<long> ij_map;
 }; // LatticeDeviationEstimator
 
 } // namespace qmcplusplus
