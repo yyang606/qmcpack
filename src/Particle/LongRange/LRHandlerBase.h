@@ -90,6 +90,7 @@ struct LRHandlerBase
     while ((niter < miter) and (ltoo_small or ltoo_large))
     {
       app_log() << niter << " amin = " << alpha_min << " a = " << alpha << " amax = " << alpha_max << "\n";
+      if (alpha_max-alpha_min < 2*tol) break;
       // adjust
       if (ltoo_small)
       {

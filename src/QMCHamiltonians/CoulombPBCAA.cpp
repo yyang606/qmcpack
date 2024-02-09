@@ -495,7 +495,6 @@ void CoulombPBCAA::initBreakup(ParticleSet& P)
   //AA->initBreakup(*PtclRef);
   myConst = evalConsts();
   myRcut  = AA->get_rc();
-  myRcut  = myRcut + 2*myRcut*nlat;
 
   if (myGrid == nullptr)
   {

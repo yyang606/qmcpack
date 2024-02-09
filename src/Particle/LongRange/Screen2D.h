@@ -27,6 +27,7 @@ public:
   // short-range part
   mRealType evaluate(mRealType r, mRealType rinv) const override;
   inline mRealType evaluateLR_r0() const override {return 0.0;}
+  mRealType findRcut();
 
   // long-range part
   inline mRealType evaluateLR(mRealType r) const override {return 0.0;}
