@@ -120,6 +120,10 @@ bool LatticeParser::put(xmlNodePtr cur)
       {
         putContent(ref_.ewaldAlpha, cur);
       }
+      else if (aname == "ewald_grid")
+      {
+        putContent(ref_.ewaldGrid, cur);
+      }
       else if (aname == "nlat")
       {
         putContent(ref_.nlat, cur);
