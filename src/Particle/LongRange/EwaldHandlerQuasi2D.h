@@ -64,7 +64,6 @@ public:
   void resetTargetParticleSet(ParticleSet& ref) override {}
   // overrides end
 private:
-  mRealType alpha;
   mRealType area;
   ///store |k|
   std::vector<mRealType> kmags;

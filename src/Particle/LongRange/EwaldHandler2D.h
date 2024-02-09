@@ -56,7 +56,6 @@ public:
   void resetTargetParticleSet(ParticleSet& ref) override {}
   // overrides end
 private:
-  mRealType alpha;
   mRealType area;
 };
 } // qmcplusplus

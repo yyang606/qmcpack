@@ -28,6 +28,8 @@ EwaldScreen2D::EwaldScreen2D(ParticleSet& ref, mRealType kc_in)
   {
     const mRealType alpha0 = std::sqrt(LR_kc/2.0/LR_rc);
     alpha = std::max(0.61093226575644/dgate, alpha0);
+    app_log() << "init alpha = " << alpha << "\n";
+    alpha = guess_ewald_alpha(LR_rc);
   }
   area = ref.getLattice().Volume/ref.getLattice().R(2,2);
   // report

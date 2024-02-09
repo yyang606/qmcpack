@@ -153,13 +153,6 @@ std::unique_ptr<OneDimCubicSpline<T>> createSpline4RbyVs_temp(const LRHandlerBas
                                                               const T vtol)
 {
   using func_type = OneDimCubicSpline<T>;
-  std::unique_ptr<LinearGrid<T>> agrid_local;
-  if (agrid == nullptr)
-  {
-    agrid_local = std::make_unique<LinearGrid<T>>();
-    agrid_local->set(0.0, rcut, 1001);
-    agrid = agrid_local.get();
-  }
   const int ng = agrid->size();
   std::vector<T> v(ng);
   // check last grid point is close to zero
@@ -202,6 +195,7 @@ std::unique_ptr<OneDimCubicSpline<T>> createSpline4RbyVs_temp(const LRHandlerBas
     std::ostringstream msg;
     msg << "LRCoulombSingleton::createSpline4RbyVs_temp. Short-range potential\n";
     msg << "  interpolation chi^2 = " << chi2 << "\n";
+    msg << "  increase ewald_grid. \n";
     throw std::runtime_error(msg.str());
   }
   return V0;
@@ -213,13 +207,6 @@ std::unique_ptr<OneDimCubicSpline<T>> createSpline4RbyVsDeriv_temp(const LRHandl
                                                                    const LinearGrid<T>* agrid)
 {
   using func_type = OneDimCubicSpline<T>;
-  std::unique_ptr<LinearGrid<T>> agrid_local;
-  if (agrid == nullptr)
-  {
-    agrid_local = std::make_unique<LinearGrid<T>>();
-    agrid_local->set(0.0, rcut, 1001);
-    agrid = agrid_local.get();
-  }
   int ng = agrid->size();
   std::vector<T> v(ng);
   T r = (*agrid)[0];

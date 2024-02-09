@@ -37,6 +37,8 @@ struct LRHandlerBase
   mRealType LR_kc;
   /// Maximum r cutoff
   mRealType LR_rc;
+  /// Ewald screening parameter
+  mRealType alpha;
   ///evaluate long-range piece (Fk is not all zero)
   bool llr;
   ///Fourier component for all the k-point
@@ -62,7 +64,7 @@ struct LRHandlerBase
 
 
   //constructor
-  explicit LRHandlerBase(mRealType kc) : MaxKshell(0), LR_kc(kc), LR_rc(0), llr(true), ClassName("LRHandlerBase") {}
+  explicit LRHandlerBase(mRealType kc) : MaxKshell(0), LR_kc(kc), LR_rc(0), alpha(LR_kc), llr(true), ClassName("LRHandlerBase") {}
 
   // virtual destructor
   virtual ~LRHandlerBase() = default;
@@ -71,6 +73,52 @@ struct LRHandlerBase
   inline mRealType get_rc() const { return LR_rc; }
   //return k cutoff
   inline mRealType get_kc() const { return LR_kc; }
+
+  inline mRealType guess_ewald_alpha(mRealType rcut)
+  {
+    const int miter = 1000;
+    const mRealType tol = 1e-10;
+    const mRealType edge = 0.9;
+    mRealType alpha_max = 1e6/rcut;
+    mRealType alpha_min = 1e-6/rcut;
+    mRealType vr = evaluate(rcut, 1./rcut);
+    mRealType vr_edge = evaluate(edge*rcut, 1./rcut/edge);
+    bool ltoo_small = vr > tol;
+    bool ltoo_large = vr_edge < tol;
+    int niter = 0;
+    app_log() << "guessing alpha" << std::endl;
+    while ((niter < miter) and (ltoo_small or ltoo_large))
+    {
+      app_log() << niter << " amin = " << alpha_min << " a = " << alpha << " amax = " << alpha_max << "\n";
+      if (alpha_max-alpha_min < 2*tol) break;
+      // adjust
+      if (ltoo_small)
+      {
+        alpha = (alpha+alpha_max)/2.0;
+      }
+      else if (ltoo_large)
+      {
+        alpha = (alpha+alpha_min)/2.0;
+      }
+      else
+      {
+        break;
+      }
+      // re-evaluate
+      vr = evaluate(rcut, 1./rcut);
+      vr_edge = evaluate(rcut/edge, 1./rcut/edge);
+      ltoo_small = vr > tol;
+      ltoo_large = vr_edge < tol;
+      if (ltoo_small)
+        alpha_min = alpha;
+      else if (ltoo_large)
+        alpha_max = alpha;
+      else
+        break;
+      niter++;
+    }
+    return alpha;
+  }
 
   inline mRealType evaluate_w_sk(const std::vector<int>& kshell, const pRealType* restrict sk) const
   {

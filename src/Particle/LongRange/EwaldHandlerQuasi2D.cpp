@@ -25,7 +25,12 @@ EwaldHandlerQuasi2D::EwaldHandlerQuasi2D(ParticleSet& ref, mRealType kc_in)
   LR_rc = ref.getLattice().LR_rc; // CoulombPBC needs get_rc() to createSpline4RbyVs
   LR_kc = ref.getLattice().LR_kc; // get_kc() is used in QMCFiniteSize
   alpha = ref.getLattice().ewaldAlpha;
-  if (alpha < 0) alpha = std::sqrt(LR_kc/2.0/LR_rc);
+  if (alpha < 0)
+  {
+    alpha = std::sqrt(LR_kc/2.0/LR_rc);
+    app_log() << "init alpha = " << alpha << "\n";
+    alpha = guess_ewald_alpha(LR_rc);
+  }
   area = ref.getLattice().Volume/ref.getLattice().R(2,2);
   // report
   app_log() << "    alpha = " << alpha << " area = " << area << std::endl;

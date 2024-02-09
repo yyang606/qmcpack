@@ -24,9 +24,32 @@ Screen2D::Screen2D(ParticleSet& ref, mRealType kc_in)
   LR_rc = ref.getLattice().LR_rc; // CoulombPBC needs get_rc() to createSpline4RbyVs
   LR_kc = ref.getLattice().LR_kc; // get_kc() is used in QMCFiniteSize
   area = ref.getLattice().Volume/ref.getLattice().R(2,2);
+  int nlat = ref.getLattice().nlat;
+  mRealType reach = LR_rc + nlat*2.0*LR_rc;
+  // find necessary rcut
+  mRealType new_rcut = findRcut();
+  LR_rc = std::max(new_rcut, LR_rc);
   // report
   app_log() << "    dgate = " << dgate << std::endl;
   app_log() << "    mimg  = " << mimg << std::endl;
+  app_log() << "     rcut = " << LR_rc << std::endl;
+  app_log() << "     nlat = " << nlat << std::endl;
+  app_log() << "    reach = " << reach << std::endl;
+  bool ltoo_small = (new_rcut > reach);
+  if (ltoo_small)
+  {
+    const int mlat = 10;
+    while (nlat < mlat)
+    {
+      nlat++;
+      reach = LR_rc + nlat*2.0*LR_rc;
+      if (reach >= new_rcut) break;
+    }
+    std::ostringstream msg;
+    msg << "nlat = " << ref.getLattice().nlat << " is too small"
+        << "  try increase to " << nlat << "\n";
+    throw std::runtime_error(msg.str());
+  }
   fillFk(ref.getSimulationCell().getKLists());
 }
 
@@ -64,6 +87,41 @@ Screen2D::mRealType Screen2D::evaluate(mRealType r, mRealType rinv) const
     vsr += std::cyl_bessel_k(0, (2*k+1)*M_PI*arg);
   }
   return pre*vsr;
+}
+
+Screen2D::mRealType Screen2D::findRcut()
+{
+  const int miter = 1000;
+  const mRealType edge = 0.9;
+  const mRealType tol = 1e-10;
+  mRealType r = LR_rc;
+  mRealType rmax = 10*LR_rc;
+  mRealType rmin = 0.0;
+  int iter = 0;
+  mRealType vtail = evaluate(r, 1./r);
+  mRealType vedge = evaluate(edge*r, 1./r/edge);
+  app_log() << "  Screen2D::findRcut\n";
+  while ((iter < miter) and ((vedge<tol) or (vtail>tol)))
+  {
+    app_log() << iter << " " << rmin << " " << r << " " << rmax << "\n";
+    if ((rmax-rmin) < 2*tol) break;
+    if (vtail>tol)
+      r = (r+rmax)/2.0;
+    else if (vedge<tol)
+      r = (r+rmin)/2.0;
+    else
+      break;
+    vtail = evaluate(r, 1./r);
+    vedge = evaluate(edge*r, 1./r/edge);
+    if (vtail>tol)
+      rmin = r;
+    else if (vedge<tol)
+      rmax = r;
+    else
+      break;
+    iter++;
+  }
+  return r;
 }
 
 } // qmcplusplus
