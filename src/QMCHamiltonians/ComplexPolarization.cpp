@@ -21,40 +21,16 @@ ComplexPolarization::ComplexPolarization(ParticleSet& P) :
 {
   // [v0_real, v0_imag]
   values.resize(2);
-  // look along x by default
-  axis = 0.0;
-  axis[0] = 1.0;
-  // maximum projcetion distance
-  rmax = 0.0;
+  // look along b_1 by default
+  gvec = 0;
+  gvec[0] = 1;
 };
 
 bool ComplexPolarization::put(xmlNodePtr cur)
 {
   OhmmsAttributeSet attrib;
-  attrib.add(axis, "axis");
+  attrib.add(gvec, "gvec");
   attrib.put(cur);
-  RealType norm=0.0;
-  for (int l=0;l<axis.size();l++)
-    norm += axis[l]*axis[l];
-  axis /= std::sqrt(norm);
-  auto axes = lattice.R;
-  std::vector<RealType> lengths;
-  for (int i=0;i<ndim;i++)
-  {
-    auto ai = axes.getRow(i);
-    lengths.push_back(dot(ai, axis));
-    for (int j=i+1;j<ndim;j++)
-    {
-      auto aj = axes.getRow(j);
-      lengths.push_back(dot(ai+aj, axis));
-    }
-  }
-  if (ndim == 3)
-  {
-    auto rvec = axes.getRow(0)+axes.getRow(1)+axes.getRow(2);
-    lengths.push_back(dot(rvec, axis));
-  }
-  rmax = *std::max_element(lengths.begin(), lengths.end());
   get(app_log());
   return true;
 }
@@ -62,8 +38,7 @@ bool ComplexPolarization::put(xmlNodePtr cur)
 bool ComplexPolarization::get(std::ostream& os) const
 { // class description
   os << "ComplexPolarization: " << name_ << std::endl;
-  os << "  axis =" << axis << std::endl;
-  os << "  rmax =" << rmax << std::endl;
+  os << "  gvec =" << gvec << std::endl;
   return true;
 }
 
@@ -104,13 +79,13 @@ ComplexPolarization::Return_t ComplexPolarization::evaluate(ParticleSet& P)
   RealType expo = 0.0;
   for (int j=0; j<npart; j++)
   {
-    auto r = P.R[j];
+    auto rj = P.R[j];
     // fractional coordinate
-    auto rp = dot(r, axis);
-    auto fj = rp/rmax;
-    expo += fj;
+    auto sj = lattice.toUnit(rj);
+    auto grj = 2.0*M_PI*dot(gvec, sj);
+    expo += grj;
   }
-  sincos(2*M_PI*expo, &cosz, &sinz);
+  sincos(expo, &cosz, &sinz);
   values[0] = wgt*cosz;
   values[1] = wgt*sinz;
 
