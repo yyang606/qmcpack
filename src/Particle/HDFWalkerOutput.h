@@ -64,7 +64,7 @@ private:
   std::array<BufferType, 2> RemoteData;
   std::array<std::vector<QMCTraits::FullPrecRealType>, 2> RemoteDataW;
   int block;
-  void write_configuration(const WalkerConfigurations& W, hdf_archive& hout, int block);
+  void write_configuration(const WalkerConfigurations& W, hdf_archive& hout, int block, bool identify_block);
 };
 
 } // namespace qmcplusplus
