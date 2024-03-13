@@ -311,6 +311,11 @@ void QMCDriver::recordBlock(int block)
     RandomNumberControl::write(RootName, myComm);
     checkpointTimer->stop();
   }
+  if (Period4ConfigDump!=0 && block%Period4ConfigDump == 0)
+  { // append current walkers to config.h5
+    const bool identify_block = true;
+    wOut->dump(W, block, identify_block);
+  }
 }
 
 bool QMCDriver::finalize(int block, bool dumpwalkers)
