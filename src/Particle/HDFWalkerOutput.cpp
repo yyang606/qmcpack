@@ -79,7 +79,7 @@ HDFWalkerOutput::~HDFWalkerOutput() = default;
  *  - walker_partition (int array)
  *  - walkers (nw,np,3)
  */
-bool HDFWalkerOutput::dump(const WalkerConfigurations& W, int nblock)
+bool HDFWalkerOutput::dump(const WalkerConfigurations& W, int nblock, const bool identify_block)
 {
   std::filesystem::path FileName = myComm->getName();
   FileName.concat(hdf::config_ext);
@@ -93,35 +93,17 @@ bool HDFWalkerOutput::dump(const WalkerConfigurations& W, int nblock)
 
   //try to use collective
   hdf_archive dump_file(myComm, true);
-  dump_file.create(FileName);
-  HDFVersion cur_version;
-  dump_file.write(cur_version.version, hdf::version);
-  dump_file.push(hdf::main_state);
-  dump_file.write(nblock, "block");
-
-  write_configuration(W, dump_file, nblock, false);
-  dump_file.close();
-
-  currentConfigNumber++;
-  prevFile = FileName;
-  return true;
-}
-
-bool HDFWalkerOutput::record(const WalkerConfigurations& W, int nblock)
-{
-  std::string FileName=myComm->getName()+hdf::config_ext;
-
-  //try to use collective
-  hdf_archive dump_file(myComm,true);
-  bool success = dump_file.open(FileName);
-
-  // YY: error handling, should this be moved to the driver?
-  if (!success)
-  { // if config.h5 cannot be opened, then let dump() create new config.h5
-    return dump(W, nblock);
+  bool exists = dump_file.open(FileName);
+  if (!exists) // create new config.h5
+    dump_file.create(FileName);
+  if (!dump_file.is_group(hdf::version))
+  {
+    HDFVersion cur_version;
+    dump_file.write(cur_version.version, hdf::version);
   }
 
-  write_configuration(W,dump_file, nblock, true);
+  dump_file.push(hdf::main_state);
+  write_configuration(W, dump_file, nblock, identify_block);
   dump_file.close();
 
   currentConfigNumber++;
@@ -129,16 +111,22 @@ bool HDFWalkerOutput::record(const WalkerConfigurations& W, int nblock)
   return true;
 }
 
-void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_archive& hout, int nblock, bool identify_block)
+void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_archive& hout, int nblock, const bool identify_block)
 {
   std::string dataset_name = hdf::walkers;
   std::string nwalker_name = hdf::num_walkers;
   if (identify_block)
-  { // change h5 slab name if each block is being recorded
+  { // change h5 slab name to record more than one block
     std::stringstream block_str;
     block_str << nblock;
     dataset_name += block_str.str();
     nwalker_name += block_str.str();
+  } else { // remove previous checkpoint
+    std::vector<std::string> names = {"block", nwalker_name, "walker_partition", dataset_name};
+    for (auto aname : names)
+    {
+      if (hout.is_dataset(aname)) hout.unlink(aname);
+    }
   }
 
   const int wb = OHMMS_DIM * number_of_particles_;
@@ -152,7 +140,11 @@ void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_arc
 
   auto& walker_offsets = W.getWalkerOffsets();
   number_of_walkers_ = walker_offsets[myComm->size()];
-  hout.write(number_of_walkers_, nwalker_name);
+  if (!identify_block)
+  {
+    hout.write(nblock, "block");
+    hout.write(number_of_walkers_, nwalker_name);
+  }
 
   if (hout.is_parallel())
   {
@@ -218,7 +210,7 @@ void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_arc
     int buffer_id = (myComm->size() > 1) ? 1 : 0;
     {
       std::array<size_t, 3> gcounts{number_of_walkers_, number_of_particles_, OHMMS_DIM};
-      hout.writeSlabReshaped(RemoteData[buffer_id], gcounts, hdf::walkers);
+      hout.writeSlabReshaped(RemoteData[buffer_id], gcounts, dataset_name);
     }
     {
       std::array<size_t, 1> gcounts{number_of_walkers_};
