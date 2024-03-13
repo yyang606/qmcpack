@@ -51,10 +51,14 @@ public:
   ///destructor
   ~HDFWalkerOutput();
 
-  /** dump configurations
+  /** dump configurations for checkpoint (overwrite file)
    * @param w walkers
    */
   bool dump(const WalkerConfigurations& w, int block);
+  /** record configurations for post-processing (append to file)
+   * @param w walkers
+   */
+  bool record(const WalkerConfigurations& w, int block);
   //     bool dump(ForwardWalkingHistoryObject& FWO);
 
 private:

@@ -107,6 +107,28 @@ bool HDFWalkerOutput::dump(const WalkerConfigurations& W, int nblock)
   return true;
 }
 
+bool HDFWalkerOutput::record(const WalkerConfigurations& W, int nblock)
+{
+  std::string FileName=myComm->getName()+hdf::config_ext;
+
+  //try to use collective
+  hdf_archive dump_file(myComm,true);
+  bool success = dump_file.open(FileName);
+
+  // YY: error handling, should this be moved to the driver?
+  if (!success)
+  { // if config.h5 cannot be opened, then let dump() create new config.h5
+    return dump(W, nblock);
+  }
+
+  write_configuration(W,dump_file, nblock, true);
+  dump_file.close();
+
+  currentConfigNumber++;
+  prevFile=FileName;
+  return true;
+}
+
 void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_archive& hout, int nblock, bool identify_block)
 {
   std::string dataset_name = hdf::walkers;
