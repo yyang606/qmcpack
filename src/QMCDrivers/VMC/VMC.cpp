@@ -98,8 +98,6 @@ bool VMC::run()
         ++now_loc;
         if (Period4WalkerDump && now_loc % Period4WalkerDump == 0)
           wClones[ip]->saveEnsemble(wit, wit_end);
-        //           if(storeConfigs && (now_loc%storeConfigs == 0))
-        //             ForwardWalkingHistory.storeConfigsForForwardWalking(*wClones[ip]);
       }
       Movers[ip]->stopBlock(false);
     } //end-of-parallel for
@@ -109,8 +107,7 @@ bool VMC::run()
 #if !defined(REMOVE_TRACEMANAGER)
     Traces->write_buffers(traceClones, block);
 #endif
-    if (storeConfigs)
-      recordBlock(block);
+    recordBlock(block);
     vmc_loop.stop();
 
     bool stop_requested = false;
