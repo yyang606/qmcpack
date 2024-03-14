@@ -59,7 +59,6 @@ HDFWalkerOutput::HDFWalkerOutput(size_t num_ptcls, const std::string& aroot, Com
       number_of_walkers_(0),
       number_of_particles_(num_ptcls),
       myComm(c),
-      currentConfigNumber(0),
       RootName(aroot)
 {
   block = -1;
@@ -83,21 +82,13 @@ bool HDFWalkerOutput::dump(const WalkerConfigurations& W, int nblock, const bool
 {
   std::filesystem::path FileName = myComm->getName();
   FileName.concat(hdf::config_ext);
-  //rotate files
-  //if(!myComm->rank() && currentConfigNumber)
-  //{
-  //  std::ostringstream o;
-  //  o<<myComm->getName()<<".b"<<(currentConfigNumber%5) << hdf::config_ext;
-  //  rename(prevFile.c_str(),o.str().c_str());
-  //}
 
   //try to use collective
   hdf_archive dump_file(myComm, true);
   bool exists = dump_file.open(FileName);
   if (!exists) // create new config.h5
-    dump_file.create(FileName);
-  if (!dump_file.is_group(hdf::version))
   {
+    dump_file.create(FileName);
     HDFVersion cur_version;
     dump_file.write(cur_version.version, hdf::version);
   }
@@ -105,18 +96,14 @@ bool HDFWalkerOutput::dump(const WalkerConfigurations& W, int nblock, const bool
   dump_file.push(hdf::main_state);
   write_configuration(W, dump_file, nblock, identify_block);
   dump_file.close();
-
-  currentConfigNumber++;
-  prevFile=FileName;
   return true;
 }
 
 void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_archive& hout, int nblock, const bool identify_block)
 {
   std::string partition_name = "walker_partition";
-  std::string weights_name = hdf::walker_weights;
   std::string dataset_name = hdf::walkers;
-  std::string nwalker_name = hdf::num_walkers;
+  std::string weights_name = hdf::walker_weights;
   if (identify_block)
   { // change h5 slab name to record more than one block
     std::stringstream block_str;
@@ -125,11 +112,9 @@ void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_arc
     dataset_name += block_str.str();
     weights_name += block_str.str();
   } else { // remove previous checkpoint
-    std::vector<std::string> names = {"block", nwalker_name, partition_name, dataset_name, weights_name};
+    std::vector<std::string> names = {"block", hdf::num_walkers, partition_name, dataset_name, weights_name};
     for (auto aname : names)
-    {
       if (hout.is_dataset(aname)) hout.unlink(aname);
-    }
   }
 
   const int wb = OHMMS_DIM * number_of_particles_;
@@ -146,7 +131,7 @@ void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_arc
   if (!identify_block)
   {
     hout.write(nblock, "block");
-    hout.write(number_of_walkers_, nwalker_name);
+    hout.write(number_of_walkers_, hdf::num_walkers);
   }
 
   if (hout.is_parallel())
