@@ -113,16 +113,19 @@ bool HDFWalkerOutput::dump(const WalkerConfigurations& W, int nblock, const bool
 
 void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_archive& hout, int nblock, const bool identify_block)
 {
+  std::string partition_name = "walker_partition";
+  std::string weights_name = hdf::walker_weights;
   std::string dataset_name = hdf::walkers;
   std::string nwalker_name = hdf::num_walkers;
   if (identify_block)
   { // change h5 slab name to record more than one block
     std::stringstream block_str;
     block_str << nblock;
+    partition_name += block_str.str();
     dataset_name += block_str.str();
-    nwalker_name += block_str.str();
+    weights_name += block_str.str();
   } else { // remove previous checkpoint
-    std::vector<std::string> names = {"block", nwalker_name, "walker_partition", dataset_name};
+    std::vector<std::string> names = {"block", nwalker_name, partition_name, dataset_name, weights_name};
     for (auto aname : names)
     {
       if (hout.is_dataset(aname)) hout.unlink(aname);
@@ -166,7 +169,7 @@ void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_arc
         myWalkerOffset.push_back(walker_offsets[myComm->rank()]);
       }
       hyperslab_proxy<std::vector<int>, 1> slab(myWalkerOffset, gcounts, counts, offsets);
-      hout.write(slab, "walker_partition");
+      hout.write(slab, partition_name);
     }
     { // write walker configuration
       std::array<size_t, 3> gcounts{number_of_walkers_, number_of_particles_, OHMMS_DIM};
@@ -180,12 +183,12 @@ void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_arc
       std::array<size_t, 1> counts{W.getActiveWalkers()};
       std::array<size_t, 1> offsets{static_cast<size_t>(walker_offsets[myComm->rank()])};
       hyperslab_proxy<std::vector<QMCTraits::FullPrecRealType>, 1> slab(RemoteDataW[0], gcounts, counts, offsets);
-      hout.write(slab, hdf::walker_weights);
+      hout.write(slab, weights_name);
     }
   }
   else
   { //gaterv to the master and master writes it, could use isend/irecv
-    hout.write(walker_offsets, "walker_partition");
+    hout.write(walker_offsets, partition_name);
     if (myComm->size() > 1)
     {
       std::vector<int> displ(myComm->size()), counts(myComm->size());
@@ -214,7 +217,7 @@ void HDFWalkerOutput::write_configuration(const WalkerConfigurations& W, hdf_arc
     }
     {
       std::array<size_t, 1> gcounts{number_of_walkers_};
-      hout.writeSlabReshaped(RemoteDataW[buffer_id], gcounts, hdf::walker_weights);
+      hout.writeSlabReshaped(RemoteDataW[buffer_id], gcounts, weights_name);
     }
   }
 }
