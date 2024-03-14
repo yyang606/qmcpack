@@ -252,7 +252,7 @@ void PairCorrEstimator::set_norm_factor()
      with the same number density
   */
   RealType r                 = 0.;
-  const RealType ftpi        = 2*(ndim-1) / ndim * M_PI;
+  const RealType ftpi        = 2*(ndim-1) * M_PI / ndim;
   const RealType N_tot_pairs = N_e * (N_e - 1) / 2;
   for (int i = 0; i < NumBins; i++)
   {
