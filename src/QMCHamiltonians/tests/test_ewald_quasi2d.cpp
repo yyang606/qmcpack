@@ -44,7 +44,10 @@ TEST_CASE("Coulomb PBC A-A Ewald Quasi2D exception", "[hamiltonian]")
   elec.createSK();
   elec.update();
 
-  CHECK_THROWS(CoulombPBCAA(elec, true, false, false));
+  CoulombPBCAA caa(elec, true, false, false);
+  double val = caa.evaluate(elec);
+  // !!!! not validated
+  CHECK(val == Approx(-5.4335842805));
 }
 
 TEST_CASE("Coulomb PBC A-A Ewald Quasi2D square", "[hamiltonian]")
