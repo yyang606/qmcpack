@@ -70,6 +70,8 @@ except (ImportError,RuntimeError):
 matplotlib_import_success = False
 try:
     import matplotlib.pyplot as plt
+    import matplotlib
+    matplotlib.use('TKAgg')
 
     params = {'legend.fontsize':14,'figure.facecolor':'white','figure.subplot.hspace':0.,
           'axes.labelsize':16,'xtick.labelsize':14,'ytick.labelsize':14}
