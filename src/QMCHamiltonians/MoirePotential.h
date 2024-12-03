@@ -34,7 +34,7 @@ public:
   std::string getClassName() const override {return "moire";};
   // required overrides end ----
 private:
-  RealType amoire, vmoire, phi;
+  RealType amoire, vmoire, phi, theta;
   std::vector<TinyVector<RealType, 3>> gvecs;
 };
 } // qmcplusplus
