@@ -21,5 +21,5 @@ echo Check the results of the CMake configuration to ensure that the preferred
 echo compilers and libraries have been selected. See README and documentation 
 echo for guidance.
 #cmake -DCMAKE_C_COMPILER=mpicc -DCMAKE_CXX_COMPILER=mpicxx ..
-make -j 8
+make -j 128
 #cd build; cmake ..; make -j 128; cd ..

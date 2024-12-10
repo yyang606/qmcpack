@@ -35,6 +35,7 @@ public:
   // required overrides end ----
 private:
   RealType amoire, vmoire, phi, theta;
+  std::string moire_shape;
   std::vector<TinyVector<RealType, 3>> gvecs;
 };
 } // qmcplusplus

@@ -42,13 +42,14 @@ bool MoirePotential::put(xmlNodePtr cur)
   const RealType AUTOEV = 27.211386245988034;
   const RealType PI = 4. * std::atan(1);
   RealType amoire_in_ang, vmoire_in_mev, phi_in_deg, epsmoire, mstar;
-  std::string moire_shape;
+  std::string moire_shape_;
   // set defaults
   epsmoire = 1.0;
   mstar = 1.0;
   amoire_in_ang = -1.0;
   vmoire_in_mev = 0.0;
   phi_in_deg = 0.0;
+  moire_shape = "triangular";
   // read inputs
   OhmmsAttributeSet attrib;
   attrib.add(amoire_in_ang, "amoire_in_ang");
@@ -56,9 +57,10 @@ bool MoirePotential::put(xmlNodePtr cur)
   attrib.add(phi_in_deg, "pmoire_in_deg");
   attrib.add(epsmoire, "epsmoire");
   attrib.add(mstar, "mstar");
-  attrib.add(moire_shape, "moire_shape");
+  attrib.add(moire_shape_, "moire_shape");
   attrib.put(cur);
   phi = phi_in_deg/180.0*PI;
+  moire_shape=moire_shape_;
   // check inputs
   if (amoire_in_ang < 0)
     throw std::runtime_error("need amoire_in_ang input");
@@ -88,6 +90,7 @@ bool MoirePotential::put(xmlNodePtr cur)
           gvecs[m][l] = gfracs[m][0]*b1[l] + gfracs[m][1]*b2[l];
         }
       }
+      return true;
   } else if (moire_shape=="square")
     {
        RealType bmag =2*PI/amoire; 
@@ -113,15 +116,19 @@ bool MoirePotential::put(xmlNodePtr cur)
 	 g2_rotated[1]=rotation_matrix[1][0]*g2[0]+rotation_matrix[1][1]*g2[1];
 	 g2=g2_rotated;
        }
+       return true;
     } else
-       app_error() << " Error: moire shapei: " << moire_shape << "not implemented!!" << std::endl;
-       APP_ABORT("");
-  return true;
+       {
+         app_error() << " Error: moire shape: " << moire_shape << "not implemented!!" << std::endl;
+         APP_ABORT("");
+         return false;
+       }
 }
 
 bool MoirePotential::get(std::ostream& os) const
 {
   os << "External moire potential" << std::endl;
+  os << "  moire shape " <<  moire_shape << std::endl;
   os << "  aM = " <<  amoire << " bohr*"<< std::endl;
   os << "  vM = " <<  vmoire << " ha*"<< std::endl;
   os << "  phi = " << phi << std::endl;
